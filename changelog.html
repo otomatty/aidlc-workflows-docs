@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-DLC Workflows v2 — 変更履歴</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
+  <div class="meta">
+    awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
+    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+  </div>
+  <nav>
+    <div class="section">ドキュメント</div>
+    <a href="index.html">概要</a>
+    <a href="architecture.html">アーキテクチャ</a>
+    <a href="workflow.html">ワークフロー</a>
+    <a href="agents.html">エージェント</a>
+    <div class="section">更新情報</div>
+    <a href="changelog.html" class="active">変更履歴</a>
+    <div class="section">外部リンク</div>
+    <a href="https://github.com/awslabs/aidlc-workflows/tree/v2" target="_blank">GitHub (v2)</a>
+  </nav>
+</aside>
+<main class="content">
+<header>
+  <h1>変更履歴</h1>
+  <div class="subtitle">
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+  </div>
+</header>
+
+<!-- CHANGELOG:INSERT -->
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.8</span>
+    <span class="cl-date">2026-07-03（コミット 89bcfa2、7/4検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>2.0.0のレビュアー機構を全ハーネスで確実に動作させる修正。3つの独立した欠陥を解消。</p>
+  <ul>
+    <li>Codexオーケストレーターの <code>gate: true</code> フローに§12aレビュアーステップを追加 — ステージの <code>reviewer:</code> がCodexで黙って無視されていた問題を修正</li>
+    <li>Kiroでレビュアーサブエージェント2体を conductor の <code>subagent.trustedAgents</code> に追加 — 信頼プロンプトでワークフローがブロックされなくなった</li>
+    <li>Kiroレビュアーの <code>fs_write</code> を <code>aidlc/spaces/**</code> にキャップ — レビュー対象より広い無制限書き込み権限を制限</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.7</span>
+    <span class="cl-date">2026-07-03</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>インクリメンタル（リーン）スコープ裏の dangling-consume ギャップを解消（issue #461）。</p>
+  <ul>
+    <li><code>security-patch</code> に <code>requirements-analysis</code> を追加（9→10ステージ）— CVE対応でも脆弱性と修復基準の監査可能な記述が残るように</li>
+    <li>run-stageディレクティブが入力をディスク上の存在で分割: 新設 <code>consumes_absent</code> フィールドが欠落必須入力を <code>expected: true/false</code> 注釈付きで列挙</li>
+    <li>upstream-coverageセンサーはディスク上に存在する消費物のみ検査 — リーンスコープで毎回発生していた偽の <code>SENSOR_FAILED</code> を解消</li>
+    <li>入力を無条件に読んでいた9ステージ本文が「(if exists)」+明示的フォールバック方式に。リカバリプロトコルに producer-is-SKIP 分岐を追加</li>
+    <li>スコープごとの意図的スキップ辺集合をテストスイートに固定 — 新たな dangling consume はCIで検出</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.6</span>
+    <span class="cl-date">2026-07-03</span>
+    <span class="cl-tag security">security</span>
+  </div>
+  <p>承認・インタビューのチェックポイントを「実在する人間が行動した決定論的証明」でゲート（issue #451）。自律IDEモード下のエージェントが1ターン内で承認をねつ造してワークフローを進められた問題を修正。</p>
+  <ul>
+    <li>実際の人間プロンプトが監査台帳に <code>HUMAN_TURN</code> イベントを記録し、approve/answerゲートは直近のゲート解決以降に <code>HUMAN_TURN</code> がなければ拒否（マーカーファイルもターンカウンターもなし — 台帳自体が記録）</li>
+    <li>ハーネス別の記録シーム: Claude（<code>UserPromptSubmit</code> フック + AskUserQuestionウィジェット応答）、Kiro IDE（<code>promptSubmit</code>）、Codex（<code>user_prompt_submit</code>）、Kiro CLI</li>
+    <li>Kiro CLI/IDEは <code>preToolUse</code> フックでゲート開放中・人間未行動時のツール呼び出しをハードブロック（exit 2）</li>
+    <li>自律Construction（swarm / Bolt）ではスコープ外（無人ランのデッドロック回避）、空台帳ではフェイルオープン。CI用バイパス: <code>AIDLC_SKIP_HUMAN_PRESENCE_GUARD=1</code></li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.5</span>
+    <span class="cl-date">2026-07-01</span>
+    <span class="cl-tag feature">feature</span>
+  </div>
+  <p>1Mコンテキストウィンドウをオーケストレーターだけでなくティア選択サブエージェントにも拡張。</p>
+  <ul>
+    <li><code>dist/claude/.claude/settings.json</code> の <code>ANTHROPIC_DEFAULT_FABLE/OPUS/SONNET_MODEL</code> Bedrockピンに <code>[1m]</code> サフィックスを付与（Haikuは1M版がないため据え置き）</li>
+    <li>ティアで選択されたサブエージェントが200Kではなく1Mウィンドウで動作するように</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.4</span>
+    <span class="cl-date">2026-06-29</span>
+    <span class="cl-tag breaking">breaking</span>
+  </div>
+  <p><code>--test-run</code> フラグとTest Run Modeを完全撤廃（issue #369）。エージェントが対話セッションで自身の不完全な作業を自己承認できる経路を除去。</p>
+  <ul>
+    <li><code>--test-run</code> は report / approve / decision / answer / スラッシュ形式のすべてから削除。ゲート・構造化質問・学習リチュアルは常に実行</li>
+    <li><code>enable-test-run</code> サブコマンドと <code>TEST_RUN_MODE_ENABLED</code> 監査イベントを削除（イベントタクソノミーは68種に）</li>
+    <li>合成CI用のバイパスは <code>AIDLC_SKIP_ARTIFACT_GUARD=1</code> のみに</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.3</span>
+    <span class="cl-date">2026-06-28</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>「ラバースタンプ罠」（長いワークフローの残ステージを実出力なしで完了扱いにする）と「ワークフロー途中チャット罠」を4つの連動する修正で閉鎖（#365, #366, #367）。</p>
+  <ul>
+    <li><strong>park:</strong> ステージ間境界でのクリーンな複数セッション退出。新ディレクティブ <code>parked</code>、Stopフックは正当な終了として扱う</li>
+    <li><strong>アーティファクトガード:</strong> <code>produces[]</code> 成果物がディスク上になければステージ完了を拒否。code-generationは <code>aidlc/</code> 外の実ソース作業も要求</li>
+    <li><strong>自律ガード:</strong> 自律swarm/Boltランは自己パーク不可 — 無人ループは止まらない</li>
+    <li><strong>会話カーブアウト:</strong> ワークフロー途中の雑談ターンをStopフックがナッジしない。対話ランのno-progressブロック上限を8→2に</li>
+    <li>新監査イベント <code>WORKFLOW_PARKED</code> / <code>WORKFLOW_UNPARKED</code></li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.2</span>
+    <span class="cl-date">2026-06-28</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>マルチユニットのConstructionフェーズで、per-unit設計ステージが最初のユニットの成果物しか作らなかった問題を修正（issue #368）。</p>
+  <ul>
+    <li>エンジンがper-unitステージ（functional-design / nfr-requirements / nfr-design / infrastructure-design）の <code>for_each</code> ループを駆動し、全Unit of Workを反復</li>
+    <li>run-stageディレクティブに解決済みユニット名を運ぶ <code>unit</code> フィールドを追加</li>
+    <li>全ユニットの成果物が揃うまで承認ゲートは提示されず、早期承認は未完了ユニット名を挙げてエラー</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.1</span>
+    <span class="cl-date">2026-06-26</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>カスタムステージをエンドツーエンドで動作させ、ステージグラフのドリフトを表面化（issue #364）。</p>
+  <ul>
+    <li><code>aidlc-graph compile</code> が新規ステージの行を自動シード（従来は手編集が必要だった）</li>
+    <li><code>/aidlc --doctor</code> とセッション開始時に、コンパイル済みグラフにない未コンパイルステージファイルを警告</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.1.0</span>
+    <span class="cl-date">2026-06-24</span>
+    <span class="cl-tag feature">feature</span>
+    <span class="cl-tag breaking">breaking</span>
+  </div>
+  <p>単一フラットな <code>aidlc-docs/</code> 記録から、インテント単位の<strong>ワークスペース</strong>レイアウトへ移行。スペース・共存する複数インテント・マルチリポジトリ・スペースレベルのknowledge/codekb・アクティブスペースに追従するメモリ。</p>
+  <ul>
+    <li>記録は <code>aidlc/spaces/&lt;space&gt;/intents/&lt;slug&gt;-&lt;id8&gt;/</code> 配下に。<code>/aidlc --init</code> は廃止（初回 <code>/aidlc</code> でインテント自動誕生）。旧レイアウトは初回実行時に自動・クラッシュ安全に移行</li>
+    <li>監査証跡はクローン単位のシャードでコミット — 並行クローンのマージ競合を解消</li>
+    <li>ナビゲーション動詞を追加: <code>/aidlc intent</code> / <code>space</code> / <code>space-create</code> / <code>intent-birth</code></li>
+    <li>確定した学習は <code>memory/</code> にpracticeとして着地、チームドメイン知識はスペースレベル <code>knowledge/</code> に</li>
+    <li>リバースエンジニアリングの9成果物はスペースレベルのリポジトリ別 <code>codekb/&lt;repo&gt;/</code> に永続化</li>
+    <li>v2系列（レビュアー機構 + Kiro IDEハーネス、2.0.0–2.0.2）をリベース・統合し、13エージェント編成と両Kiro配布物を同梱</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.0.2</span>
+    <span class="cl-date">2026-06-18</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>ステージの <code>reviewer:</code> / <code>reviewer_max_iterations</code> frontmatterフィールドを検証（refs #389）。不正なレビュアー設定が実行時失敗や静かな無効化ではなく、コンパイル時に大きく失敗するように。</p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.0.1</span>
+    <span class="cl-date">2026-06-18</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>2.0.0レビュアー機構マージ後のテストスイートをグリーン化（refs #387）。frontmatterエミッターのレビュアーフィールド欠落、バージョントリオ不整合、11エージェント前提のアサーション3件を修正。挙動変更なし。</p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.0.0</span>
+    <span class="cl-date">2026-06-18</span>
+    <span class="cl-tag feature">feature</span>
+  </div>
+  <p>ワークフローに<strong>LLMベースの品質検証（レビュアー機構）</strong>を追加。<strong>Kiro IDEハーネス</strong>（<code>dist/kiro-ide/</code>）も新登場。</p>
+  <ul>
+    <li>ステージfrontmatterの任意 <code>reviewer:</code> フィールド — ステージ本文後に助言的品質ゲートとして実行、<code>reviewer_max_iterations</code>（既定2）でループ上限</li>
+    <li>レビュアーペルソナ2体（aidlc-product-lead-agent / aidlc-architecture-reviewer-agent）が追加され、編成は11→13エージェントに</li>
+    <li>レビュアーは自動承認しない — 人間の承認ゲートは不変</li>
+  </ul>
+</div>
+
+<footer>
+  非公式の自動生成ウォッチサイトです。一次情報は <a href="https://github.com/awslabs/aidlc-workflows/blob/v2/CHANGELOG.md">CHANGELOG.md (v2)</a> を参照してください。
+</footer>
+</main>
+</div>
+</body>
+</html>

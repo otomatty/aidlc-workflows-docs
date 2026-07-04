@@ -1,0 +1,8 @@
+{
+  "branch": "v2",
+  "last_checked_commit_sha": "89bcfa2f2d4fb29b328ae77aa48a11d198cfcbca",
+  "last_checked_commit_date": "2026-07-04 07:45:10 +1000",
+  "last_checked_commit_message": "[Bug] Wire reviewer across harnesses: Kiro fs_write cap, trustedAgents, codex §12a step (#405)",
+  "checked_at": "2026-07-04",
+  "site_version": "2.1.8"
+}

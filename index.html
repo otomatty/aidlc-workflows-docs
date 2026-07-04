@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI-DLC Workflows v2 ドキュメント — 概要</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="layout">
+<aside class="sidebar">
+  <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
+  <div class="meta">
+    awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
+    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+  </div>
+  <nav>
+    <div class="section">ドキュメント</div>
+    <a href="index.html" class="active">概要</a>
+    <a href="architecture.html">アーキテクチャ</a>
+    <a href="workflow.html">ワークフロー</a>
+    <a href="agents.html">エージェント</a>
+    <div class="section">更新情報</div>
+    <a href="changelog.html">変更履歴</a>
+    <div class="section">外部リンク</div>
+    <a href="https://github.com/awslabs/aidlc-workflows/tree/v2" target="_blank">GitHub (v2)</a>
+  </nav>
+</aside>
+<main class="content">
+<header>
+  <h1>AI-DLC Workflows 2.x 概要</h1>
+  <div class="subtitle">
+    最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+  </div>
+</header>
+
+<p><strong>AI-DLC（AI-Driven Development Life Cycle）</strong>は、AI支援によるソフトウェア開発を反復可能で追跡可能なフェーズに構造化するAWS発の方法論です。本リポジトリ <code>awslabs/aidlc-workflows</code> のv2ブランチは、その方法論をハーネス中立な <code>core/</code> に一度だけ実装し、複数のCLIハーネスへ配布するネイティブ実装（2.x系、GA Preview）です。</p>
+
+<div class="warn">
+<strong>GA Preview:</strong> 2.x系は活発に開発中であり、リリース間で破壊的変更が発生し得ます。本番用途には安定版の <code>main</code> ブランチ（v1系）が推奨されています。
+</div>
+
+<h2>ワンコマンドで起動</h2>
+<pre><code>/aidlc Build a REST API for inventory management</code></pre>
+<p>このひとつのコマンドから、意図の把握 → 要件 → 設計 → 実装 → テスト → デプロイまでの構造化ワークフローが始まります。すべての意思決定ポイントで人間の承認ゲートを通過します。</p>
+
+<h2>主要な数値</h2>
+<table>
+<tr><th>項目</th><th>値</th></tr>
+<tr><td>フェーズ</td><td>5（Initialization / Ideation / Inception / Construction / Operation）</td></tr>
+<tr><td>ステージ</td><td>32</td></tr>
+<tr><td>エージェント</td><td>13（ドメインエキスパート11 + レビュアーペルソナ2）</td></tr>
+<tr><td>スコープ</td><td>9（enterprise 〜 workshop）+ 自由文からの自動検出</td></tr>
+<tr><td>深度レベル</td><td>3（Minimal / Standard / Comprehensive）</td></tr>
+<tr><td>テスト戦略レベル</td><td>3（深度とは独立に指定可能）</td></tr>
+<tr><td>監査イベント種別</td><td>68</td></tr>
+</table>
+
+<h2>対応ハーネス</h2>
+<p>方法論はハーネス中立な <code>core/</code> に1回だけ記述され、各ハーネス向けの配布物（<code>dist/&lt;harness&gt;/</code>）はそこから生成されます。決定論的エンジン（状態機械・監査ログ・並列エージェントを調停するレフェリー）は全ハーネスでバイト単位に同一です。</p>
+<table>
+<tr><th>ハーネス</th><th>インストール</th><th>起動</th></tr>
+<tr><td>Claude Code</td><td><code>dist/claude/.claude/</code> + <code>dist/claude/aidlc/</code> をプロジェクトへコピー</td><td><code>/aidlc</code></td></tr>
+<tr><td>Kiro IDE</td><td><code>dist/kiro-ide/.kiro/</code> + <code>aidlc/</code>（+ AGENTS.md）</td><td><code>/aidlc</code></td></tr>
+<tr><td>Kiro CLI（≥ 2.6）</td><td><code>dist/kiro/.kiro/</code> + <code>aidlc/</code>（+ AGENTS.md）</td><td><code>/aidlc</code></td></tr>
+<tr><td>Codex CLI（≥ 0.139.0）</td><td><code>dist/codex/</code> 一式</td><td><code>$aidlc</code></td></tr>
+</table>
+<p>全ハーネス共通の前提として、TypeScript製のフックとCLIツールを動かす <strong>bun</strong> のインストールが必要です。推奨モデルは Claude Opus 4.8 です。</p>
+
+<h2>設計哲学: Small Mob, Broad Agents</h2>
+<p>数十の狭い専門エージェント（ウォーターフォール式の引き継ぎ連鎖を再現してしまう）ではなく、複数ステージ・複数フェーズを横断して活動する<strong>幅広い能力を持つ11のエージェント</strong>を採用しています。人間の効果的なチームが3〜5人のモブでフィーチャー全体をカバーするのと同じモデルです。エージェント境界は情報損失点になるため、同一エージェントが関連ステージを連続して主導し、コンテキストを自然に保持します。</p>
+
+<h2>なぜAI-DLCか</h2>
+<p>アドホックなAIコーディングは、プロジェクトが本格化するとコンテキストのドリフト・意思決定理由の消失・意図しない挙動に悩まされます。AI-DLCは各ステージに明確なオーナーを置き、すべての決定が承認ゲートを通り、人間の修正から学んだことを永続的なルールとして記録します。同じエンジンが使い捨てのPoCから規制産業のエンタープライズ案件までを、実行するステージ数と深度を変えるだけでカバーします。</p>
+
+<h2>主な機能</h2>
+<ul>
+<li><strong>5フェーズ・32ステージ</strong> — 詳細は<a href="workflow.html">ワークフロー</a>を参照</li>
+<li><strong>13エージェント</strong>（11ドメイン + 2レビュアー） — 詳細は<a href="agents.html">エージェント</a>を参照</li>
+<li><strong>9つの適応スコープ</strong>と自由文からの自動検出、3深度レベル、3テスト戦略レベル</li>
+<li><strong>全ステージに承認ゲート</strong> — 人間がすべての決定を掌握。v2.1.6以降は監査台帳の<code>HUMAN_TURN</code>イベントで「実在する人間の応答」を決定論的に検証</li>
+<li><strong>2層ナレッジシステム</strong> — 方法論ナレッジはフレームワークに同梱、チームナレッジはスペース単位でユーザー管理</li>
+<li><strong>ルールと学習ループ</strong> — 人間の修正が永続的な行動ルールに変換される</li>
+<li><strong>68種イベントの監査証跡</strong> — エンタープライズ向けトレーサビリティ</li>
+<li><strong>セッション再開</strong> — チェックポイントからの継続、やり直し、任意ステージへのジャンプ、park/resume</li>
+</ul>
+
+<h2>リポジトリ構成（v2）</h2>
+<table>
+<tr><th>ディレクトリ</th><th>内容</th></tr>
+<tr><td><code>core/</code></td><td>ハーネス中立の単一ソース: agents / stages / scopes / sensors / hooks / tools / knowledge / skills / templates</td></tr>
+<tr><td><code>harness/</code></td><td>各ハーネス固有の薄いサーフェス定義</td></tr>
+<tr><td><code>dist/</code></td><td>生成された配布物（claude / kiro / kiro-ide / codex）</td></tr>
+<tr><td><code>docs/</code></td><td>ユーザーガイド・ハーネスエンジニアガイド・開発者リファレンス</td></tr>
+<tr><td><code>tests/</code></td><td>スモーク・ユニット・統合テスト</td></tr>
+</table>
+
+<footer>
+  非公式の自動生成ウォッチサイトです。一次情報は <a href="https://github.com/awslabs/aidlc-workflows/tree/v2">awslabs/aidlc-workflows (v2)</a> を参照してください。
+</footer>
+</main>
+</div>
+</body>
+</html>
