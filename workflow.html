@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.0<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>ワークフロー: フェーズ・ステージ・スコープ</h1>
   <div class="subtitle">
-    5フェーズ・32ステージ・9スコープ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+    5フェーズ・32ステージ・9スコープ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-05（最新コミット b67798c）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -135,9 +135,18 @@
 <tr><td>"proof of concept", "prototype", "poc", "spike"</td><td><code>poc</code></td></tr>
 <tr><td>"mvp", "minimum viable"</td><td><code>mvp</code></td></tr>
 <tr><td>"workshop", "lab", "training"</td><td><code>workshop</code></td></tr>
-<tr><td>その他すべて</td><td><code>feature</code></td></tr>
+<tr><td>その他すべて</td><td>コンポーズ提案（v2.2.0〜。従来の無言 <code>feature</code> 既定は廃止）</td></tr>
 </table>
-<p>スコープキーワードと5語超のプロジェクト記述が同居する場合は <code>feature</code> にフォールバックして確認を求める曖昧性解消ルールがあり、検出後は必ずスコープ名とステージ数を示す確認プロンプトが出ます。プロジェクト単位の既定スコープは <code>AWS_AIDLC_DEFAULT_SCOPE</code> で設定できます。</p>
+<p>v2.2.0でルーティングが変更されました: キーワードの明確な一致は<strong>一致したスコープ名を示す1行確認</strong>（例: bugfix）を出し、一致がない・リッチな記述の場合は<strong>コンポーズ提案</strong>（下記）にルーティングされます。旧来の静的feature既定確認は廃止。検出後は必ずスコープ名とステージ数を示す確認プロンプトが出ます。プロジェクト単位の既定スコープは <code>AWS_AIDLC_DEFAULT_SCOPE</code> で設定できます。</p>
+
+<h2>アダプティブコンポーザー（v2.2.0）</h2>
+<p>9つのストックスコープに加えて、<strong>コンポーザーエージェント</strong>がタスクに合わせたカスタムのEXECUTE/SKIPステージグリッドを合成できます。</p>
+<ul>
+<li><code>/aidlc compose "&lt;task&gt;"</code> — ストックスコープが一致する場合でもコンポーザーを強制起動。<code>--new-scope</code> でカスタムスコープ合成を強制</li>
+<li><code>/aidlc compose --report &lt;path&gt;</code> — スキャンレポート（SonarQube等）をトリアージし、コンパクトな「修正して出荷」グリッドに構成。ストック一致（bugfix / security-patch）ならファイル書き込みなしでルーティング</li>
+<li><strong>in-flight recompose</strong> — 実行中に未着手ステージのEXECUTE/SKIPを反転（<code>recompose --skip/--add</code>）。監査ロック下で厳格検証され、完了済み・カーソル後方・walking-skeletonゲートアンカーの反転は拒否。チャットでの「このステージはスキップできる?」もコンダクターが認識して同じゲートに通す</li>
+<li>合成スコープは <code>keywords: []</code> で書き出され、一回限りのプランが将来のキーワードルーティングを書き換えません。提案は常に人間の承認ゲート（approve/edit/reject）を通ります</li>
+</ul>
 
 <h2>深度とテスト戦略</h2>
 <div class="grid-2">

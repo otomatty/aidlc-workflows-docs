@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.0<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,34 @@
 <header>
   <h1>変更履歴</h1>
   <div class="subtitle">
-    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-05（最新コミット b67798c）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <!-- CHANGELOG:INSERT -->
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.0</span>
+    <span class="cl-date">2026-07-04（コミット eae912e、7/5検知）</span>
+    <span class="cl-tag feature">feature</span>
+  </div>
+  <p>Adaptive Workflows（ロードマップGoal 3）: タスクに合わせてセレモニーを構成する<strong>コンポーザーエージェント</strong>が <code>/aidlc</code> 配下に追加。作業内容を記述すると、明確なキーワード一致は該当スコープ名を示す1行確認に、リッチ／不一致な記述は（旧来の無言feature既定の代わりに）コンポーズ提案にルーティングされる。コンポーザーはタスクとワークスペーススキャンを読み、SKIPごとの根拠付きでEXECUTE/SKIPステージグリッドを提案し、人間の承認後にスコープとして書き出して同一ターン内でワークフローを開始する。※ロードマップの番号が入れ替わり、adaptiveが2.2.0で先行、reviewer-as-verifierが2.3.0（Full GA宣言込み）に移動。このリリースはGA宣言ではない。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>新 <code>/aidlc compose "&lt;task&gt;"</code>（および <code>/aidlc-compose</code> ショートカットスキル）。<code>--new-scope</code> でカスタムスコープの合成を強制、<code>--report &lt;path&gt;</code> でスキャンレポート（SonarQube等）から「修正して出荷」のコンパクトなグリッドをトリアージ合成</li>
+    <li>コールドスタートの自由文ルーティングを変更: キーワード明確一致→一致スコープ名の1行確認、不明確→コンポーズ提案。旧来の静的feature既定確認は廃止</li>
+    <li>新 読み取り専用 <code>detect --json</code>: ワークスペーススキャン＋ハーネスごとのスコープデータ配置を出力</li>
+    <li>新 <code>validate-grid --proposal &lt;path&gt; [--strict] [--project-type] [--keywords]</code>（aidlc-graph.ts）: 任意のEXECUTE/SKIPグリッドを検証。<code>--strict</code>（recomposeモード）は必須入力の飢餓をハードリジェクト</li>
+    <li>新 <code>recompose --skip &lt;slugs&gt; --add &lt;slugs&gt;</code>: 実行中ワークフローの未着手ステージのEXECUTE/SKIPを監査ロック下で反転（in-flight再構成）。完了済み・カーソル後方・walking-skeletonゲートアンカーの反転は拒否</li>
+    <li>チャットファーストの途中再構成: 実行中に「market researchはスキップできる?」のような発話をコンダクターが認識し、同じ承認ゲート＋recompose検証を通す（自律Construction中は除外）</li>
+    <li>jump / finalize / lookup / --status がライブプラン（recompose後のサフィックス上書き）を静的スコープグリッドより優先するように</li>
+    <li>新監査イベント <code>RECOMPOSED</code>（タクソノミーは68→69イベント）</li>
+    <li>新 <code>aidlc-composer-agent</code>（編成は13→14エージェント）。propose-onlyで人間承認まで書き込まない。合成スコープは <code>keywords: []</code> で出荷され、一回限りのプランが将来のキーワードルーティングを書き換えない</li>
+    <li>Kiro IDE: 委譲サブエージェントがツールを持たない問題を修正（委譲先5エージェントの.mdに <code>tools: ["read","write","shell"]</code> を注入）。Kiroではコンポーザー専用のfs_writeサンドボックス許可（スコープレジストリ2パスのみ）</li>
+    <li>Stopフックにカーブアウト: 保留中のコンポーズ提案（<code>aidlc/.aidlc-compose-pending</code> マーカー）があればゲートでターン終了を許可（自律ガード付き・fail-open）</li>
+    <li>付随コミット b67798c: roadmap.html を2.2.0時点の状態に更新（Goal 3 Shipped、2.2.0/2.3.0スワップ反映）</li>
+  </ul>
+</div>
 
 <div class="cl-entry">
   <div class="cl-head">

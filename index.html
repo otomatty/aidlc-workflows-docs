@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.0<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>AI-DLC Workflows 2.x 概要</h1>
   <div class="subtitle">
-    最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+    最終更新: <!-- AUTO:last-updated -->2026-07-05（最新コミット b67798c）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -76,12 +76,13 @@
 <h2>主な機能</h2>
 <ul>
 <li><strong>5フェーズ・32ステージ</strong> — 詳細は<a href="workflow.html">ワークフロー</a>を参照</li>
-<li><strong>13エージェント</strong>（11ドメイン + 2レビュアー） — 詳細は<a href="agents.html">エージェント</a>を参照</li>
+<li><strong>14エージェント</strong>（11ドメイン + 2レビュアー + 1コンポーザー） — 詳細は<a href="agents.html">エージェント</a>を参照</li>
 <li><strong>9つの適応スコープ</strong>と自由文からの自動検出、3深度レベル、3テスト戦略レベル</li>
+<li><strong>アダプティブコンポーザー</strong>（v2.2.0） — コンポーザーエージェントがタスクやスキャンレポートからEXECUTE/SKIPステージグリッドを提案し、承認後にカスタムスコープとして書き出して即開始。実行中の再構成（recompose）も可能</li>
 <li><strong>全ステージに承認ゲート</strong> — 人間がすべての決定を掌握。v2.1.6以降は監査台帳の<code>HUMAN_TURN</code>イベントで「実在する人間の応答」を決定論的に検証</li>
 <li><strong>2層ナレッジシステム</strong> — 方法論ナレッジはフレームワークに同梱、チームナレッジはスペース単位でユーザー管理</li>
 <li><strong>ルールと学習ループ</strong> — 人間の修正が永続的な行動ルールに変換される</li>
-<li><strong>68種イベントの監査証跡</strong> — エンタープライズ向けトレーサビリティ</li>
+<li><strong>69種イベントの監査証跡</strong> — エンタープライズ向けトレーサビリティ</li>
 <li><strong>セッション再開</strong> — チェックポイントからの継続、やり直し、任意ステージへのジャンプ、park/resume</li>
 </ul>
 

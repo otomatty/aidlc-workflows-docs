@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.0<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>アーキテクチャ</h1>
   <div class="subtitle">
-    エンジン・コンダクター・ガード機構 ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+    エンジン・コンダクター・ガード機構 ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-05（最新コミット b67798c）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -113,7 +113,7 @@
 <tr><td><code>[S]</code></td><td>スキップ（スコープ除外・skip・ジャンプによるバイパス）</td></tr>
 </table>
 <h3>監査証跡</h3>
-<p>68種のイベントタクソノミーによる構造化ログ。クローンごとのシャード（<code>audit/&lt;host&gt;-&lt;clone&gt;.md</code>）としてコミットされ、並行クローンがマージ競合を起こしません。読み手はglobしてタイムスタンプでマージします。<code>HUMAN_TURN</code>（v2.1.6）や <code>WORKFLOW_PARKED</code> / <code>WORKFLOW_UNPARKED</code>（v2.1.3）もこの台帳のイベントです。</p>
+<p>69種のイベントタクソノミーによる構造化ログ。クローンごとのシャード（<code>audit/&lt;host&gt;-&lt;clone&gt;.md</code>）としてコミットされ、並行クローンがマージ競合を起こしません。読み手はglobしてタイムスタンプでマージします。<code>HUMAN_TURN</code>（v2.1.6）や <code>WORKFLOW_PARKED</code> / <code>WORKFLOW_UNPARKED</code>（v2.1.3）や <code>RECOMPOSED</code>（v2.2.0、実行中プラン再構成）もこの台帳のイベントです。</p>
 
 <h2>決定論的な脊柱: hooks / tools / sensors</h2>
 <div class="grid-2">
@@ -122,7 +122,7 @@
 <ul>
 <li><code>aidlc-audit-logger</code> — 監査ログ記録</li>
 <li><code>aidlc-mint-presence</code> — 人間プロンプトで HUMAN_TURN を鋳造（v2.1.6）</li>
-<li><code>aidlc-stop</code> — Stopフック（ラバースタンプ防止）</li>
+<li><code>aidlc-stop</code> — Stopフック（ラバースタンプ防止。v2.2.0で保留中コンポーズ提案マーカーによるゲート時ターン終了カーブアウトを追加）</li>
 <li><code>aidlc-sensor-fire</code> — センサー発火</li>
 <li><code>aidlc-session-start / -end</code> — セッション境界処理</li>
 <li><code>aidlc-validate-state</code> — 状態検証</li>
@@ -144,7 +144,7 @@
 
 <div class="card">
 <h3>主要CLIツール（core/tools）</h3>
-<p><code>aidlc-orchestrate</code>（エンジン）、<code>aidlc-state</code>（状態遷移）、<code>aidlc-log</code> / <code>aidlc-audit</code>（記録）、<code>aidlc-graph</code>（ステージグラフのコンパイル）、<code>aidlc-swarm</code> / <code>aidlc-bolt</code>（並列Construction）、<code>aidlc-jump</code>、<code>aidlc-learnings</code>、<code>aidlc-runtime</code>、<code>aidlc-utility</code>（init / status / doctor / scope-table 等）、<code>aidlc-worktree</code> ほか。すべてbunで実行されるTypeScriptです。</p>
+<p><code>aidlc-orchestrate</code>（エンジン）、<code>aidlc-state</code>（状態遷移）、<code>aidlc-log</code> / <code>aidlc-audit</code>（記録）、<code>aidlc-graph</code>（ステージグラフのコンパイル、v2.2.0で <code>validate-grid</code> 検証を追加）、<code>aidlc-swarm</code> / <code>aidlc-bolt</code>（並列Construction）、<code>aidlc-jump</code>、<code>aidlc-learnings</code>、<code>aidlc-runtime</code>、<code>aidlc-utility</code>（init / status / doctor / scope-table、v2.2.0で <code>detect</code> / <code>recompose</code> を追加）、<code>aidlc-worktree</code> ほか。すべてbunで実行されるTypeScriptです。</p>
 </div>
 
 <h2>consumes / consumes_absent 契約（v2.1.7）</h2>

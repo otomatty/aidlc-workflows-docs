@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.1.8<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.0<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,11 @@
 <header>
   <h1>エージェント</h1>
   <div class="subtitle">
-    13エージェント（ドメインエキスパート11 + レビュアー2） ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-04（最新コミット 89bcfa2）<!-- /AUTO:last-updated -->
+    14エージェント（ドメインエキスパート11 + レビュアー2 + コンポーザー1） ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-05（最新コミット b67798c）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
-<p>AI-DLCはコンダクターがステージ実行中に体現する<strong>11のドメインエキスパートペルソナ</strong>と、v2.0.0で追加された<strong>2つのレビュアーペルソナ</strong>を使います。インラインステージ（出荷グラフのすべてのマルチエージェントステージ）では、コンダクターが各エージェントを自身のコンテキスト内でペルソナとして採用します。<code>Task</code> によるサブエージェント派遣は <code>mode: subagent</code> ステージ（reverse-engineering、code-generation）に限られます。どちらの場合も委譲は必ずコンダクターが行い、<strong>エージェント同士が直接呼び合うことはありません</strong>。</p>
+<p>AI-DLCはコンダクターがステージ実行中に体現する<strong>11のドメインエキスパートペルソナ</strong>と、v2.0.0で追加された<strong>2つのレビュアーペルソナ</strong>、v2.2.0で追加された<strong>コンポーザーエージェント</strong>を使います。インラインステージ（出荷グラフのすべてのマルチエージェントステージ）では、コンダクターが各エージェントを自身のコンテキスト内でペルソナとして採用します。<code>Task</code> によるサブエージェント派遣は <code>mode: subagent</code> ステージ（reverse-engineering、code-generation）に限られます。どちらの場合も委譲は必ずコンダクターが行い、<strong>エージェント同士が直接呼び合うことはありません</strong>。</p>
 
 <div class="note">
 高判断力が要る8エージェント（product / design / architect / developer / quality / devsecops / compliance / aws-platform）は opus モデルで、テンプレート的な出力が中心の3エージェント（delivery / pipeline-deploy / operations）は sonnet で動作します。v2.1.5以降、ティア選択されるモデルには1Mコンテキスト版がピン留めされます。
@@ -131,6 +131,10 @@
 <div class="note">
 v2.1.8で、レビュアー機構が全ハーネスで確実に動作するよう修正されました: Codexオーケストレーターに§12aレビュアーステップが追加され（従来 <code>reviewer:</code> は黙って無視されていた）、Kiroではレビュアーが <code>subagent.trustedAgents</code> に登録されて信頼プロンプトで停止しなくなり、Kiroレビュアーの書き込みは <code>aidlc/spaces/**</code> にキャップされました（ビルダーより広い無制限 <code>fs_write</code> を持っていた問題の修正）。
 </div>
+
+<h2>コンポーザーエージェント（v2.2.0で追加）</h2>
+<h3>aidlc-composer-agent</h3>
+<p>コンダクターがコンポーズ要求（<code>/aidlc compose</code>、コンポーズ提案の受諾、実行中の再構成）で派遣する14体目のエージェント。タスク記述とワークスペーススキャン（<code>detect --json</code>）を読み、SKIPごとの根拠付きでEXECUTE/SKIPステージグリッドを提案します。<strong>人間が承認するまで一切書き込まないpropose-only設計</strong>で、承認後にスコープファイル（<code>keywords: []</code>）とscope-gridエントリの2ファイルを書き出します。敵対的なkeep-bias（安易にステージを削らない）を持ち、提案は <code>validate-grid</code> で決定論的に検証されます。Kiroではスコープレジストリの2パスのみに <code>fs_write</code> を許可する専用サンドボックス設定を持ちます（コンダクター自身はそこに書けない）。</p>
 
 <h2>ナレッジのロード</h2>
 <p>各エージェントは方法論ナレッジを <code>.claude/knowledge/&lt;agent-name&gt;/</code> から、チームナレッジをスペースレベルの <code>aidlc/knowledge/&lt;agent-name&gt;/</code>（チームが作成した場合）からロードします。出荷された13のエージェントファイルはアップグレードで上書きされるため直接編集せず、チーム標準はスペースレベルのナレッジに追加します。新しいエージェントは <code>.claude/agents/&lt;slug&gt;.md</code> に必須frontmatter付きで置けばユーザー所有ファイルとして追加できます。</p>
