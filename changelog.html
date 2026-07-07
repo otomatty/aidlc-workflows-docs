@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.0<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.1<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,29 @@
 <header>
   <h1>変更履歴</h1>
   <div class="subtitle">
-    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-05（最新コミット b67798c）<!-- /AUTO:last-updated -->
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-07（最新コミット ded69da）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <!-- CHANGELOG:INSERT -->
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.1</span>
+    <span class="cl-date">2026-07-06（コミット ded69da、7/7検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>ヘルプ要求が誤ってインテントを生成するのを防ぐ修正。<code>/aidlc intent help</code> が「helpという名前のインテントへの切替」と解釈され、失敗時のエラー文言が「作りたいものを記述して新規開始を」と促すため、作業中のコンダクターがそれを指示と読んで不要なインテントを誕生させていた。素の <code>/aidlc help</code> / <code>-h</code> は自由文ファネルに落ち、「help」という名のインテント作成を提案（または実行中ステージを黙って進行）していた。ヘルプ形の入力はすべてヘルプ表示にルーティングされるように。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li><code>/aidlc intent help</code>（<code>-h</code>）と <code>/aidlc space help</code>（<code>-h</code>）はグローバルヘルプを表示。エンジン、Kiroのverb-interceptシーム、<code>aidlc-utility.ts</code> ハンドラ自体の3層で適用</li>
+    <li><code>/aidlc</code> 直後の単独 <code>help</code> / <code>-h</code> もヘルプ表示に（<code>--help</code> と同じ扱い）。長い記述内の「help」（例: <code>/aidlc "help desk app"</code>）は従来どおり自由文として扱う</li>
+    <li>「help」を予約レコード名に: <code>intent-birth</code> はhelpにスラグ化されるラベルを、<code>space-create help</code> はその名前を、いずれも変更前に拒否</li>
+    <li>ステアリング文言の修正: 「Unknown intent」エラーは新規作成を提案せず読み取り専用の一覧のみを案内、「Unknown space」エラーもスペース作成を指示しない</li>
+    <li>オーケストレータースキルの第2インテントCONFIRMステップが誤ったバイナリ名（<code>aidlc-utility.ts next</code> → 正: <code>aidlc-orchestrate.ts next</code>）を4ハーネスすべてで参照していた問題を修正（ガード迂回の誘発を防止）</li>
+    <li>Codexの転送ループ: 先頭の <code>$aidlc</code>/<code>/aidlc</code> 呼び出しマーカーを落として残りを個別引数として転送するよう指示を追加（スラッシュ行全体が1トークンとしてエコーされ動詞がルーターから隠れる実挙動を修正）。エンジン側はマーカー付き入力を意図的に修復しない — 崩れたエコーはスコープ確認（安全な人間ゲート）に落ちる</li>
+    <li>3ハーネス（claude TUI / kiro-cli ACP / codex exec）で実機検証済み。テスト追加: t114・t165・t178</li>
+  </ul>
+</div>
 
 <div class="cl-entry">
   <div class="cl-head">
