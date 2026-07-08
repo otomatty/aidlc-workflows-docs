@@ -1,8 +1,8 @@
 {
   "branch": "v2",
-  "last_checked_commit_sha": "ded69da276a9d17dec4b3e8c09cee92baa722115",
-  "last_checked_commit_date": "2026-07-06 18:07:12 +1000",
-  "last_checked_commit_message": "fix: route help-shaped inputs to help instead of the intent birth funnel (#479) (2.2.1) (#491)",
-  "checked_at": "2026-07-07",
-  "site_version": "2.2.1"
+  "last_checked_commit_sha": "242953ec76f307c8caf565805f9955a7ef458a92",
+  "last_checked_commit_date": "2026-07-08 02:53:54 +1000",
+  "last_checked_commit_message": "fix: detect git submodules as a brownfield signal in workspace detection (2.2.10) (#507)",
+  "checked_at": "2026-07-08",
+  "site_version": "2.2.10"
 }

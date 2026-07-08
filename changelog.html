@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.1<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.10<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,126 @@
 <header>
   <h1>変更履歴</h1>
   <div class="subtitle">
-    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-07（最新コミット ded69da）<!-- /AUTO:last-updated -->
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-08（最新コミット 242953e）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <!-- CHANGELOG:INSERT -->
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.10</span>
+    <span class="cl-date">2026-07-06（コミット 242953e、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>ワークスペース検出がgit submoduleを認識するように。コードが未初期化submodule（空ディレクトリ + <code>.gitmodules</code>）にあるワークスペースはGreenfield判定となり、リバースエンジニアリングが自動スキップされ、全設計ステージがコード理解ゼロで走っていた。第6のBrownfield信号として、パース可能な <code>.gitmodules</code>（submoduleパスエントリ1件以上）でBrownfieldに分類。未初期化のsubmoduleパスがある場合はbirth・doctorレポート・<code>detect</code> で警告と対処法（<code>git submodule update --init --recursive</code>）を提示する。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li><code>WORKSPACE_SCANNED</code> 監査イベントに <code>Submodules</code> フィールド（<code>N declared, M uninitialized</code>）を追加。<code>.gitmodules</code> が無いプロジェクトではイベントはバイト単位で同一</li>
+    <li><code>/aidlc --doctor</code> に助言的な <code>Submodules:</code> 行を追加（exit codeには影響しない）</li>
+    <li>読み取り専用 <code>detect</code> の <code>--json</code> に <code>submodules</code> キーを追加。言語判定はスキャン結果のまま（フェッチ前はUnknownが正直な値）</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.9</span>
+    <span class="cl-date">2026-07-06（コミット 7e83ef5、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>ユニット単位のConstructionステージが、CONDITIONALアーティファクトの提出を完了条件として要求しなくなった。新しいステージfrontmatterキー <code>optional_produces:</code> に「ユニットが必要とする場合のみ書く」アーティファクトを宣言する — <code>functional-design</code> の <code>frontend-components</code>（UIがあるユニットのみ）と <code>infrastructure-design</code> の <code>shared-infrastructure</code>（インフラ共有時のみ）が <code>produces:</code> から移動。バックエンドのみのユニットがN/Aスタブファイルなしで完了でき、ステージゲートに到達可能になった。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>ユニット単位の <code>next</code> がCONDITIONALアーティファクトを省略したユニットを通過（従来は同ユニットが毎回再emitされゲートが開かなかった）</li>
+    <li><code>approve</code> はカバレッジを必須の <code>produces:</code> のみで判定。REQUIREDアーティファクトの欠落は従来どおりブロック</li>
+    <li><code>optional_produces:</code> の各エントリはステージ本文の <code>(CONDITIONAL - ...)</code> マーカーと対応必須。新コマンド・フラグなし、CI破壊なし</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.8</span>
+    <span class="cl-date">2026-07-05（コミット 45035ea、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>2.2.0 Adaptive Workflowsのフォローアップ2件を強化し、「自律Construction下では決して〜しない」ルールに決定論的なアンカーを付与。実行中コンポーズのカーブアウトが有界化され、クラッシュ・放棄されたセッションのマーカーがStopフックの転送ループ強制を恒久的に無効化できなくなった。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>Stopフックは <code>aidlc/.aidlc-compose-pending</code> マーカーをmtimeが24時間以内の場合のみ尊重。古い孤児マーカーは無視してベストエフォートで削除、強制が自動復旧（読み取りエラー時はfail-open）</li>
+    <li><code>/aidlc --doctor</code> がマーカーの存在と経過時間を報告: 新鮮なら助言的なpass行、staleなら対処法付きのfail行としてexit非ゼロ</li>
+    <li><code>recompose</code> は <code>Construction Autonomy Mode: autonomous</code> 下で非ゼロexitで拒否（対処法: <code>aidlc-bolt set-autonomy --mode gated</code> かswarm完了を待つ）。gated・未設定は従来どおり</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.7</span>
+    <span class="cl-date">2026-07-05（コミット 8e723b1、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>ワークスペース検出がコンテナフォルダ内にネストしたプロジェクトを発見できるように。ソースが1階層下（例: <code>wordbook/</code>、<code>backend/</code>）にあるプロジェクトは、スキャナがワークスペースルート+固定のソースディレクトリリストしか見ないためGreenfield判定となり、リバースエンジニアリングがスキップされていた。トップレベル信号が無い場合、各サブディレクトリの深さ1スキャンにフォールバックし、ネストしたコードベースをBrownfieldとして検出する。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>検出したサブディレクトリは <code>WORKSPACE_SCANNED</code> の <code>Nested Root</code>、<code>/aidlc detect --json</code> の <code>nestedRoot</code> として出力。通常のトップレベルプロジェクトの分類は不変</li>
+    <li>Greenfield判定のまま <code>bugfix</code> / <code>refactor</code> / <code>security-patch</code> を開始するとstderrに1行の助言を表示（ルーティングとProject Typeは変更しない）</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.6</span>
+    <span class="cl-date">2026-07-05（コミット 7c02d48、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>Construction中の承認オプションが、常に「Code Generation」と表示する代わりに実際の次ステージ名を表示するように。run-stageディレクティブが計算済みの <code>next_stage</code> フィールド（アクティブスコープとrecompose後のEXECUTE/SKIPプランを考慮した次のin-scopeステージの表示名）を運び、ハーネスのquestion-rendering annexがApproveオプションの「Continue to ...」をそこから逐語レンダリング。最終in-scopeステージでは「Complete workflow」と表示。コマンド・フラグの変更なし。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.5</span>
+    <span class="cl-date">2026-07-05（コミット a534ab7、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>自律Constructionの実行が、複数バッチのBolt DAGを最初のバッチで停滞せずに全バッチ進行するように。従来は最初の並列バッチのマージ後、エンジンが同じバッチを永久に再emitし、後続バッチにもステージ承認ゲートにも到達できなかった（Units of Workに依存エッジがある=トポロジカルバッチが2つ以上あるプロジェクトすべてが該当）。エンジンはコンパイル済みBolt DAGをバッチ単位で登り、部分収束バッチは未収束ユニットのみ再ファンし、全バッチ収束後に単一のステージゲートを提示する。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li><code>next</code> が次の未収束バッチを <code>invoke-swarm</code> としてemitし、最終バッチ収束後に承認ゲートを提示</li>
+    <li>収束済みユニットの読み取りをステージの今回実行にスコープ: 後方/redoジャンプでの再実行は前回実行の台帳に頼らずバッチを再構築</li>
+    <li><code>aidlc-swarm.ts finalize</code> はマージバック失敗ユニット（<code>merge_failures</code>、exit 2）の <code>SWARM_UNIT_CONVERGED</code> を記録しない。worktreeは保存されるので該当ユニットのみ <code>finalize</code> を再実行（<code>prepare</code> の再実行は不要）</li>
+    <li>単一バッチの自律swarmとgated Constructionは不変</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.4</span>
+    <span class="cl-date">2026-07-05（コミット 220f52b、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>2つのレビュー専用エージェント（product-lead / architecture-reviewer）が追記する <code>## Review</code> セクションに、実際のUTCタイムスタンプと自分自身の名前を記録するように。従来はDateフィールドが素の <code>[ISO timestamp]</code> プレースホルダで記憶から記入され、Reviewerフィールドはレビュー対象の作成者（PRODUCERエージェント）名になっていたため、ディスク上のすべてのレビューが被レビュー側に帰属していた。Dateは <code>date -u</code> のシェル実行結果を貼り付け、Reviewerはレビュアーペルソナ名を記録する。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.3</span>
+    <span class="cl-date">2026-07-05（コミット ff7c15b、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>Kiro CLI・Kiro IDE・Codexのフックアダプタの脆弱なプロセス再起動を修正。各アダプタはライフサイクルフックを裸名 <code>bun</code> の子プロセスで起動していたが、GUI起動アプリや最小サーバ環境の <code>$PATH</code> には <code>~/.bun/bin</code> が無いことが多く、<code>Executable not found in $PATH: bun</code> でフック層全体が死んでいた。アダプタ自身を実行中のbunバイナリの絶対パス（<code>process.execPath</code>）で再起動するようにし、監査ログ・セッションライフサイクル・状態検証・サブエージェント追跡が完全復旧。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>既知の制限: 4つのコアフック（stopガードのエンジン照会・statusline状態同期・runtime-graphコンパイル・センサーディスパッチ）はさらに1段深くで <code>bun</code> を裸名解決するため、<code>bun</code> 無しPATHでは劣化したまま（stopガードはfail-open）。フォローアップで対応予定</li>
+    <li>新コマンド・フラグなし、CI破壊なし</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.2</span>
+    <span class="cl-date">2026-07-05（コミット 47904f3、7/8検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>プロジェクトがper-intentワークスペースレイアウトに移行すると、learningsゲートが候補0件（または誤ったphase）を返す問題を修正。runtime-graph行の <code>memory_path</code> がアクティブintentのrecordディレクトリ抜きで記録され、learnings surfaceのphase読み取りも誤ったパスセグメントを見ていた。書き込み側（runtime-graphコンパイルとstate advance遷移）・読み取り側（surfaceのphase抽出）の両方がper-intentレコードパスを使うように。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li><code>learnings surface</code> がワークスペースレイアウト下でステージの記録済みlearningsを発見できるように</li>
+    <li>JSON出力の <code>phase</code> フィールドが正しく（従来はper-intentプロジェクトで常に <code>spaces</code> を報告）。レガシーのフラットレイアウトは従来どおり正しいphaseを報告</li>
+  </ul>
+</div>
+
 
 <div class="cl-entry">
   <div class="cl-head">
