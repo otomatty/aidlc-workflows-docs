@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.10<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.19<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>ワークフロー: フェーズ・ステージ・スコープ</h1>
   <div class="subtitle">
-    5フェーズ・32ステージ・9スコープ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-08（最新コミット 242953e）<!-- /AUTO:last-updated -->
+    5フェーズ・32ステージ・9スコープ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-09（最新コミット 6f597ce）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -85,7 +85,7 @@
 </table>
 
 <h2>Phase 3: Construction（3.1–3.7）</h2>
-<p>設計と実装。per-unitステージ（functional-design、nfr-requirements、nfr-design、infrastructure-design）は<strong>Unit of Workごとに反復</strong>実行され（v2.1.2でエンジンが <code>for_each</code> ループを駆動するよう修正）、全ユニットの成果物が揃うまで承認ゲートは提示されません。code-generationは自律許可下では<strong>スウォーム</strong>（並列サブエージェント + レフェリーによる収束）で実行されます。</p>
+<p>設計と実装。per-unitステージ（functional-design、nfr-requirements、nfr-design、infrastructure-design）は<strong>Unit of Workごとに反復</strong>実行され（v2.1.2でエンジンが <code>for_each</code> ループを駆動するよう修正）、全ユニットの成果物が揃うまで承認ゲートは提示されません。code-generationは自律許可下では<strong>スウォーム</strong>（並列サブエージェント + レフェリーによる収束）で実行されます。v2.2.13で、設計4ステージの反復順をオプトインで<strong>unit-major</strong>（1ユニットの設計4文書を連続作成してから次のユニットへ）に切り替え可能になりました（<code>Construction Iteration: unit-major</code>、デフォルトは従来のstage-major）。v2.2.18で、各ユニットに任意の <code>kind:</code>（service / spec / ui / packaging / library）をタグ付けすると、設計4ステージがその種別に該当するアーティファクトのみを要求するようになりました（kind未指定は従来どおり全マトリクス）。</p>
 <table>
 <tr><th>ステージ</th><th>リード</th></tr>
 <tr><td>Functional Design（per-unit）</td><td>architect</td></tr>
@@ -110,7 +110,7 @@
 </table>
 
 <h2>9つのスコープ</h2>
-<p>スコープは<strong>どのステージを実行するか</strong>を、深度は<strong>各ステージがどれだけ詳細な成果物を作るか</strong>を、テスト戦略は<strong>どれだけテストを生成するか</strong>を制御します。</p>
+<p>スコープは<strong>どのステージを実行するか</strong>を、深度は<strong>各ステージがどれだけ詳細な成果物を作るか</strong>を、テスト戦略は<strong>どれだけテストを生成するか</strong>を制御します。v2.2.12以降、スコープ確認時にコンパイル済みグリッドから読んだ正確なステージ数・承認ゲート数がプレビューされます（例: <code>feature</code> = 32ステージ・29ゲート、<code>bugfix</code> = 7ステージ・4ゲート）。</p>
 <table>
 <tr><th>スコープ</th><th>実行 / 全体</th><th>深度</th><th>テスト戦略</th><th>ユースケース</th></tr>
 <tr><td><code>enterprise</code></td><td>32 / 32</td><td>Comprehensive</td><td>Comprehensive</td><td>規制産業のエンタープライズ機能、完全な監査証跡</td></tr>

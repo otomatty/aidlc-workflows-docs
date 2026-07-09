@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.10<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.2.19<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,129 @@
 <header>
   <h1>変更履歴</h1>
   <div class="subtitle">
-    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-08（最新コミット 242953e）<!-- /AUTO:last-updated -->
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-09（最新コミット 6f597ce）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <!-- CHANGELOG:INSERT -->
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.19</span>
+    <span class="cl-date">2026-07-09（コミット 6f597ce、7/9検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>プロジェクトパスにスペースが含まれるとフックとステータスラインが壊れる問題を修正。Claude用 <code>settings.json</code> 内の全11フックコマンド・ステータスラインコマンド・事前承認bun-toolsパーミッショングロブで <code>$CLAUDE_PROJECT_DIR</code> がダブルクォートされ、bash系フックランナーでのword-splittingによる <code>Module not found</code> を解消。<strong>アップグレード: <code>dist/claude/.claude/settings.json</code> の再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.18</span>
+    <span class="cl-date">2026-07-09（コミット 831bd29、7/9検知）</span>
+    <span class="cl-tag feature">feat</span>
+  </div>
+  <p>ユニット種別（kind）によるユニット単位設計マトリクスの刈り込み。units-generationのエッジブロックで各Unit of Workに任意の <code>kind:</code>（service / spec / ui / packaging / library）をタグ付けすると、Construction設計4ステージ（functional-design、nfr-requirements、nfr-design、infrastructure-design）はその種別に該当するアーティファクトのみを要求・生成する（specユニットにscalabilityドキュメントは不要、packagingユニットにビジネスロジックモデルは不要、など）。kind未指定・per-kindマップの無いステージ・未注釈アーティファクトは従来どおり全マトリクス適用で、既存ワークフローは無変更。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要</strong>（旧エンジン + kindタグ付きエッジブロックはunits-generationゲートで大声で失敗する）。</p>
+  <ul>
+    <li>NEW <code>kind:</code> キー（unit-of-work-dependency.mdのエッジブロック内、任意）。不正値は <code>required-sections</code> センサーがゲートで検出</li>
+    <li>NEW <code>produces_kinds:</code> ステージfrontmatterフィールド（アーティファクト名 → 適用kindのマップ）。スキーマバリデーターが未知kind・空リスト・未宣言アーティファクトを拒否</li>
+    <li>エンジンはrun-stageディレクティブの <code>produces</code> パスとユニット単位カバレッジチェックの両方を現在ユニットのkindに刈り込む。全ユニットの必須セットが空になるステージはno-opとして承認（デッドロックしない）</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.17</span>
+    <span class="cl-date">2026-07-09（コミット 300b640、7/9検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>Kiro IDEハーネスのフックが実質no-opだった問題を修正。Kiro IDEはフックコンテキストをstdinではなく <code>USER_PROMPT</code> 環境変数で渡すため、IDEアダプターが <code>USER_PROMPT</code> を読み、ツール結果テキストから書き込みファイルパスを復元し、ペイロードの無いフックは監査証跡から駆動するように変更。監査ログ・センサー発火・ランタイムグラフ再コンパイル・ステータスライン同期がKiro IDEで動作するようになった。stdin読み取り廃止で毎フック2秒のstdinレースタイムアウトも解消。<strong>アップグレード: <code>dist/kiro-ide/.kiro/</code> の再コピーが必要。</strong>Kiro CLI / Claude Code / Codexの挙動は不変。</p>
+  <ul>
+    <li>IDEの監査テール駆動は前進のみ・冪等（<code>Current Stage</code> を巻き戻さない、staleな遷移での再コンパイルをmtimeガードで防止）</li>
+    <li><code>log-subagent</code> がサブエージェントの実名を記録（従来は <code>agent_type: "unknown"</code> をハードコード）。2つのレビュアーエージェントは応答先頭行に自己識別マーカーを出力するようになった（stage-protocol §12aで強化）</li>
+    <li>失敗したツール呼び出しは書き込みとして監査されない（<code>toolSuccess === false</code> を明示ガード）</li>
+    <li>オプトインのフックデバッグログ（<code>AIDLC_HOOK_DEBUG=1</code> または <code>aidlc/.aidlc-hook-debug</code> マーカー）を追加</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.16</span>
+    <span class="cl-date">2026-07-09（コミット 7fa5479、7/9検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>アーキテクチャレビュアーの読み取りスコープを「レビュー対象アーティファクト + ステージが <code>consumes:</code> する共有インセプション契約」に限定。従来、ユニット単位Constructionステージのレビュアーには読み取り制約がなく、ペルソナの「すべてをクロスリファレンス」指示によりユニットNのレビューが兄弟ユニットのディレクトリまで読み、レビューコストがユニット数に比例して増大していた。stage-protocol §12a・レビュアーペルソナ・4ハーネスのオーケストレーターすべてに同じ境界を追加。ユニット間契約の検証は共有インセプションアーティファクト（components.md等）に対して行い、兄弟ユニットのファイルは設計が明示的に統合ポイントとして名指しする場合のみスポットチェック。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.15</span>
+    <span class="cl-date">2026-07-09（コミット 911b8cc、7/9検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>エージェントfrontmatterのキーを不活性な <code>modelOverride:</code> からClaude Codeが実際に読む <code>model:</code> にリネーム。これによりClaude Codeで出荷済みの <code>model: sonnet</code> ピン（architecture-reviewer / product-lead / delivery / pipeline-deploy / operations の委譲5エージェント）が効くようになり、セッションモデルではなくSonnetで実行される。CodexのTOML出力はバイト同一、Kiro CLI/IDEのJSON設定は無変更。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.14</span>
+    <span class="cl-date">2026-07-09（コミット 51b515a、7/9検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>Constructionのサイレントデータ損失を修正。コンパイル済みランタイムグラフに <code>bolt_dag</code> ノードが欠けている場合（staleまたは削除された runtime-graph.json）、ユニット単位のConstructionステージが黙って1イテレーションに縮退し、複数ユニットのプロジェクトが最初のユニットだけをエラーなしで出荷していた。エンジンは読み取り側で自己修復するようになり、キャッシュ済みbolt_dagが無ければ <code>unit-of-work-dependency.md</code> からユニットバッチDAGを直接再計算する。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>ユニット単位ステージはruntime-graph.json欠損時も全ユニットを反復（再計算時はstale graphを名指しするstderrノートを1行出力）</li>
+    <li><code>report --result approved</code> の全ユニットカバレッジガードも再計算リストに対して適用（staleグラフによる部分ビルドの早期承認を防止）</li>
+    <li>ユニットブロックが欠落・不正・循環の場合はエラーディレクティブとして表面化（黙って1ユニットだけビルドしない）</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.13</span>
+    <span class="cl-date">2026-07-09（コミット b2e1a55、7/9検知）</span>
+    <span class="cl-tag feature">feat</span>
+  </div>
+  <p>Construction設計ステージのオプトイン「unit-major」反復。デフォルトは従来どおりstage-major（functional-designを全ユニット、次にnfr-requirementsを全ユニット…）だが、<code>Construction Iteration: unit-major</code> を記録すると、1ユニットの設計4文書を連続して作成してから次のユニットに移る。承認ゲートは数・機構とも不変だが、unit-major下では設計ブロックの最後にカスケードで発火する。code-generationと自律スウォームは対象外。フィールド未設定なら挙動はバイト同一。</p>
+  <ul>
+    <li>NEW <code>aidlc-state.ts set-construction-iteration &lt;unit-major|stage-major&gt;</code> サブコマンド。厳密読み取りで <code>unit-major</code> の完全一致のみが新ウォークを有効化</li>
+    <li>delivery-planningが承認済みプランのユニットファースト設計実行を分類し、該当時に自動で記録。人間はいつでも同サブコマンドで変更可能</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.12</span>
+    <span class="cl-date">2026-07-09（コミット c4c08d6、7/9検知）</span>
+    <span class="cl-tag feature">feat</span>
+  </div>
+  <p>スコープ確認がコミット前にコストをプレビューするように。コールドスタート確認とコンポーズ提案が、コンパイル済みグリッドから読んだ正確なステージ数・承認ゲート数を提示（推定値ではない）。スコープ確認時に「何に同意するのか」（例: <code>feature</code> は32ステージ・29ゲート、<code>bugfix</code> は7ステージ・4ゲート）が名前だけでなく数字で分かる。</p>
+  <ul>
+    <li>キーワードヒット確認は <code>Starting a "&lt;scope&gt;" workflow ... - N of T stages, G approval gates.</code> 形式に。per-unitファンアウトがある場合は末尾に明記</li>
+    <li><code>scope-change</code> 出力に <code>Approval gates:</code> 行、<code>SCOPE_CHANGED</code> 監査イベントに <code>Approval Gates</code> フィールドを追加</li>
+    <li><code>validate-grid</code> のJSON出力に <code>summary</code> フィールド（ステージ/ゲート/per-unitカウント）を追加（加算的変更）</li>
+  </ul>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.2.11</span>
+    <span class="cl-date">2026-07-08（コミット 48306cc、7/9検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>ゲートリビジョンのバックストップ。コンダクターが開いている承認ゲートでアーティファクトを修正したのに <code>reject</code> コマンドの実行を忘れると、<code>Revision Count: 0</code> のまま監査ペア（<code>GATE_REJECTED</code>/<code>STAGE_REVISING</code>）が残らなかった。<code>approve</code> がこれを決定論的に検知し、コミット前に欠落ペアを <code>Recovered: true</code> タグ付きでバックフィルする。承認を拒否するのではなく記録を照合する方式で、レビュアーの承認前 <code>## Review</code> 追記では発火しない。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+  <ul>
+    <li>NEW <code>Recovered: true</code> 付き監査行バリアント（approve時バックストップが発行）</li>
+    <li>NEW <code>AIDLC_SKIP_REVISION_BACKSTOP=1</code> オフスイッチ</li>
+  </ul>
+</div>
+
+<div class="cl-entry daily">
+  <div class="cl-head">
+    <span class="cl-version">日次差分</span>
+    <span class="cl-date">2026-07-09（コミット 3fa5622・8a5bdc7、7/9検知）</span>
+  </div>
+  <p>テストのみの変更2件（リリースなし）: 実行中リコンポーズのライブKiro ACP + Codex execカバレッジを追加（+501行）、workspace-journeyのcodekbビートで正当なグリーンフィールドRE-skipを許容。</p>
+</div>
+
 
 <div class="cl-entry">
   <div class="cl-head">

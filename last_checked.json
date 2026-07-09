@@ -1,8 +1,8 @@
 {
   "branch": "v2",
-  "last_checked_commit_sha": "242953ec76f307c8caf565805f9955a7ef458a92",
-  "last_checked_commit_date": "2026-07-08 02:53:54 +1000",
-  "last_checked_commit_message": "fix: detect git submodules as a brownfield signal in workspace detection (2.2.10) (#507)",
-  "checked_at": "2026-07-08",
-  "site_version": "2.2.10"
+  "last_checked_commit_sha": "6f597ce9a5053a448e2861802825613aadd47a87",
+  "last_checked_commit_date": "2026-07-09 17:38:45 +1000",
+  "last_checked_commit_message": "fix: quote $CLAUDE_PROJECT_DIR in Claude hook and statusline commands (2.2.14) (#522)",
+  "checked_at": "2026-07-09",
+  "site_version": "2.2.19"
 }
