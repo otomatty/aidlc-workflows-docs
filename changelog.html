@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.19<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.3.3<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,70 @@
 <header>
   <h1>変更履歴</h1>
   <div class="subtitle">
-    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-09（最新コミット 6f597ce）<!-- /AUTO:last-updated -->
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-12（最新コミット 83ed7a8）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <!-- CHANGELOG:INSERT -->
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.3.3</span>
+    <span class="cl-date">2026-07-10（コミット 83ed7a8、7/12検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>自律Construction中の <code>scope-change</code> をエンジンレベルで拒否。<code>recompose</code> がv2.2.8で塞いだギャップの兄弟対応で、どちらもライブプランのEXECUTE/SKIPステージ構成を作り替える動詞であり、無人自律ランには新しい形を承認する人間がゲートにいないため。従来この「自律下でプランを作り替えない」ルールはrecomposeのみエンジン強制で、scope-changeは文書上のルールだった。<code>Construction Autonomy Mode</code> が <code>autonomous</code> のとき <code>scope-change</code>（および実行中ワークフローへの <code>/aidlc --scope &lt;name&gt;</code>）は非ゼロ終了し、対処法（<code>aidlc-bolt set-autonomy --mode gated</code> への切替、またはスウォーム完了待ち）を明示する。gated・未設定モードと新規ワークフローの <code>--scope</code> 指定は従来どおり。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.3.2</span>
+    <span class="cl-date">2026-07-10（コミット 8b654a9、7/12検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p><code>/aidlc --doctor</code> が記録済みのフックドロップを表示するように。フックは設計上フェイルオープン（監査記録の失敗がツール呼び出しを壊してはならない）で、握りつぶしたエラーは <code>.aidlc-hooks-health/&lt;hook&gt;.drops</code> に記録されるが、doctorがそのファイルを読んでおらず、サイレント失敗のテレメトリが不可視だった。doctorに <code>Hook drops</code> 行が追加され、クリーンなら <code>none recorded</code>、ドロップがあればフック名・件数・最終発生時刻と対処法（.dropsファイルを確認し、調査後に削除）を助言行として表示。助言のみでexitコードは変えないため、過去の解決済みドロップがCIを赤に固定することはない。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.3.1</span>
+    <span class="cl-date">2026-07-10（コミット b128f27、7/12検知）</span>
+    <span class="cl-tag feature">feat</span>
+  </div>
+  <p>チューナブル・エージェントティア。エージェントの著述時契約が生のモデルピンから作業形状ベースの <code>tier:</code>（judgment / balanced / templated）になり、ビルドが各ハーネスのネイティブなmodel/effortキーへ投影する。Claude Codeではjudgment 9エージェント（architect / aws-platform / compliance / composer / design / developer / devsecops / product / quality）が <code>model: inherit</code>（effortピンなし）となり、Opusピンを廃止 — セッションのモデル・effort選択が委譲作業でもそのまま維持され、フレームワークが黙ってダウングレードしない。balanced 2レビュアーはSonnet系（effortピンなし）、templated 3プランナー（delivery / pipeline-deploy / operations）はSonnet系 + <code>effort: medium</code>。</p>
+  <ul>
+    <li>Codex CLI: judgment はTOMLから <code>model</code>/<code>model_reasoning_effort</code> を省略しセッション既定を継承。balanced/templated は <code>openai.gpt-5.4</code> をピン</li>
+    <li>Kiro CLI/IDE: judgment はJSONの <code>"model"</code> を省略（デフォルトモデルにフォールバック）、balanced/templated は <code>claude-sonnet-4.5</code>。従来は委譲5エージェント全てが opus-4.8 ピンだったため、Kiroでは挙動変更あり</li>
+    <li>NEW パック時コストキャップ: 空間メモリfrontmatterの <code>tier_cap:</code>（org → team → project、後勝ち）または <code>AIDLC_TIER_CAP</code> 環境変数で全投影の上位ティアを collapse</li>
+    <li>著述エージェントfrontmatterから <code>model:</code> を撤去（投影バイパスとしてテストで不在を固定）。ユーザー自作エージェントは従来どおり <code>model:</code> を使用可</li>
+  </ul>
+  <p>旧来の常時Opus挙動に戻すには、インストール済みコピーの投影値を直接編集する（例: 該当エージェントの <code>.claude/agents/*.md</code> に <code>model: opus</code>）。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。</strong></p>
+</div>
+
+<div class="cl-entry daily">
+  <div class="cl-head">
+    <span class="cl-version">日次差分</span>
+    <span class="cl-date">2026-07-09（コミット 29a31f7、7/12検知）</span>
+    <span class="cl-tag fix">fix</span>
+  </div>
+  <p>#475（2.3.0）のsquash-mergeでCHANGELOG.mdから欠落した 2.2.11〜2.2.19 のエントリを復元。ドキュメントのみの修正でコード変更なし。</p>
+</div>
+
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.3.0</span>
+    <span class="cl-date">2026-07-07（コミット e89162f、7/12検知）</span>
+    <span class="cl-tag feature">feat</span>
+  </div>
+  <p><strong>AIDLCプラグイン機構</strong>を追加。<code>plugins/&lt;name&gt;/</code> で著述する、新規ステージの追加 + 既存コアステージへの追加的コントリビューションシーム（<code>produces</code> / <code>consumes</code> / <code>sensors</code> / <code>required_sections</code> のset-union、ステージ本文への散文フラグメント接合）からなるオプトインの拡張。パッケージャーがハーネスごとの<strong>実ホストプラグイン</strong>（<code>dist/plugins/&lt;name&gt;/{claude,codex,kiro,kiro-ide}/</code>）として出力し、composeフックがインストールへマージ後にグラフを再コンパイルしてオーケストレーターが新ステージをルーティングする。配布はハイブリッド: ストアのあるClaude/Codexはホストネイティブの <code>/plugin</code> インストール、Kiroはフォルダドロップ + 明示compose。信頼はホストネイティブ（AIDLC独自のトラスト層なし）。プラグイン非アクティブ時はコアがバイト同一に保たれる。リファレンスプラグイン <code>test-pro</code> を同梱し、4ハーネス投影すべてで検証済み。</p>
+  <ul>
+    <li>ステージスキーマが <code>number</code> / <code>name</code> / <code>bundle</code> / <code>when</code> / <code>required_sections</code>（任意、形状検証あり）を受理</li>
+    <li>composeフックは単一のポータブルな <code>compose.ts</code>（bun製）: no-clobberコピー、エントリ単位の <code>consumes</code> マージ、コンテンツハッシュによる冪等なフラグメント接合、自己修復グラフ再コンパイル。ドロップ記録はhooks-healthに書かれ <code>/aidlc --doctor</code> が表示。bun不在時はexit 0でスキップ</li>
+    <li><code>bun scripts/package.ts --check</code> は <code>dist/plugins/</code> のバイトパリティも drift-guard。新シーム <code>package.ts plugin build</code> で単一投影を任意ディレクトリへビルド可</li>
+    <li>設計は <code>docs/reference/18-plugin-mechanism.md</code>（+ 著述ガイド）に集約。plugin agents/scopes/memory投影・marketplace・lockfile等は明示的にdeferred</li>
+  </ul>
+  <p><strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピー。既存インストールは無影響（プラグインはオプトイン、ベースツリー無変更）。</strong></p>
+</div>
+
 <div class="cl-entry">
   <div class="cl-head">
     <span class="cl-version">2.2.19</span>

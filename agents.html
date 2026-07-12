@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.19<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.3.3<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,14 +30,14 @@
 <header>
   <h1>エージェント</h1>
   <div class="subtitle">
-    14エージェント（ドメインエキスパート11 + レビュアー2 + コンポーザー1） ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-09（最新コミット 6f597ce）<!-- /AUTO:last-updated -->
+    14エージェント（ドメインエキスパート11 + レビュアー2 + コンポーザー1） ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-12（最新コミット 83ed7a8）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <p>AI-DLCはコンダクターがステージ実行中に体現する<strong>11のドメインエキスパートペルソナ</strong>と、v2.0.0で追加された<strong>2つのレビュアーペルソナ</strong>、v2.2.0で追加された<strong>コンポーザーエージェント</strong>を使います。インラインステージ（出荷グラフのすべてのマルチエージェントステージ）では、コンダクターが各エージェントを自身のコンテキスト内でペルソナとして採用します。<code>Task</code> によるサブエージェント派遣は <code>mode: subagent</code> ステージ（reverse-engineering、code-generation）に限られます。どちらの場合も委譲は必ずコンダクターが行い、<strong>エージェント同士が直接呼び合うことはありません</strong>。</p>
 
 <div class="note">
-高判断力が要る8エージェント（product / design / architect / developer / quality / devsecops / compliance / aws-platform）は opus モデルで、テンプレート的な出力が中心の3エージェント（delivery / pipeline-deploy / operations）は sonnet で動作します。v2.1.5以降、ティア選択されるモデルには1Mコンテキスト版がピン留めされます。v2.2.15で、エージェントfrontmatterのキーが不活性な <code>modelOverride:</code> からClaude Codeが実際に読む <code>model:</code> にリネームされ、委譲5エージェント（architecture-reviewer / product-lead / delivery / pipeline-deploy / operations）のSonnetピンがClaude Codeで実際に効くようになりました。
+高判断力が要る8エージェント（product / design / architect / developer / quality / devsecops / compliance / aws-platform）は opus モデルで、テンプレート的な出力が中心の3エージェント（delivery / pipeline-deploy / operations）は sonnet で動作します。v2.3.1でこのモデルピンはティア投影（<code>tier:</code> judgment / balanced / templated）に置き換わり、Claude Codeではjudgment 9エージェント（上記8 + composer）が <code>model: inherit</code> となってOpusピンを廃止（セッションのモデル・effort選択が委譲作業でも維持される）。balanced 2レビュアーとtemplated 3プランナーはSonnet系のまま（templatedのみ <code>effort: medium</code>）。<code>tier_cap:</code>（空間メモリfrontmatter）または <code>AIDLC_TIER_CAP</code> でパック時にティアの上限を設定できます。v2.1.5以降、ティア選択されるモデルには1Mコンテキスト版がピン留めされます。v2.2.15で、エージェントfrontmatterのキーが不活性な <code>modelOverride:</code> からClaude Codeが実際に読む <code>model:</code> にリネームされ、委譲5エージェント（architecture-reviewer / product-lead / delivery / pipeline-deploy / operations）のSonnetピンがClaude Codeで実際に効くようになりました。
 </div>
 
 <h2>ドメインエキスパート11エージェント</h2>

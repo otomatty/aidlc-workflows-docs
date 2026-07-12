@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.2.19<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.3.3<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>アーキテクチャ</h1>
   <div class="subtitle">
-    エンジン・コンダクター・ガード機構 ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-09（最新コミット 6f597ce）<!-- /AUTO:last-updated -->
+    エンジン・コンダクター・ガード機構 ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-12（最新コミット 83ed7a8）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -91,7 +91,7 @@
 
 <div class="card">
 <h3>park / Stopフック / 自律ガード（v2.1.3）</h3>
-<p><code>park</code> コマンドはワークフローをステージ間境界で清潔に一時停止し、Stopフックは <code>parked</code> を正当な終了として扱います。長いワークフローで「doneに到達するためのラバースタンプ」を防ぎます。逆に自律Constructionラン中は自己パークできず（自律ガード）、無人ループは止まりません。会話カーブアウトにより、ワークフロー途中の雑談ターンはナッジなしで終了できます。</p>
+<p><code>park</code> コマンドはワークフローをステージ間境界で清潔に一時停止し、Stopフックは <code>parked</code> を正当な終了として扱います。長いワークフローで「doneに到達するためのラバースタンプ」を防ぎます。逆に自律Constructionラン中は自己パークできず（自律ガード）、無人ループは止まりません。同じ理由で、ライブプランのEXECUTE/SKIP構成を作り替える <code>recompose</code>（v2.2.8）と <code>scope-change</code>（v2.3.3）は自律Construction中エンジンレベルで拒否されます — 無人ランには新しいプラン形状を承認する人間がゲートにいないため。会話カーブアウトにより、ワークフロー途中の雑談ターンはナッジなしで終了できます。</p>
 </div>
 
 <div class="card">
@@ -145,7 +145,12 @@
 
 <div class="card">
 <h3>主要CLIツール（core/tools）</h3>
-<p><code>aidlc-orchestrate</code>（エンジン）、<code>aidlc-state</code>（状態遷移）、<code>aidlc-log</code> / <code>aidlc-audit</code>（記録）、<code>aidlc-graph</code>（ステージグラフのコンパイル、v2.2.0で <code>validate-grid</code> 検証を追加）、<code>aidlc-swarm</code> / <code>aidlc-bolt</code>（並列Construction）、<code>aidlc-jump</code>、<code>aidlc-learnings</code>、<code>aidlc-runtime</code>、<code>aidlc-utility</code>（init / status / doctor / scope-table、v2.2.0で <code>detect</code> / <code>recompose</code> を追加）、<code>aidlc-worktree</code> ほか。すべてbunで実行されるTypeScriptです。</p>
+<p><code>aidlc-orchestrate</code>（エンジン）、<code>aidlc-state</code>（状態遷移）、<code>aidlc-log</code> / <code>aidlc-audit</code>（記録）、<code>aidlc-graph</code>（ステージグラフのコンパイル、v2.2.0で <code>validate-grid</code> 検証を追加）、<code>aidlc-swarm</code> / <code>aidlc-bolt</code>（並列Construction）、<code>aidlc-jump</code>、<code>aidlc-learnings</code>、<code>aidlc-runtime</code>、<code>aidlc-utility</code>（init / status / doctor / scope-table、v2.2.0で <code>detect</code> / <code>recompose</code> を追加）。doctorはv2.3.2からフェイルオープンなフックが記録したドロップ（<code>.aidlc-hooks-health/&lt;hook&gt;.drops</code>）を助言行 <code>Hook drops</code> として表示、<code>aidlc-worktree</code> ほか。すべてbunで実行されるTypeScriptです。</p>
+</div>
+
+<h2>プラグイン機構（v2.3.0）</h2>
+<div class="card">
+<p>オプトインの拡張機構。<code>plugins/&lt;name&gt;/</code> で「新規ステージの追加」と「既存コアステージへの追加的コントリビューションシーム」（<code>produces</code> / <code>consumes</code> / <code>sensors</code> / <code>required_sections</code> のset-union、ステージ本文への散文フラグメント接合）を著述すると、パッケージャーがハーネスごとの実ホストプラグイン（<code>dist/plugins/&lt;name&gt;/{claude,codex,kiro,kiro-ide}/</code>）として出力します。composeフック（ポータブルな <code>compose.ts</code>、冪等・アップグレード対応・複数プラグイン間で順序決定的）がインストールへマージした後にステージグラフを再コンパイルし、オーケストレーターが新ステージをルーティングします。配布はハイブリッド（Claude/Codexはホストネイティブの <code>/plugin</code>、Kiroはフォルダドロップ + 明示compose）で、信頼判断はホストに委ねられます（AIDLC独自のトラスト層なし）。プラグイン非アクティブ時はコアがバイト同一に保たれ、既存インストールは無影響。リファレンス実装として <code>test-pro</code> プラグインを同梱。プラグインの agents / scopes / memory 投影やmarketplace・lockfileなどは明示的に将来対応（deferred）です。</p>
 </div>
 
 <h2>consumes / consumes_absent 契約（v2.1.7）</h2>
