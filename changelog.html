@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.3.3<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.3.4<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,11 +30,26 @@
 <header>
   <h1>変更履歴</h1>
   <div class="subtitle">
-    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-12（最新コミット 83ed7a8）<!-- /AUTO:last-updated -->
+    v2ブランチ（2.x系）の日次ウォッチ ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-13（最新コミット 3c76878）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
 <!-- CHANGELOG:INSERT -->
+<div class="cl-entry">
+  <div class="cl-head">
+    <span class="cl-version">2.3.4</span>
+    <span class="cl-date">2026-07-12（コミット 3c76878、7/13検知）</span>
+    <span class="cl-tag feature">feat</span>
+  </div>
+  <p>ユニット単位レビュアーの読み取りスコープ境界（v2.2.16で文書化されたステージプロトコル§12aのルール）が、散文だけでなく決定論的に強制されるように。新しいPreToolUseフック <code>aidlc-reviewer-scope.ts</code>（フレームワーク12本目のフック、2本目のフロー変更フック）が、レビュー実行中に派遣されたレビュアーの兄弟ユニット <code>construction/</code> パスへのツール呼び出し（ファイル読み書き、兄弟をまたぐ grep/glob/シェルパターン）を exit 2 + 誘導メッセージで拒否し、渡された契約パスへリダイレクトする。コンダクターがレビュアー起動前に <code>&lt;record&gt;/.aidlc-reviewer-dispatch.json</code>（§12a step 1で書き込み、step 3で削除、6時間で失効）を書くことで強制ウィンドウが開き、レコードの <code>exempt</code> リスト（consumes契約・ステージファイル・Q&amp;Aファイル・コンダクターが名指しした統合ポイントファイル）が唯一の例外となる。<strong>アップグレード: <code>dist/&lt;harness&gt;/</code> シェルの再コピーが必要。Codexユーザーはフックトラストの再シード（<code>bun scripts/package.ts codex trust --project &lt;abs-dir&gt;</code>）も必要。</strong></p>
+  <ul>
+    <li>すべての拒否は監査イベント <code>REVIEWER_SCOPE_BLOCKED</code>（Tool / Target / Stage / Unit付き）として記録。監査イベント分類は70種→71種に</li>
+    <li>パス認識マッチング: <code>..</code> 遡り、<code>construction</code> を根に取る再帰検索（<code>grep -rn TODO construction</code> 等）、パス無し Grep/Glob、大文字小文字バリアント、クォート分割・ワイルドカード、<code>cd</code> + 相対パスの迂回をすべてブロック。現ユニットと明示exemptの読み取りは許可</li>
+    <li>あいまいなケースは常にフェイルオープン。<code>AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1</code> で無効化可能（誤検知の脱出口、例: ソースツリー自体に <code>construction/</code> がある場合）。6時間超の古いレコード（クラッシュしたレビュー）は無視して自動掃除</li>
+    <li>ハーネス別登録: Claude Code は <code>settings.json</code> 初のPreToolUseエントリ、Kiro CLI は2レビュアーエージェントのJSON設定内にアダプターの <code>reviewer-scope</code> ターゲットを配線、Codex は <code>hooks.json</code> にPreToolUse行（新規トラストエントリが必要）。Kiro IDE は意図的に登録なし — IDEフックのペイロードにはツール入力が載らない（<code>toolArgs</code> 常に空）ため検査不能で、散文ルールが引き続き統治（移植ガイドに明記）</li>
+    <li>ディスパッチレコードが無い場合はブロックせず、advisory drop として記録され <code>/aidlc --doctor</code> が表示（コンダクターのstep 1書き込み漏れの検知）</li>
+  </ul>
+</div>
 <div class="cl-entry">
   <div class="cl-head">
     <span class="cl-version">2.3.3</span>

@@ -1,8 +1,8 @@
 {
   "branch": "v2",
-  "last_checked_commit_sha": "83ed7a812c4024904f2c5e4d744e28077e0a5acd",
-  "last_checked_commit_date": "2026-07-10 13:22:01 +1000",
-  "last_checked_commit_message": "fix: refuse scope-change under autonomous Construction (2.3.3) (#542)",
-  "checked_at": "2026-07-12",
-  "site_version": "2.3.3"
+  "last_checked_commit_sha": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
+  "last_checked_commit_date": "2026-07-12 22:20:28 +1000",
+  "last_checked_commit_message": "feat: deterministic PreToolUse enforcement of the reviewer read-scope bound (2.3.4) (#545)",
+  "checked_at": "2026-07-13",
+  "site_version": "2.3.4"
 }

@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.3.3<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.3.4<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>アーキテクチャ</h1>
   <div class="subtitle">
-    エンジン・コンダクター・ガード機構 ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-12（最新コミット 83ed7a8）<!-- /AUTO:last-updated -->
+    エンジン・コンダクター・ガード機構 ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-13（最新コミット 3c76878）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -128,6 +128,7 @@
 <li><code>aidlc-validate-state</code> — 状態検証</li>
 <li><code>aidlc-statusline / -sync-statusline</code> — ステータス表示</li>
 <li><code>aidlc-runtime-compile</code>、<code>aidlc-log-subagent</code></li>
+<li><code>aidlc-reviewer-scope</code> — PreToolUse。レビュー実行中、派遣レビュアーの兄弟ユニット <code>construction/</code> への読み書き・検索をブロック（v2.3.4、2本目のフロー変更フック。拒否は <code>REVIEWER_SCOPE_BLOCKED</code> として監査記録、<code>AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1</code> で無効化可）</li>
 </ul>
 <p class="note-inline">v2.2.17で、Kiro IDEハーネスのフックが実質no-opだった問題が修正されました（フックコンテキストをstdinではなく <code>USER_PROMPT</code> 環境変数から読むIDEアダプターに変更。監査ログ・センサー発火・グラフ再コンパイル・ステータスライン同期がKiro IDEで動作）。v2.2.19で、プロジェクトパスにスペースがあるとフックが落ちる問題（<code>$CLAUDE_PROJECT_DIR</code> の未クォート）も修正されています。</p>
 </div>

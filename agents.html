@@ -12,7 +12,7 @@
   <a class="logo" href="index.html">AI-DLC <span>Docs</span></a>
   <div class="meta">
     awslabs/aidlc-workflows（v2ブランチ）非公式ウォッチサイト<br>
-    <span class="badge"><!-- AUTO:version-badge -->v2.3.3<!-- /AUTO:version-badge --></span>
+    <span class="badge"><!-- AUTO:version-badge -->v2.3.4<!-- /AUTO:version-badge --></span>
   </div>
   <nav>
     <div class="section">ドキュメント</div>
@@ -30,7 +30,7 @@
 <header>
   <h1>エージェント</h1>
   <div class="subtitle">
-    14エージェント（ドメインエキスパート11 + レビュアー2 + コンポーザー1） ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-12（最新コミット 83ed7a8）<!-- /AUTO:last-updated -->
+    14エージェント（ドメインエキスパート11 + レビュアー2 + コンポーザー1） ｜ 最終更新: <!-- AUTO:last-updated -->2026-07-13（最新コミット 3c76878）<!-- /AUTO:last-updated -->
   </div>
 </header>
 
@@ -129,7 +129,7 @@
 </div>
 </div>
 <div class="note">
-v2.1.8で、レビュアー機構が全ハーネスで確実に動作するよう修正されました: Codexオーケストレーターに§12aレビュアーステップが追加され（従来 <code>reviewer:</code> は黙って無視されていた）、Kiroではレビュアーが <code>subagent.trustedAgents</code> に登録されて信頼プロンプトで停止しなくなり、Kiroレビュアーの書き込みは <code>aidlc/spaces/**</code> にキャップされました（ビルダーより広い無制限 <code>fs_write</code> を持っていた問題の修正）。さらにv2.2.16で、アーキテクチャレビュアーの読み取りスコープが「レビュー対象アーティファクト + ステージが <code>consumes:</code> する共有インセプション契約」に限定され、ユニット単位レビューのコストがユニット数に比例して増大する問題が解消されました（兄弟ユニットのファイルは設計が明示的に統合ポイントとして名指しする場合のみスポットチェック）。
+v2.1.8で、レビュアー機構が全ハーネスで確実に動作するよう修正されました: Codexオーケストレーターに§12aレビュアーステップが追加され（従来 <code>reviewer:</code> は黙って無視されていた）、Kiroではレビュアーが <code>subagent.trustedAgents</code> に登録されて信頼プロンプトで停止しなくなり、Kiroレビュアーの書き込みは <code>aidlc/spaces/**</code> にキャップされました（ビルダーより広い無制限 <code>fs_write</code> を持っていた問題の修正）。さらにv2.2.16で、アーキテクチャレビュアーの読み取りスコープが「レビュー対象アーティファクト + ステージが <code>consumes:</code> する共有インセプション契約」に限定され、ユニット単位レビューのコストがユニット数に比例して増大する問題が解消されました（兄弟ユニットのファイルは設計が明示的に統合ポイントとして名指しする場合のみスポットチェック）。v2.3.4でこの読み取りスコープ境界はPreToolUseフック <code>aidlc-reviewer-scope</code> により決定論的に強制されるようになりました（Claude Code / Kiro CLI / Codex CLIでハードブロック。Kiro IDEはフックペイロードにツール入力が載らないため散文ルールのまま）。
 </div>
 
 <h2>コンポーザーエージェント（v2.2.0で追加）</h2>
