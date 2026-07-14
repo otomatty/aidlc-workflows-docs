@@ -1,0 +1,331 @@
+---
+title: 変更履歴
+description: 旧ウォッチサイトから移行した 2.x 系の日本語変更履歴アーカイブです。
+sidebarOrder: 0
+---
+
+# 変更履歴
+
+このページは、旧 5 ページ構成の日本語ウォッチサイトに掲載していた `changelog.html` を Markdown へ移行した履歴アーカイブです。
+現在の Astro サイト本体は `awslabs/aidlc-workflows` の翻訳ドキュメントを表示し、この履歴は旧 v2 系サイトの要約記録を保存します。
+
+## 2.3.3
+- 日付: 2026-07-10（コミット 83ed7a8、7/12検知）
+- 種別: fix
+
+自律Construction中の `scope-change` をエンジンレベルで拒否。`recompose` がv2.2.8で塞いだギャップの兄弟対応で、どちらもライブプランのEXECUTE/SKIPステージ構成を作り替える動詞であり、無人自律ランには新しい形を承認する人間がゲートにいないため。従来この「自律下でプランを作り替えない」ルールはrecomposeのみエンジン強制で、scope-changeは文書上のルールだった。`Construction Autonomy Mode` が `autonomous` のとき `scope-change`（および実行中ワークフローへの `/aidlc --scope <name>`）は非ゼロ終了し、対処法（`aidlc-bolt set-autonomy --mode gated` への切替、またはスウォーム完了待ち）を明示する。gated・未設定モードと新規ワークフローの `--scope` 指定は従来どおり。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+## 2.3.2
+- 日付: 2026-07-10（コミット 8b654a9、7/12検知）
+- 種別: fix
+
+`/aidlc --doctor` が記録済みのフックドロップを表示するように。フックは設計上フェイルオープン（監査記録の失敗がツール呼び出しを壊してはならない）で、握りつぶしたエラーは `.aidlc-hooks-health/<hook>.drops` に記録されるが、doctorがそのファイルを読んでおらず、サイレント失敗のテレメトリが不可視だった。doctorに `Hook drops` 行が追加され、クリーンなら `none recorded`、ドロップがあればフック名・件数・最終発生時刻と対処法（.dropsファイルを確認し、調査後に削除）を助言行として表示。助言のみでexitコードは変えないため、過去の解決済みドロップがCIを赤に固定することはない。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+## 2.3.1
+- 日付: 2026-07-10（コミット b128f27、7/12検知）
+- 種別: feat
+
+チューナブル・エージェントティア。エージェントの著述時契約が生のモデルピンから作業形状ベースの `tier:`（judgment / balanced / templated）になり、ビルドが各ハーネスのネイティブなmodel/effortキーへ投影する。Claude Codeではjudgment 9エージェント（architect / aws-platform / compliance / composer / design / developer / devsecops / product / quality）が `model: inherit`（effortピンなし）となり、Opusピンを廃止 — セッションのモデル・effort選択が委譲作業でもそのまま維持され、フレームワークが黙ってダウングレードしない。balanced 2レビュアーはSonnet系（effortピンなし）、templated 3プランナー（delivery / pipeline-deploy / operations）はSonnet系 + `effort: medium`。
+
+旧来の常時Opus挙動に戻すには、インストール済みコピーの投影値を直接編集する（例: 該当エージェントの `.claude/agents/*.md` に `model: opus`）。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- Codex CLI: judgment はTOMLから `model`/`model_reasoning_effort` を省略しセッション既定を継承。balanced/templated は `openai.gpt-5.4` をピン
+- Kiro CLI/IDE: judgment はJSONの `"model"` を省略（デフォルトモデルにフォールバック）、balanced/templated は `claude-sonnet-4.5`。従来は委譲5エージェント全てが opus-4.8 ピンだったため、Kiroでは挙動変更あり
+- NEW パック時コストキャップ: 空間メモリfrontmatterの `tier_cap:`（org → team → project、後勝ち）または `AIDLC_TIER_CAP` 環境変数で全投影の上位ティアを collapse
+- 著述エージェントfrontmatterから `model:` を撤去（投影バイパスとしてテストで不在を固定）。ユーザー自作エージェントは従来どおり `model:` を使用可
+## 日次差分（2026-07-09（コミット 29a31f7、7/12検知））
+- 日付: 2026-07-09（コミット 29a31f7、7/12検知）
+- 種別: fix
+
+#475（2.3.0）のsquash-mergeでCHANGELOG.mdから欠落した 2.2.11〜2.2.19 のエントリを復元。ドキュメントのみの修正でコード変更なし。
+## 2.3.0
+- 日付: 2026-07-07（コミット e89162f、7/12検知）
+- 種別: feat
+
+**AIDLCプラグイン機構**を追加。`plugins/<name>/` で著述する、新規ステージの追加 + 既存コアステージへの追加的コントリビューションシーム（`produces` / `consumes` / `sensors` / `required_sections` のset-union、ステージ本文への散文フラグメント接合）からなるオプトインの拡張。パッケージャーがハーネスごとの**実ホストプラグイン**（`dist/plugins/<name>/{claude,codex,kiro,kiro-ide}/`）として出力し、composeフックがインストールへマージ後にグラフを再コンパイルしてオーケストレーターが新ステージをルーティングする。配布はハイブリッド: ストアのあるClaude/Codexはホストネイティブの `/plugin` インストール、Kiroはフォルダドロップ + 明示compose。信頼はホストネイティブ（AIDLC独自のトラスト層なし）。プラグイン非アクティブ時はコアがバイト同一に保たれる。リファレンスプラグイン `test-pro` を同梱し、4ハーネス投影すべてで検証済み。
+
+**アップグレード: `dist/<harness>/` シェルの再コピー。既存インストールは無影響（プラグインはオプトイン、ベースツリー無変更）。**
+
+- ステージスキーマが `number` / `name` / `bundle` / `when` / `required_sections`（任意、形状検証あり）を受理
+- composeフックは単一のポータブルな `compose.ts`（bun製）: no-clobberコピー、エントリ単位の `consumes` マージ、コンテンツハッシュによる冪等なフラグメント接合、自己修復グラフ再コンパイル。ドロップ記録はhooks-healthに書かれ `/aidlc --doctor` が表示。bun不在時はexit 0でスキップ
+- `bun scripts/package.ts --check` は `dist/plugins/` のバイトパリティも drift-guard。新シーム `package.ts plugin build` で単一投影を任意ディレクトリへビルド可
+- 設計は `docs/reference/18-plugin-mechanism.md`（+ 著述ガイド）に集約。plugin agents/scopes/memory投影・marketplace・lockfile等は明示的にdeferred
+## 2.2.19
+- 日付: 2026-07-09（コミット 6f597ce、7/9検知）
+- 種別: fix
+
+プロジェクトパスにスペースが含まれるとフックとステータスラインが壊れる問題を修正。Claude用 `settings.json` 内の全11フックコマンド・ステータスラインコマンド・事前承認bun-toolsパーミッショングロブで `$CLAUDE_PROJECT_DIR` がダブルクォートされ、bash系フックランナーでのword-splittingによる `Module not found` を解消。**アップグレード: `dist/claude/.claude/settings.json` の再コピーが必要。**
+## 2.2.18
+- 日付: 2026-07-09（コミット 831bd29、7/9検知）
+- 種別: feat
+
+ユニット種別（kind）によるユニット単位設計マトリクスの刈り込み。units-generationのエッジブロックで各Unit of Workに任意の `kind:`（service / spec / ui / packaging / library）をタグ付けすると、Construction設計4ステージ（functional-design、nfr-requirements、nfr-design、infrastructure-design）はその種別に該当するアーティファクトのみを要求・生成する（specユニットにscalabilityドキュメントは不要、packagingユニットにビジネスロジックモデルは不要、など）。kind未指定・per-kindマップの無いステージ・未注釈アーティファクトは従来どおり全マトリクス適用で、既存ワークフローは無変更。**アップグレード: `dist/<harness>/` シェルの再コピーが必要**（旧エンジン + kindタグ付きエッジブロックはunits-generationゲートで大声で失敗する）。
+
+- NEW `kind:` キー（unit-of-work-dependency.mdのエッジブロック内、任意）。不正値は `required-sections` センサーがゲートで検出
+- NEW `produces_kinds:` ステージfrontmatterフィールド（アーティファクト名 → 適用kindのマップ）。スキーマバリデーターが未知kind・空リスト・未宣言アーティファクトを拒否
+- エンジンはrun-stageディレクティブの `produces` パスとユニット単位カバレッジチェックの両方を現在ユニットのkindに刈り込む。全ユニットの必須セットが空になるステージはno-opとして承認（デッドロックしない）
+## 2.2.17
+- 日付: 2026-07-09（コミット 300b640、7/9検知）
+- 種別: fix
+
+Kiro IDEハーネスのフックが実質no-opだった問題を修正。Kiro IDEはフックコンテキストをstdinではなく `USER_PROMPT` 環境変数で渡すため、IDEアダプターが `USER_PROMPT` を読み、ツール結果テキストから書き込みファイルパスを復元し、ペイロードの無いフックは監査証跡から駆動するように変更。監査ログ・センサー発火・ランタイムグラフ再コンパイル・ステータスライン同期がKiro IDEで動作するようになった。stdin読み取り廃止で毎フック2秒のstdinレースタイムアウトも解消。**アップグレード: `dist/kiro-ide/.kiro/` の再コピーが必要。**Kiro CLI / Claude Code / Codexの挙動は不変。
+
+- IDEの監査テール駆動は前進のみ・冪等（`Current Stage` を巻き戻さない、staleな遷移での再コンパイルをmtimeガードで防止）
+- `log-subagent` がサブエージェントの実名を記録（従来は `agent_type: "unknown"` をハードコード）。2つのレビュアーエージェントは応答先頭行に自己識別マーカーを出力するようになった（stage-protocol §12aで強化）
+- 失敗したツール呼び出しは書き込みとして監査されない（`toolSuccess === false` を明示ガード）
+- オプトインのフックデバッグログ（`AIDLC_HOOK_DEBUG=1` または `aidlc/.aidlc-hook-debug` マーカー）を追加
+## 2.2.16
+- 日付: 2026-07-09（コミット 7fa5479、7/9検知）
+- 種別: fix
+
+アーキテクチャレビュアーの読み取りスコープを「レビュー対象アーティファクト + ステージが `consumes:` する共有インセプション契約」に限定。従来、ユニット単位Constructionステージのレビュアーには読み取り制約がなく、ペルソナの「すべてをクロスリファレンス」指示によりユニットNのレビューが兄弟ユニットのディレクトリまで読み、レビューコストがユニット数に比例して増大していた。stage-protocol §12a・レビュアーペルソナ・4ハーネスのオーケストレーターすべてに同じ境界を追加。ユニット間契約の検証は共有インセプションアーティファクト（components.md等）に対して行い、兄弟ユニットのファイルは設計が明示的に統合ポイントとして名指しする場合のみスポットチェック。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+## 2.2.15
+- 日付: 2026-07-09（コミット 911b8cc、7/9検知）
+- 種別: fix
+
+エージェントfrontmatterのキーを不活性な `modelOverride:` からClaude Codeが実際に読む `model:` にリネーム。これによりClaude Codeで出荷済みの `model: sonnet` ピン（architecture-reviewer / product-lead / delivery / pipeline-deploy / operations の委譲5エージェント）が効くようになり、セッションモデルではなくSonnetで実行される。CodexのTOML出力はバイト同一、Kiro CLI/IDEのJSON設定は無変更。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+## 2.2.14
+- 日付: 2026-07-09（コミット 51b515a、7/9検知）
+- 種別: fix
+
+Constructionのサイレントデータ損失を修正。コンパイル済みランタイムグラフに `bolt_dag` ノードが欠けている場合（staleまたは削除された runtime-graph.json）、ユニット単位のConstructionステージが黙って1イテレーションに縮退し、複数ユニットのプロジェクトが最初のユニットだけをエラーなしで出荷していた。エンジンは読み取り側で自己修復するようになり、キャッシュ済みbolt_dagが無ければ `unit-of-work-dependency.md` からユニットバッチDAGを直接再計算する。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- ユニット単位ステージはruntime-graph.json欠損時も全ユニットを反復（再計算時はstale graphを名指しするstderrノートを1行出力）
+- `report --result approved` の全ユニットカバレッジガードも再計算リストに対して適用（staleグラフによる部分ビルドの早期承認を防止）
+- ユニットブロックが欠落・不正・循環の場合はエラーディレクティブとして表面化（黙って1ユニットだけビルドしない）
+## 2.2.13
+- 日付: 2026-07-09（コミット b2e1a55、7/9検知）
+- 種別: feat
+
+Construction設計ステージのオプトイン「unit-major」反復。デフォルトは従来どおりstage-major（functional-designを全ユニット、次にnfr-requirementsを全ユニット…）だが、`Construction Iteration: unit-major` を記録すると、1ユニットの設計4文書を連続して作成してから次のユニットに移る。承認ゲートは数・機構とも不変だが、unit-major下では設計ブロックの最後にカスケードで発火する。code-generationと自律スウォームは対象外。フィールド未設定なら挙動はバイト同一。
+
+- NEW `aidlc-state.ts set-construction-iteration <unit-major|stage-major>` サブコマンド。厳密読み取りで `unit-major` の完全一致のみが新ウォークを有効化
+- delivery-planningが承認済みプランのユニットファースト設計実行を分類し、該当時に自動で記録。人間はいつでも同サブコマンドで変更可能
+## 2.2.12
+- 日付: 2026-07-09（コミット c4c08d6、7/9検知）
+- 種別: feat
+
+スコープ確認がコミット前にコストをプレビューするように。コールドスタート確認とコンポーズ提案が、コンパイル済みグリッドから読んだ正確なステージ数・承認ゲート数を提示（推定値ではない）。スコープ確認時に「何に同意するのか」（例: `feature` は32ステージ・29ゲート、`bugfix` は7ステージ・4ゲート）が名前だけでなく数字で分かる。
+
+- キーワードヒット確認は `Starting a "<scope>" workflow ... - N of T stages, G approval gates.` 形式に。per-unitファンアウトがある場合は末尾に明記
+- `scope-change` 出力に `Approval gates:` 行、`SCOPE_CHANGED` 監査イベントに `Approval Gates` フィールドを追加
+- `validate-grid` のJSON出力に `summary` フィールド（ステージ/ゲート/per-unitカウント）を追加（加算的変更）
+## 2.2.11
+- 日付: 2026-07-08（コミット 48306cc、7/9検知）
+- 種別: fix
+
+ゲートリビジョンのバックストップ。コンダクターが開いている承認ゲートでアーティファクトを修正したのに `reject` コマンドの実行を忘れると、`Revision Count: 0` のまま監査ペア（`GATE_REJECTED`/`STAGE_REVISING`）が残らなかった。`approve` がこれを決定論的に検知し、コミット前に欠落ペアを `Recovered: true` タグ付きでバックフィルする。承認を拒否するのではなく記録を照合する方式で、レビュアーの承認前 `## Review` 追記では発火しない。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- NEW `Recovered: true` 付き監査行バリアント（approve時バックストップが発行）
+- NEW `AIDLC_SKIP_REVISION_BACKSTOP=1` オフスイッチ
+## 日次差分（2026-07-09（コミット 3fa5622・8a5bdc7、7/9検知））
+- 日付: 2026-07-09（コミット 3fa5622・8a5bdc7、7/9検知）
+- 種別: 記録
+
+テストのみの変更2件（リリースなし）: 実行中リコンポーズのライブKiro ACP + Codex execカバレッジを追加（+501行）、workspace-journeyのcodekbビートで正当なグリーンフィールドRE-skipを許容。
+## 2.2.10
+- 日付: 2026-07-06（コミット 242953e、7/8検知）
+- 種別: fix
+
+ワークスペース検出がgit submoduleを認識するように。コードが未初期化submodule（空ディレクトリ + `.gitmodules`）にあるワークスペースはGreenfield判定となり、リバースエンジニアリングが自動スキップされ、全設計ステージがコード理解ゼロで走っていた。第6のBrownfield信号として、パース可能な `.gitmodules`（submoduleパスエントリ1件以上）でBrownfieldに分類。未初期化のsubmoduleパスがある場合はbirth・doctorレポート・`detect` で警告と対処法（`git submodule update --init --recursive`）を提示する。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- `WORKSPACE_SCANNED` 監査イベントに `Submodules` フィールド（`N declared, M uninitialized`）を追加。`.gitmodules` が無いプロジェクトではイベントはバイト単位で同一
+- `/aidlc --doctor` に助言的な `Submodules:` 行を追加（exit codeには影響しない）
+- 読み取り専用 `detect` の `--json` に `submodules` キーを追加。言語判定はスキャン結果のまま（フェッチ前はUnknownが正直な値）
+## 2.2.9
+- 日付: 2026-07-06（コミット 7e83ef5、7/8検知）
+- 種別: fix
+
+ユニット単位のConstructionステージが、CONDITIONALアーティファクトの提出を完了条件として要求しなくなった。新しいステージfrontmatterキー `optional_produces:` に「ユニットが必要とする場合のみ書く」アーティファクトを宣言する — `functional-design` の `frontend-components`（UIがあるユニットのみ）と `infrastructure-design` の `shared-infrastructure`（インフラ共有時のみ）が `produces:` から移動。バックエンドのみのユニットがN/Aスタブファイルなしで完了でき、ステージゲートに到達可能になった。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- ユニット単位の `next` がCONDITIONALアーティファクトを省略したユニットを通過（従来は同ユニットが毎回再emitされゲートが開かなかった）
+- `approve` はカバレッジを必須の `produces:` のみで判定。REQUIREDアーティファクトの欠落は従来どおりブロック
+- `optional_produces:` の各エントリはステージ本文の `(CONDITIONAL - ...)` マーカーと対応必須。新コマンド・フラグなし、CI破壊なし
+## 2.2.8
+- 日付: 2026-07-05（コミット 45035ea、7/8検知）
+- 種別: fix
+
+2.2.0 Adaptive Workflowsのフォローアップ2件を強化し、「自律Construction下では決して〜しない」ルールに決定論的なアンカーを付与。実行中コンポーズのカーブアウトが有界化され、クラッシュ・放棄されたセッションのマーカーがStopフックの転送ループ強制を恒久的に無効化できなくなった。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- Stopフックは `aidlc/.aidlc-compose-pending` マーカーをmtimeが24時間以内の場合のみ尊重。古い孤児マーカーは無視してベストエフォートで削除、強制が自動復旧（読み取りエラー時はfail-open）
+- `/aidlc --doctor` がマーカーの存在と経過時間を報告: 新鮮なら助言的なpass行、staleなら対処法付きのfail行としてexit非ゼロ
+- `recompose` は `Construction Autonomy Mode: autonomous` 下で非ゼロexitで拒否（対処法: `aidlc-bolt set-autonomy --mode gated` かswarm完了を待つ）。gated・未設定は従来どおり
+## 2.2.7
+- 日付: 2026-07-05（コミット 8e723b1、7/8検知）
+- 種別: fix
+
+ワークスペース検出がコンテナフォルダ内にネストしたプロジェクトを発見できるように。ソースが1階層下（例: `wordbook/`、`backend/`）にあるプロジェクトは、スキャナがワークスペースルート+固定のソースディレクトリリストしか見ないためGreenfield判定となり、リバースエンジニアリングがスキップされていた。トップレベル信号が無い場合、各サブディレクトリの深さ1スキャンにフォールバックし、ネストしたコードベースをBrownfieldとして検出する。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- 検出したサブディレクトリは `WORKSPACE_SCANNED` の `Nested Root`、`/aidlc detect --json` の `nestedRoot` として出力。通常のトップレベルプロジェクトの分類は不変
+- Greenfield判定のまま `bugfix` / `refactor` / `security-patch` を開始するとstderrに1行の助言を表示（ルーティングとProject Typeは変更しない）
+## 2.2.6
+- 日付: 2026-07-05（コミット 7c02d48、7/8検知）
+- 種別: fix
+
+Construction中の承認オプションが、常に「Code Generation」と表示する代わりに実際の次ステージ名を表示するように。run-stageディレクティブが計算済みの `next_stage` フィールド（アクティブスコープとrecompose後のEXECUTE/SKIPプランを考慮した次のin-scopeステージの表示名）を運び、ハーネスのquestion-rendering annexがApproveオプションの「Continue to ...」をそこから逐語レンダリング。最終in-scopeステージでは「Complete workflow」と表示。コマンド・フラグの変更なし。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+## 2.2.5
+- 日付: 2026-07-05（コミット a534ab7、7/8検知）
+- 種別: fix
+
+自律Constructionの実行が、複数バッチのBolt DAGを最初のバッチで停滞せずに全バッチ進行するように。従来は最初の並列バッチのマージ後、エンジンが同じバッチを永久に再emitし、後続バッチにもステージ承認ゲートにも到達できなかった（Units of Workに依存エッジがある=トポロジカルバッチが2つ以上あるプロジェクトすべてが該当）。エンジンはコンパイル済みBolt DAGをバッチ単位で登り、部分収束バッチは未収束ユニットのみ再ファンし、全バッチ収束後に単一のステージゲートを提示する。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- `next` が次の未収束バッチを `invoke-swarm` としてemitし、最終バッチ収束後に承認ゲートを提示
+- 収束済みユニットの読み取りをステージの今回実行にスコープ: 後方/redoジャンプでの再実行は前回実行の台帳に頼らずバッチを再構築
+- `aidlc-swarm.ts finalize` はマージバック失敗ユニット（`merge_failures`、exit 2）の `SWARM_UNIT_CONVERGED` を記録しない。worktreeは保存されるので該当ユニットのみ `finalize` を再実行（`prepare` の再実行は不要）
+- 単一バッチの自律swarmとgated Constructionは不変
+## 2.2.4
+- 日付: 2026-07-05（コミット 220f52b、7/8検知）
+- 種別: fix
+
+2つのレビュー専用エージェント（product-lead / architecture-reviewer）が追記する `## Review` セクションに、実際のUTCタイムスタンプと自分自身の名前を記録するように。従来はDateフィールドが素の `[ISO timestamp]` プレースホルダで記憶から記入され、Reviewerフィールドはレビュー対象の作成者（PRODUCERエージェント）名になっていたため、ディスク上のすべてのレビューが被レビュー側に帰属していた。Dateは `date -u` のシェル実行結果を貼り付け、Reviewerはレビュアーペルソナ名を記録する。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+## 2.2.3
+- 日付: 2026-07-05（コミット ff7c15b、7/8検知）
+- 種別: fix
+
+Kiro CLI・Kiro IDE・Codexのフックアダプタの脆弱なプロセス再起動を修正。各アダプタはライフサイクルフックを裸名 `bun` の子プロセスで起動していたが、GUI起動アプリや最小サーバ環境の `$PATH` には `~/.bun/bin` が無いことが多く、`Executable not found in $PATH: bun` でフック層全体が死んでいた。アダプタ自身を実行中のbunバイナリの絶対パス（`process.execPath`）で再起動するようにし、監査ログ・セッションライフサイクル・状態検証・サブエージェント追跡が完全復旧。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- 既知の制限: 4つのコアフック（stopガードのエンジン照会・statusline状態同期・runtime-graphコンパイル・センサーディスパッチ）はさらに1段深くで `bun` を裸名解決するため、`bun` 無しPATHでは劣化したまま（stopガードはfail-open）。フォローアップで対応予定
+- 新コマンド・フラグなし、CI破壊なし
+## 2.2.2
+- 日付: 2026-07-05（コミット 47904f3、7/8検知）
+- 種別: fix
+
+プロジェクトがper-intentワークスペースレイアウトに移行すると、learningsゲートが候補0件（または誤ったphase）を返す問題を修正。runtime-graph行の `memory_path` がアクティブintentのrecordディレクトリ抜きで記録され、learnings surfaceのphase読み取りも誤ったパスセグメントを見ていた。書き込み側（runtime-graphコンパイルとstate advance遷移）・読み取り側（surfaceのphase抽出）の両方がper-intentレコードパスを使うように。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- `learnings surface` がワークスペースレイアウト下でステージの記録済みlearningsを発見できるように
+- JSON出力の `phase` フィールドが正しく（従来はper-intentプロジェクトで常に `spaces` を報告）。レガシーのフラットレイアウトは従来どおり正しいphaseを報告
+## 2.2.1
+- 日付: 2026-07-06（コミット ded69da、7/7検知）
+- 種別: fix
+
+ヘルプ要求が誤ってインテントを生成するのを防ぐ修正。`/aidlc intent help` が「helpという名前のインテントへの切替」と解釈され、失敗時のエラー文言が「作りたいものを記述して新規開始を」と促すため、作業中のコンダクターがそれを指示と読んで不要なインテントを誕生させていた。素の `/aidlc help` / `-h` は自由文ファネルに落ち、「help」という名のインテント作成を提案（または実行中ステージを黙って進行）していた。ヘルプ形の入力はすべてヘルプ表示にルーティングされるように。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- `/aidlc intent help`（`-h`）と `/aidlc space help`（`-h`）はグローバルヘルプを表示。エンジン、Kiroのverb-interceptシーム、`aidlc-utility.ts` ハンドラ自体の3層で適用
+- `/aidlc` 直後の単独 `help` / `-h` もヘルプ表示に（`--help` と同じ扱い）。長い記述内の「help」（例: `/aidlc "help desk app"`）は従来どおり自由文として扱う
+- 「help」を予約レコード名に: `intent-birth` はhelpにスラグ化されるラベルを、`space-create help` はその名前を、いずれも変更前に拒否
+- ステアリング文言の修正: 「Unknown intent」エラーは新規作成を提案せず読み取り専用の一覧のみを案内、「Unknown space」エラーもスペース作成を指示しない
+- オーケストレータースキルの第2インテントCONFIRMステップが誤ったバイナリ名（`aidlc-utility.ts next` → 正: `aidlc-orchestrate.ts next`）を4ハーネスすべてで参照していた問題を修正（ガード迂回の誘発を防止）
+- Codexの転送ループ: 先頭の `$aidlc`/`/aidlc` 呼び出しマーカーを落として残りを個別引数として転送するよう指示を追加（スラッシュ行全体が1トークンとしてエコーされ動詞がルーターから隠れる実挙動を修正）。エンジン側はマーカー付き入力を意図的に修復しない — 崩れたエコーはスコープ確認（安全な人間ゲート）に落ちる
+- 3ハーネス（claude TUI / kiro-cli ACP / codex exec）で実機検証済み。テスト追加: t114・t165・t178
+## 2.2.0
+- 日付: 2026-07-04（コミット eae912e、7/5検知）
+- 種別: feature
+
+Adaptive Workflows（ロードマップGoal 3）: タスクに合わせてセレモニーを構成する**コンポーザーエージェント**が `/aidlc` 配下に追加。作業内容を記述すると、明確なキーワード一致は該当スコープ名を示す1行確認に、リッチ／不一致な記述は（旧来の無言feature既定の代わりに）コンポーズ提案にルーティングされる。コンポーザーはタスクとワークスペーススキャンを読み、SKIPごとの根拠付きでEXECUTE/SKIPステージグリッドを提案し、人間の承認後にスコープとして書き出して同一ターン内でワークフローを開始する。※ロードマップの番号が入れ替わり、adaptiveが2.2.0で先行、reviewer-as-verifierが2.3.0（Full GA宣言込み）に移動。このリリースはGA宣言ではない。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
+- 新 `/aidlc compose "<task>"`（および `/aidlc-compose` ショートカットスキル）。`--new-scope` でカスタムスコープの合成を強制、`--report <path>` でスキャンレポート（SonarQube等）から「修正して出荷」のコンパクトなグリッドをトリアージ合成
+- コールドスタートの自由文ルーティングを変更: キーワード明確一致→一致スコープ名の1行確認、不明確→コンポーズ提案。旧来の静的feature既定確認は廃止
+- 新 読み取り専用 `detect --json`: ワークスペーススキャン＋ハーネスごとのスコープデータ配置を出力
+- 新 `validate-grid --proposal <path> [--strict] [--project-type] [--keywords]`（aidlc-graph.ts）: 任意のEXECUTE/SKIPグリッドを検証。`--strict`（recomposeモード）は必須入力の飢餓をハードリジェクト
+- 新 `recompose --skip <slugs> --add <slugs>`: 実行中ワークフローの未着手ステージのEXECUTE/SKIPを監査ロック下で反転（in-flight再構成）。完了済み・カーソル後方・walking-skeletonゲートアンカーの反転は拒否
+- チャットファーストの途中再構成: 実行中に「market researchはスキップできる?」のような発話をコンダクターが認識し、同じ承認ゲート＋recompose検証を通す（自律Construction中は除外）
+- jump / finalize / lookup / --status がライブプラン（recompose後のサフィックス上書き）を静的スコープグリッドより優先するように
+- 新監査イベント `RECOMPOSED`（タクソノミーは68→69イベント）
+- 新 `aidlc-composer-agent`（編成は13→14エージェント）。propose-onlyで人間承認まで書き込まない。合成スコープは `keywords: []` で出荷され、一回限りのプランが将来のキーワードルーティングを書き換えない
+- Kiro IDE: 委譲サブエージェントがツールを持たない問題を修正（委譲先5エージェントの.mdに `tools: ["read","write","shell"]` を注入）。Kiroではコンポーザー専用のfs_writeサンドボックス許可（スコープレジストリ2パスのみ）
+- Stopフックにカーブアウト: 保留中のコンポーズ提案（`aidlc/.aidlc-compose-pending` マーカー）があればゲートでターン終了を許可（自律ガード付き・fail-open）
+- 付随コミット b67798c: roadmap.html を2.2.0時点の状態に更新（Goal 3 Shipped、2.2.0/2.3.0スワップ反映）
+## 2.1.8
+- 日付: 2026-07-03（コミット 89bcfa2、7/4検知）
+- 種別: fix
+
+2.0.0のレビュアー機構を全ハーネスで確実に動作させる修正。3つの独立した欠陥を解消。
+
+- Codexオーケストレーターの `gate: true` フローに§12aレビュアーステップを追加 — ステージの `reviewer:` がCodexで黙って無視されていた問題を修正
+- Kiroでレビュアーサブエージェント2体を conductor の `subagent.trustedAgents` に追加 — 信頼プロンプトでワークフローがブロックされなくなった
+- Kiroレビュアーの `fs_write` を `aidlc/spaces/**` にキャップ — レビュー対象より広い無制限書き込み権限を制限
+## 2.1.7
+- 日付: 2026-07-03
+- 種別: fix
+
+インクリメンタル（リーン）スコープ裏の dangling-consume ギャップを解消（issue #461）。
+
+- `security-patch` に `requirements-analysis` を追加（9→10ステージ）— CVE対応でも脆弱性と修復基準の監査可能な記述が残るように
+- run-stageディレクティブが入力をディスク上の存在で分割: 新設 `consumes_absent` フィールドが欠落必須入力を `expected: true/false` 注釈付きで列挙
+- upstream-coverageセンサーはディスク上に存在する消費物のみ検査 — リーンスコープで毎回発生していた偽の `SENSOR_FAILED` を解消
+- 入力を無条件に読んでいた9ステージ本文が「(if exists)」+明示的フォールバック方式に。リカバリプロトコルに producer-is-SKIP 分岐を追加
+- スコープごとの意図的スキップ辺集合をテストスイートに固定 — 新たな dangling consume はCIで検出
+## 2.1.6
+- 日付: 2026-07-03
+- 種別: security
+
+承認・インタビューのチェックポイントを「実在する人間が行動した決定論的証明」でゲート（issue #451）。自律IDEモード下のエージェントが1ターン内で承認をねつ造してワークフローを進められた問題を修正。
+
+- 実際の人間プロンプトが監査台帳に `HUMAN_TURN` イベントを記録し、approve/answerゲートは直近のゲート解決以降に `HUMAN_TURN` がなければ拒否（マーカーファイルもターンカウンターもなし — 台帳自体が記録）
+- ハーネス別の記録シーム: Claude（`UserPromptSubmit` フック + AskUserQuestionウィジェット応答）、Kiro IDE（`promptSubmit`）、Codex（`user_prompt_submit`）、Kiro CLI
+- Kiro CLI/IDEは `preToolUse` フックでゲート開放中・人間未行動時のツール呼び出しをハードブロック（exit 2）
+- 自律Construction（swarm / Bolt）ではスコープ外（無人ランのデッドロック回避）、空台帳ではフェイルオープン。CI用バイパス: `AIDLC_SKIP_HUMAN_PRESENCE_GUARD=1`
+## 2.1.5
+- 日付: 2026-07-01
+- 種別: feature
+
+1Mコンテキストウィンドウをオーケストレーターだけでなくティア選択サブエージェントにも拡張。
+
+- `dist/claude/.claude/settings.json` の `ANTHROPIC_DEFAULT_FABLE/OPUS/SONNET_MODEL` Bedrockピンに `[1m]` サフィックスを付与（Haikuは1M版がないため据え置き）
+- ティアで選択されたサブエージェントが200Kではなく1Mウィンドウで動作するように
+## 2.1.4
+- 日付: 2026-06-29
+- 種別: breaking
+
+`--test-run` フラグとTest Run Modeを完全撤廃（issue #369）。エージェントが対話セッションで自身の不完全な作業を自己承認できる経路を除去。
+
+- `--test-run` は report / approve / decision / answer / スラッシュ形式のすべてから削除。ゲート・構造化質問・学習リチュアルは常に実行
+- `enable-test-run` サブコマンドと `TEST_RUN_MODE_ENABLED` 監査イベントを削除（イベントタクソノミーは68種に）
+- 合成CI用のバイパスは `AIDLC_SKIP_ARTIFACT_GUARD=1` のみに
+## 2.1.3
+- 日付: 2026-06-28
+- 種別: fix
+
+「ラバースタンプ罠」（長いワークフローの残ステージを実出力なしで完了扱いにする）と「ワークフロー途中チャット罠」を4つの連動する修正で閉鎖（#365, #366, #367）。
+
+- **park:** ステージ間境界でのクリーンな複数セッション退出。新ディレクティブ `parked`、Stopフックは正当な終了として扱う
+- **アーティファクトガード:** `produces[]` 成果物がディスク上になければステージ完了を拒否。code-generationは `aidlc/` 外の実ソース作業も要求
+- **自律ガード:** 自律swarm/Boltランは自己パーク不可 — 無人ループは止まらない
+- **会話カーブアウト:** ワークフロー途中の雑談ターンをStopフックがナッジしない。対話ランのno-progressブロック上限を8→2に
+- 新監査イベント `WORKFLOW_PARKED` / `WORKFLOW_UNPARKED`
+## 2.1.2
+- 日付: 2026-06-28
+- 種別: fix
+
+マルチユニットのConstructionフェーズで、per-unit設計ステージが最初のユニットの成果物しか作らなかった問題を修正（issue #368）。
+
+- エンジンがper-unitステージ（functional-design / nfr-requirements / nfr-design / infrastructure-design）の `for_each` ループを駆動し、全Unit of Workを反復
+- run-stageディレクティブに解決済みユニット名を運ぶ `unit` フィールドを追加
+- 全ユニットの成果物が揃うまで承認ゲートは提示されず、早期承認は未完了ユニット名を挙げてエラー
+## 2.1.1
+- 日付: 2026-06-26
+- 種別: fix
+
+カスタムステージをエンドツーエンドで動作させ、ステージグラフのドリフトを表面化（issue #364）。
+
+- `aidlc-graph compile` が新規ステージの行を自動シード（従来は手編集が必要だった）
+- `/aidlc --doctor` とセッション開始時に、コンパイル済みグラフにない未コンパイルステージファイルを警告
+## 2.1.0
+- 日付: 2026-06-24
+- 種別: feature、breaking
+
+単一フラットな `aidlc-docs/` 記録から、インテント単位の**ワークスペース**レイアウトへ移行。スペース・共存する複数インテント・マルチリポジトリ・スペースレベルのknowledge/codekb・アクティブスペースに追従するメモリ。
+
+- 記録は `aidlc/spaces/<space>/intents/<slug>-<id8>/` 配下に。`/aidlc --init` は廃止（初回 `/aidlc` でインテント自動誕生）。旧レイアウトは初回実行時に自動・クラッシュ安全に移行
+- 監査証跡はクローン単位のシャードでコミット — 並行クローンのマージ競合を解消
+- ナビゲーション動詞を追加: `/aidlc intent` / `space` / `space-create` / `intent-birth`
+- 確定した学習は `memory/` にpracticeとして着地、チームドメイン知識はスペースレベル `knowledge/` に
+- リバースエンジニアリングの9成果物はスペースレベルのリポジトリ別 `codekb/<repo>/` に永続化
+- v2系列（レビュアー機構 + Kiro IDEハーネス、2.0.0–2.0.2）をリベース・統合し、13エージェント編成と両Kiro配布物を同梱
+## 2.0.2
+- 日付: 2026-06-18
+- 種別: fix
+
+ステージの `reviewer:` / `reviewer_max_iterations` frontmatterフィールドを検証（refs #389）。不正なレビュアー設定が実行時失敗や静かな無効化ではなく、コンパイル時に大きく失敗するように。
+## 2.0.1
+- 日付: 2026-06-18
+- 種別: fix
+
+2.0.0レビュアー機構マージ後のテストスイートをグリーン化（refs #387）。frontmatterエミッターのレビュアーフィールド欠落、バージョントリオ不整合、11エージェント前提のアサーション3件を修正。挙動変更なし。
+## 2.0.0
+- 日付: 2026-06-18
+- 種別: feature
+
+ワークフローに**LLMベースの品質検証（レビュアー機構）**を追加。**Kiro IDEハーネス**（`dist/kiro-ide/`）も新登場。
+
+- ステージfrontmatterの任意 `reviewer:` フィールド — ステージ本文後に助言的品質ゲートとして実行、`reviewer_max_iterations`（既定2）でループ上限
+- レビュアーペルソナ2体（aidlc-product-lead-agent / aidlc-architecture-reviewer-agent）が追加され、編成は11→13エージェントに
+- レビュアーは自動承認しない — 人間の承認ゲートは不変

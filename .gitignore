@@ -1,0 +1,11 @@
+node_modules
+.astro
+dist
+playwright-report
+test-results
+coverage
+*.lcov
+*.tsbuildinfo
+.cache
+.idea
+.DS_Store

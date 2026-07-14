@@ -1,0 +1,35 @@
+---
+import type { DocTranslationStatus } from "../content.config";
+
+interface Props {
+	sourcePath: string;
+	sourceCommit: string;
+	translationStatus: DocTranslationStatus;
+}
+
+const { sourcePath, sourceCommit, translationStatus } = Astro.props;
+
+const sourceHref = `https://github.com/awslabs/aidlc-workflows/blob/${sourceCommit}/${sourcePath}`;
+const isCurrent = translationStatus === "current";
+---
+
+<section class="source-status" aria-label="ソース情報">
+	<div class="source-status__header">
+		<h2>ソース情報</h2>
+		<span class:list={["status-badge", isCurrent ? "is-current" : "is-stale"]}>
+			{isCurrent ? "同期済み" : "要確認"}
+		</span>
+	</div>
+	<p>
+		原文:
+		<a href={sourceHref}>ソース ({sourceCommit.slice(0, 7)})</a>
+	</p>
+	<p>
+		<code>{sourcePath}</code>
+	</p>
+	<p class="source-status__note">
+		{isCurrent
+			? "翻訳は記録済みの原文コミットと一致しています。"
+			: "原文更新後の確認が必要です。"}
+	</p>
+</section>

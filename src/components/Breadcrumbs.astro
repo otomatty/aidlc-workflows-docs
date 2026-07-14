@@ -1,0 +1,73 @@
+---
+import type { GuideNavigation, NavLink } from "../lib/navigation";
+import { withBase } from "../lib/routes";
+
+interface Props {
+	navigation: GuideNavigation[];
+	contentId: string;
+	pageTitle: string;
+}
+
+interface Crumb {
+	label: string;
+	href?: string;
+}
+
+const { navigation, contentId, pageTitle } = Astro.props;
+
+function flattenNavigation(groups: GuideNavigation[]): Map<string, NavLink> {
+	return new Map(
+		groups.flatMap((group) =>
+			group.sections.flatMap((section) =>
+				section.links.map((link) => [link.id, link] as const),
+			),
+		),
+	);
+}
+
+const crumbs: Crumb[] = [{ label: "ドキュメント", href: withBase("/docs/") }];
+
+if (contentId !== "index") {
+	const linkMap = flattenNavigation(navigation);
+	const segments = contentId.split("/");
+	const guideId = segments[0];
+	const guide = navigation.find((entry) => entry.id === guideId);
+
+	if (guide) {
+		crumbs.push({ label: guide.title });
+	}
+
+	let partialId = guideId ?? "";
+	for (const segment of segments.slice(1, -1)) {
+		partialId = `${partialId}/${segment}`;
+		const maybeLink =
+			linkMap.get(partialId) ?? linkMap.get(`${partialId}/index`);
+		if (maybeLink) {
+			crumbs.push({ label: maybeLink.title, href: maybeLink.href });
+		}
+	}
+
+	crumbs.push({ label: pageTitle });
+}
+---
+
+<nav class="breadcrumbs" aria-label="パンくず">
+	<ol>
+		{
+			crumbs.map((crumb, index) => {
+				const isCurrent = index === crumbs.length - 1;
+				return (
+					<li>
+						{isCurrent || !crumb.href ? (
+							<span aria-current={isCurrent ? "page" : undefined}>
+								{crumb.label}
+							</span>
+						) : (
+							<a href={crumb.href}>{crumb.label}</a>
+						)}
+					</li>
+				);
+			})
+		}
+	</ol>
+</nav>

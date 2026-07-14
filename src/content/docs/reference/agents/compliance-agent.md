@@ -1,0 +1,105 @@
+---
+title: aidlc-compliance-agent — 技術リファレンス
+description: aidlc-compliance-agent の識別情報、ステージ担当、連携パターン、ナレッジソースを定義します。
+sidebarOrder: 6
+sourcePath: docs/reference/agents/compliance-agent.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 1b4e320cd08164d2abafb5a34ff76005d07b6c058f604dcfbffd3da58b757236
+translationStatus: current
+---
+
+<a id="aidlc-compliance-agent----technical-reference"></a>
+# aidlc-compliance-agent -- 技術リファレンス
+
+<a id="identity"></a>
+## 識別情報
+
+| 項目 | 値 |
+|------|----|
+| 名前 | aidlc-compliance-agent |
+| 階層 | **judgment** |
+| 許可される Claude Code ツール | Read, Edit, Write, Glob, Grep, WebSearch, AskUserQuestion |
+| 許可されない Claude Code ツール | Task |
+
+---
+
+<a id="stage-ownership"></a>
+## 担当ステージ
+
+<a id="lead-stages"></a>
+### 主担当ステージ
+
+このエージェントに主担当ステージはありません。ライフサイクル全体を通じて、
+支援および助言の役割に専従します。
+
+<a id="support-stages"></a>
+### 支援ステージ
+
+| ステージ | 名称 | このエージェントの貢献内容 |
+|----------|------|------------------------------|
+| feasibility | 実現可能性と制約分析 | 規制上の制約の特定、コンプライアンス観点での実現可能性評価、RAID ログの初期化 |
+| nfr-requirements | NFR 要件 | コンプライアンス主導の非機能要件と統制仕様 |
+| infrastructure-design | インフラストラクチャ設計 | データ所在地の検証、暗号化要件、IAM 監査 |
+| environment-provisioning | 環境プロビジョニング | プロビジョニング済み環境に対するコンプライアンス態勢の検証 |
+
+---
+
+<a id="collaboration-patterns"></a>
+## 連携パターン
+
+<a id="receives-from"></a>
+### 受け取る相手
+
+| ソース | 成果物 |
+|--------|--------|
+| aidlc-architect-agent | コンプライアンスレビュー用のシステム設計、データフロー図 |
+| aidlc-devsecops-agent | コンプライアンスマッピング用のセキュリティ統制、暗号化仕様 |
+
+<a id="hands-off-to"></a>
+### 引き渡す相手
+
+| ターゲット | 成果物 |
+|----------|--------|
+| aidlc-architect-agent | 設計へ組み込むためのコンプライアンス要件 |
+| aidlc-devsecops-agent | 規制上の義務から導かれたセキュリティ統制仕様 |
+| オーケストレーター | コンプライアンスリスクのエスカレーション、RAID ログ更新 |
+
+<a id="collaborates-with-peer"></a>
+### 協働相手（同位）
+
+| 相手 | 共有する関心事項 |
+|------|------------------|
+| aidlc-aws-platform-agent | データ所在地、保管時暗号化、IAM 監査 |
+
+---
+
+<a id="knowledge-sources"></a>
+## ナレッジソース
+
+<a id="methodology-tier-1"></a>
+### 手法論（第1層）
+
+パス: `.claude/knowledge/aidlc-compliance-agent/`
+
+| ファイル | 内容 |
+|----------|------|
+| regulatory-frameworks.md | 主要な規制フレームワーク（PCI-DSS、HIPAA、SOC 2、GDPR）のリファレンス |
+
+<a id="team-tier-2"></a>
+### チーム（第2層）
+
+パス: `aidlc/knowledge/aidlc-compliance-agent/`（スペースレベルのナレッジディレクトリ。ユーザー管理）
+
+チームが内容を持つときに作成するスペースレベルのディレクトリです（エンジンは `aidlc/knowledge/` を空で提供します）。既存のコンプライアンスマトリクス、監査所見、データ
+分類スキーム、規制解釈など、プロジェクト固有のコンプライアンス文脈を
+チームがここに格納します。
+
+---
+
+<a id="cross-references"></a>
+## 相互参照
+
+- [エージェントリファレンス概要](README.md)
+- [エージェントガイド: aidlc-compliance-agent](../../guide/agents/compliance-agent.md)
+- [ステージドキュメント](../04-stages/)
+- 出典: [`dist/claude/.claude/agents/aidlc-compliance-agent.md`](../../../dist/claude/.claude/agents/aidlc-compliance-agent.md)

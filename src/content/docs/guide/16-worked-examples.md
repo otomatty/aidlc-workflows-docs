@@ -1,0 +1,379 @@
+---
+title: 実践例
+description: bugfix と feature の 2 つの完全な実例を通して、AI-DLC の進み方を示します。
+sidebarOrder: 16
+sourcePath: docs/guide/16-worked-examples.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 4a72592baf7f6fef6a9b1b39c9ae362c74b1a735622fbc16a309e084584b3487
+translationStatus: current
+---
+
+<a id="worked-examples"></a>
+# 実践例
+
+AI-DLC が実際にどう動くかを示す 2 つの完全な実例を載せます。1 つはバグ修正、もう 1 つは機能開発です。どちらもコマンド呼び出し、ステージ進行、承認ゲート、成果物出力を示します。
+
+> **ハーネスに関する注記。** これらの実行記録は **Claude Code** で取得しました。そのため `/aidlc` や、`Task` 呼び出しで委譲されるサブエージェントステージなど、Claude Code の操作面がそのまま出ています。ステージの流れ、ゲート、成果物はどのハーネスでも同一で、違うのは委譲の仕組みだけです（Kiro は `subagent` ツール、Codex は `codex exec` ワーカーを使います）。[他のハーネスでの実行](harnesses/README.md) を参照してください。
+
+---
+
+<a id="bugfix-walkthrough"></a>
+## バグ修正の実例
+
+この例では、ユーザープロフィール API のヌルポインター例外を修正します。**bugfix** スコープは、Minimal の深さで 7 ステージ（初期化 3 + 分野別 4）を実行します。
+
+<a id="invocation"></a>
+### 呼び出し
+
+```
+/aidlc bugfix
+```
+
+コンダクターは、何を直したいかを尋ねます。
+
+> **What would you like to build?**
+
+あなたは次のように答えます。
+
+> ユーザープロフィール API は、`display_name` フィールドが `null` のとき HTTP 500 を返します。`GET /api/v1/users/:id/profile` エンドポイントは `ProfileSerializer.serialize()` 内で NullPointerException を起こします。これは、`display_name` が必須になる前に作成されたユーザープロフィールの約 12% に影響します。
+
+<a id="stages-executed"></a>
+### 実行されるステージ
+
+| # | ステージ | フェーズ | リードエージェント | モード |
+|---|-------|-------|------------|------|
+| 0.1 | ワークスペース足場作成 | 初期化 | オーケストレーター | インライン（自動で先へ進む） |
+| 0.2 | ワークスペース検出 | 初期化 | オーケストレーター | インライン（自動で先へ進む） |
+| 0.3 | 状態初期化 | 初期化 | オーケストレーター | インライン（自動で先へ進む） |
+| 2.1 | リバースエンジニアリング | 構想 | aidlc-developer-agent + aidlc-architect-agent | サブエージェント |
+| 2.3 | 要件分析 | 構想 | aidlc-product-agent | インライン |
+| 3.5 | コード生成 | 構築 | aidlc-developer-agent | サブエージェント |
+| 3.6 | ビルドとテスト | 構築 | aidlc-quality-agent | インライン |
+
+<a id="initialization-stages-01-03-auto-proceed"></a>
+### 初期化（ステージ 0.1〜0.3）— 自動進行
+
+3 つの初期化ステージは、利用者の操作なしで 1 秒未満の単一かつ決定論的なツール呼び出し（`aidlc-utility init`）として実行されます。
+
+- **0.1 ワークスペース足場作成** — 最初のインテントを自動作成し、その記録ディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成する（以下では `<record>/` と表記）。`<YYMMDD>` は記録が時系列で並ぶようにする短い UTC 日付接頭辞。`<label>` はコンダクターが要求内容から抽出した短いケバブケースの要約。正規 ID は UUIDv7 で、`intents.json` のレジストリ行に保持される
+- **0.2 ワークスペース検出** — ルールベース走査が Java 17、Spring Boot 3.2、Maven、既存プロジェクトを特定する
+- **0.3 状態初期化** — `aidlc-state.md` を、スコープ `bugfix`、深さ `Minimal`、実行対象の分野別ステージを含む状態で初期化する
+
+> 進捗: 全体 3/7 | 初期化の 3/3 ステージが完了。次: リバースエンジニアリング
+
+<a id="stage-21-reverse-engineering"></a>
+### ステージ 2.1 — リバースエンジニアリング
+
+2 段階のサブエージェント処理がコードベースを走査します。最初に aidlc-developer-agent がコードを走査し、その後 aidlc-architect-agent が統合します。`<record>/inception/reverse-engineering/` に 9 個の成果物を生成します。
+
+| 成果物 | 内容 |
+|----------|----------|
+| `business-overview.md` | 利用者サービス — プロフィール、設定、認証トークン |
+| `architecture.md` | Spring Boot モノリス、3 層設計 |
+| `code-structure.md` | 6 パッケージ: コントローラー、サービス、モデル、リポジトリ、シリアライザー、設定 |
+| `api-documentation.md` | `/api/v1/users/` 配下の 8 個の REST エンドポイント |
+| `component-inventory.md` | コントローラー、サービス、リポジトリ、シリアライザーの一覧 |
+| `technology-stack.md` | Java 17、Spring Boot 3.2、PostgreSQL 15、Jackson 2.15 |
+| `dependencies.md` | Maven 依存関係ツリー、サードパーティーライブラリ、バージョン制約 |
+| `code-quality-assessment.md` | テストカバレッジ 62%、基本的な CI |
+| `reverse-engineering-timestamp.md` | 走査の実行時刻と対象コミット |
+
+**承認ゲート:**
+
+```
+Reverse Engineering complete. How would you like to proceed?
+- Approve        -> Continue to Requirements Analysis
+- Request Changes -> Provide revision feedback
+```
+
+あなたは **Approve** を選択します。
+
+<a id="stage-23-requirements-analysis"></a>
+### ステージ 2.3 — 要件分析
+
+aidlc-product-agent のペルソナが読み込まれ、`<record>/inception/requirements-analysis/requirements-analysis-questions.md` に確認質問を作成します。
+
+```markdown
+## Q1: Bug Severity Classification
+How severe is this bug for your users?
+A. Critical — causes data loss or security exposure
+B. High — blocks a core workflow for affected users
+C. Medium — degraded experience but workaround exists
+D. Low — cosmetic or minor inconvenience
+X. Other (please specify)
+
+[Answer]:
+```
+
+コンダクターは対話方式を提示します。
+
+```
+How would you like to answer these questions?
+- Guide me        -> Walk through each question interactively
+- I'll edit the file -> Fill in answers directly
+- Chat            -> Discuss freely
+```
+
+利用者は **Guide me** を選び、`Q1 = High`、`Q2 = Username as fallback`、`Q3 = Handle null gracefully (no migration)` と回答します。
+
+コンダクターは `requirements.md` を生成し、3 つの機能要件（null 処理、シリアライザー修正、代替ロジック）と 1 つの非機能要件（応答時間に退行がないこと）を記述します。
+
+**承認ゲート:** あなたは **Approve** を選択します。
+
+<a id="stage-35-code-generation"></a>
+### ステージ 3.5 — コード生成
+
+コンダクターはコード生成計画を作成し、その後 aidlc-developer-agent のサブエージェントへ委譲します。
+
+**計画:**
+1. `ProfileSerializer.serialize()` を修正し、`null` の `display_name` を処理できるようにする
+2. `null` / `non-null` の両ケースに対する単体テストを追加する
+3. `ProfileService.getProfile()` の防御的検査を修正する
+4. API エンドポイントに対する結合テストを追加する
+
+利用者は計画を承認します。サブエージェントは 4 つの手順をすべて実装します。
+
+- **変更**: `ProfileSerializer.java`（利用者名の代替を含む `null` 安全な実装）
+- **変更**: `ProfileService.java`（防御的な `null` 処理）
+- **作成**: `ProfileSerializerTest.java`（2 つの単体テスト）
+- **作成**: `ProfileControllerIntegrationTest.java`（2 つの結合テスト）
+
+**承認ゲート:** あなたは **Approve** を選択します。
+
+<a id="stage-36-build-and-test"></a>
+### ステージ 3.6 — ビルドとテスト
+
+aidlc-quality-agent がビルドとテストを実行します。
+
+```
+mvn clean compile        # BUILD SUCCESS
+mvn test                 # 89 tests, 0 failures
+mvn verify               # Integration tests pass
+```
+
+結果は `<record>/construction/build-and-test/test-results.md` に記録されます。89 テスト成功、失敗 0、網羅率は 62% から 64% へ上がります。
+
+**承認ゲート:** あなたは **Approve** を選びます。ワークフローは完了です。
+
+<a id="end-state"></a>
+### 最終状態
+
+```
+aidlc/spaces/default/intents/260624-null-display-fix/
+  aidlc-state.md              # All 7 stages marked [x]
+  audit/                      # Full decision trail (per-clone shards)
+  inception/
+    reverse-engineering/       # 9 RE artifacts
+    requirements-analysis/     # requirements.md + questions
+  construction/
+    bugfix-null-display-name/
+      code-generation/         # plan + summary
+    build-and-test/            # instructions + test results
+```
+
+アプリケーションコードはワークスペースルートに出ます。
+- `ProfileSerializer.java`（変更）
+- `ProfileService.java`（変更）
+- `ProfileSerializerTest.java`（新規作成）
+- `ProfileControllerIntegrationTest.java`（新規作成）
+
+<a id="key-observations"></a>
+### 主な観察点
+
+1. **各分野別ステージに承認ゲートがある** — すべての判断を利用者が制御する
+2. **Minimal の深さ** — 成果物は短く対象が絞られ、修正内容の定義に必要な質問だけが出る
+3. **サブエージェントへの委譲** — リバースエンジニアリングとコード生成のような重い作業は、利用者が承認している間に子プロセスで実行される
+4. **完全な監査証跡** — すべての判断が ISO 形式の時刻付きで記録される
+5. **セッション再開** — 途中で中断しても `/aidlc` が進行中状態を検出する
+
+---
+
+<a id="feature-walkthrough"></a>
+## feature の実例
+
+この例では、タスク管理アプリケーション向けの通知サービスを構築します。**feature** スコープは Standard の深さで 32 ステージすべてを実行します。この実例では、全フェーズにまたがる主要ステージを抜粋します。
+
+<a id="invocation-1"></a>
+### 呼び出し
+
+```
+/aidlc feature
+```
+
+> **What would you like to build?**
+
+> タスク管理アプリケーション向けの通知サービス。タスクが割り当てられたとき、期日が近づいたとき、コメントが投稿されたときに、利用者がアプリ内通知と任意のメールダイジェストを受け取れるようにしたい。利用者ごとの通知設定にも対応したい。
+
+<a id="initialization-stages-01-03-auto-proceed-1"></a>
+### 初期化（ステージ 0.1〜0.3）— 自動進行
+
+3 つの初期化ステージは `aidlc-utility init` 内で自動実行されます。ワークスペース検出は、TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク / 利用者サービスを持つ既存プロジェクトを特定します。
+
+> 進捗: 全体 3/32 | スコープ: feature、深さ: Standard
+
+<a id="ideation-phase-stages-11-17"></a>
+### アイデア創出フェーズ（ステージ 1.1〜1.7）
+
+**ステージ 1.1 — 意図の取り込み**（aidlc-product-agent）
+
+aidlc-product-agent はインテントを取り込み、`intent-statement.md` と `stakeholder-map.md` を生成します。質問は対象利用者、通知経路、優先度に集中します。
+
+```
+Q1: Which notification channels are in scope?
+A. In-app only
+B. In-app + email
+C. In-app + email + push
+D. In-app + email + push + SMS
+X. Other
+```
+
+利用者は B（アプリ内 + メール）と答えます。承認後、このステージは通知種別と利用者起点を対応付けた構造化インテント文を生成します。
+
+**ステージ 1.4 — スコープ定義**（aidlc-product-agent）
+
+スコープ境界を定義します。対象内は 3 種類の起点、利用者設定、メールダイジェストです。対象外はプッシュ通知、SMS、リアルタイム WebSocket です。`scope-document.md` と、優先順位付き項目を含む `intent-backlog.md` を生成します。
+
+**ステージ 1.7 — 承認と引き継ぎ**（aidlc-delivery-agent）
+
+アイデア創出の全出力を集約した取り組み概要をまとめます。フェーズ境界検証により、インテントからスコープまでの追跡可能性を確認します。
+
+> 進捗: 全体 10/32 | IDEATION 完了。検証ゲート通過。
+
+<a id="inception-phase-stages-21-28"></a>
+### 構想フェーズ（ステージ 2.1〜2.8）
+
+**ステージ 2.1 — リバースエンジニアリング**（サブエージェント）
+
+既存コードベースを 2 段階で走査します。通知サービスが連携すべき既存サービス構造、データベーススキーマ、API パターンを特定します。
+
+**ステージ 2.2 — プラクティス発見**（aidlc-pipeline-deploy-agent）
+
+このステージは aidlc-pipeline-deploy-agent が主担当となり、aidlc-quality-agent、aidlc-developer-agent、aidlc-devsecops-agent が支援します。既存プロジェクトなので、リバースエンジニアリング成果物を利用し、チーム既存の実践事項、つまりテストフレームワークと網羅率の慣例、CI / リント設定、分岐 / レビュー規範を推定します。`team-practices.md`、`discovered-rules.md`、`evidence.md` を生成します。確認されると、見つかった実践事項は `aidlc/spaces/<space>/memory/team.md` と `aidlc/spaces/<space>/memory/project.md` へ昇格され、下流ステージがそれらを尊重するようになります。
+
+**ステージ 2.3 — 要件分析**（aidlc-product-agent）
+
+12 個の機能要件（通知起点、設定 CRUD、メール描画、ダイジェスト予定設定）と 5 個の非機能要件（配信遅延 < 5 秒、メール再試行、設定保存）を生成します。質問は境界事例にも踏み込みます。メール配信に失敗したらどうするか、ダイジェストをどの頻度で実行するか、などです。
+
+**ステージ 2.6 — アプリケーション設計**（aidlc-architect-agent）
+
+aidlc-architect-agent が通知サービスのアーキテクチャを設計します。
+
+- **コンポーネント**: `NotificationService`、`PreferenceService`、`EmailRenderer`、`DigestScheduler`
+- **API 契約**: 設定管理用 REST エンドポイント、起点処理用の内部イベントハンドラー
+- **アーキテクチャ決定記録**: イベント駆動の起点パターン（ポーリングではなく）、メールキューに SQS（直接送信ではなく）
+
+`components.md`、`services.md`、`decisions.md` を生成します。
+
+**ステージ 2.7 — 作業ユニット生成**（aidlc-architect-agent）
+
+3 つの作業ユニットへ分解します。
+
+1. **`notification-core`** — イベントハンドラー、通知保存、アプリ内配信
+2. **`notification-preferences`** — 通知設定 CRUD API、既定の設定
+3. **`notification-email`** — メールレンダラー、SQS 統合、ダイジェスト予定処理
+
+依存関係マップ付きの `unit-of-work.md` を生成します。順序は `notification-core` が先で、その後に利用者設定とメール処理を並列実行します。
+
+**ステージ 2.8 — デリバリー計画**（aidlc-delivery-agent）
+
+Bolt の実行順は次のとおりです。Bolt 1 は `notification-core` を出荷します（ワーキングスケルトンとして、イベントハンドラー処理がエンドツーエンドで通ることを証明します）。Bolt 2 では `notification-preferences` と `notification-email` を並列出荷します。Bolt ごとの完了定義は `bolt-plan.md` に記録し、WSJF 風の根拠は `risk-and-sequencing-rationale.md`、外部 SES / SQS 依存は `external-dependency-map.md` に記録します。フェーズ境界検証により要件とアーキテクチャの整合を確認します。
+
+> 進捗: 全体 18/32 | INCEPTION 完了。検証ゲート通過。
+
+<a id="construction-phase-stages-31-37"></a>
+### 構築フェーズ（ステージ 3.1〜3.7）
+
+構築は 2.8 の計画に従って **Bolt ごと**に実行されます。最初の Bolt はワーキングスケルトンで、その後に出る段階選択プロンプトが残りの実行における自律性を決めます。依存関係を共有しない Bolt は並列で実行します。
+
+**Bolt 1: `notification-core`** — ワーキングスケルトン（常にゲート付き）
+
+この Bolt は、イベントハンドラー処理が機能することを証明するエンドツーエンドの一部分です。通知イベントが内部ハンドラーへ到達し、ストレージへ保存され、アプリ内配信エンドポイントから見えることを示します。コンダクターは `notification-core` 向けに 3.1〜3.4 を横断する 1 回の質問ラウンドを開き、設計成果物一式を生成した後、コード生成を aidlc-developer-agent サブエージェントへ委譲します。
+
+- **3.1 機能設計** — ドメインエンティティ（Notification、NotificationEvent）、業務ルール（重複排除、流量制限）
+- **3.5 コード生成** — イベントハンドラー、通知リポジトリ、アプリ内配信エンドポイント。3 つのソースファイルと 4 つのテストファイル
+
+ワーキングスケルトンのゲートで、利用者は Bolt 1 のコード概要をレビューして承認します。
+
+承認直後に**段階選択プロンプト**が発火します。
+
+```
+The walking skeleton shipped. How should the remaining Bolts run?
+  ▸ Continue autonomously
+    Run remaining Bolts without gates. Failures still halt and ask.
+  ▸ Gate every Bolt
+    Present an approval gate after each Bolt (or parallel batch).
+```
+
+全体の形がうまくいくと確認できたので、利用者は **Continue autonomously** を選びます。コンダクターは `aidlc-state.md` に `Construction Autonomy Mode: autonomous` を記録し、`AUTONOMY_MODE_SET` を出します。
+
+**Bolt 2: `notification-preferences` + `notification-email`** — 並列バッチ
+
+両者は `notification-core` にだけ依存し、互いには依存しないため、2.8 の計画では 1 つのバッチにまとめられます。コンダクターは各 Bolt ごとに質問を集め、設計成果物を生成し、その後 **2 つのコード生成ステージを同時に委譲**するため、単一ターン内で 2 つの `Task` 呼び出しを発行します。
+
+- **`notification-preferences` — 3.1 機能設計** — 設定エンティティ、既定値、経路切り替え
+- **`notification-preferences` — 3.5 コード生成** — CRUD API エンドポイント、設定リポジトリ、検証。2 つのソースファイルと 3 つのテストファイル
+- **`notification-email` — 3.2 非機能要件** — メール配信の信頼性（指数バックオフ付き再試行）、ダイジェスト予定時刻の正確性
+- **`notification-email` — 3.4 インフラ設計** — SQS キュー、SES 統合、デッドレターキュー向け CloudWatch アラーム
+- **`notification-email` — 3.5 コード生成** — メール描画処理、SQS コンシューマー、ダイジェスト定期処理。4 つのソースファイルと 5 つのテストファイル
+
+両方のサブエージェント Task は次のターンで返ってきます。`autonomous` を選んでいるため、バッチゲートはありません。構築はそのまま 3.6 へ進みます。
+
+**失敗するとどう見えるか。** たとえば `notification-email` のコード生成が壊れた SES モックとともに戻ってきたとします。コンダクターは `notification-preferences` の完了を待ち、その成果物をディスクに保持したまま、次を表示します。
+
+```
+Bolt notification-preferences succeeded. Bolt notification-email failed during code generation:
+  "SES client mock could not be constructed — check test config."
+
+Options:
+  ▸ Retry         Re-run notification-email from code generation.
+  ▸ Skip          Mark notification-email skipped and continue. Dependent Bolts may also fail.
+  ▸ Abort         Stop Construction. Resume via /aidlc --stage code-generation.
+```
+
+利用者は **Retry** を選び、モック設定を直し、`notification-email` だけを再実行します。通知設定はすでに `[x]` 完了です。
+
+**ステージ 3.6 — ビルドとテスト**（aidlc-quality-agent。全 Bolt 完了後に 1 回だけ実行）
+
+ビルド手順を生成し、3 つの作業ユニット全体で完全なテスト一式を実行します。47 テスト成功、失敗 0、網羅率 78% です。
+
+**ステージ 3.7 — CI パイプライン**（aidlc-pipeline-deploy-agent）
+
+リント、ビルド、テスト、セキュリティ走査の各ステージを持つ CI パイプラインを設定します。品質ゲートは網羅率 >= 75%、重大な脆弱性なしです。
+
+> 進捗: 全体 25/32 | 構築完了。検証ゲート通過。
+
+<a id="operation-phase-stages-41-47"></a>
+### 運用フェーズ（ステージ 4.1〜4.7）
+
+**ステージ 4.1 — デプロイパイプライン** — 健全性確認ゲートを持つブルーグリーンデプロイ戦略
+
+**ステージ 4.2 — 環境プロビジョニング** — SQS キュー、SES 設定、通知保存用 DynamoDB テーブル
+
+**ステージ 4.4 — 可観測性セットアップ** — 通知配信遅延、メール送信率、デッドレターキュー深度の CloudWatch ダッシュボード。配信失敗用アラームも設定
+
+**ステージ 4.7 — フィードバックと最適化** — SLO 目標（アプリ内配信 99.9%、30 秒以内のメール配信 99%）、コスト分析、フィードバックループ文書
+
+> 進捗: 全体 32/32 | 運用完了。feature ワークフロー完了。
+
+<a id="key-differences-from-bugfix"></a>
+### バグ修正との主な違い
+
+| 観点 | バグ修正 | 機能開発 |
+|--------|--------|---------|
+| 実行ステージ数 | 7 | 32 |
+| 深さ | Minimal | Standard |
+| フェーズ | 初期化 + 構想 + 構築 | 5 フェーズすべて |
+| 作業ユニット数 | 1 | 3 |
+| Bolt ごとの構築 | なし（bugfix は単一 Bolt） | あり — 2 Bolt（ワーキングスケルトン + 1 並列バッチ） |
+| 条件付きステージ | 多くがスキップ | 多くが実行される |
+| 承認ゲート | 4 個 | ワーキングスケルトン + 段階選択プロンプト、その後は自律モードに従う |
+
+---
+
+<a id="next-steps"></a>
+## 次のステップ
+
+- [スコープ、深さ、テスト戦略](05-scopes-and-depth.md) — スコープが実行ステージをどう決めるか
+- [ステージの実行方法](04-phases-and-stages.md) — ステージ手順の詳細
+- [エージェント](06-agents.md) — エージェントのペルソナと責務
+- [成果物リファレンス](14-artifacts-reference.md) — 完全な成果物ディレクトリツリー

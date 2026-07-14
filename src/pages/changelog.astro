@@ -1,0 +1,31 @@
+---
+import { getCollection, render } from "astro:content";
+
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { withBase } from "../lib/routes";
+
+const siteEntries = await getCollection("site");
+const changelogEntry = siteEntries.find((entry) => entry.id === "changelog");
+
+if (!changelogEntry) {
+	throw new Error('Missing site content entry for "changelog".');
+}
+
+const { Content } = await render(changelogEntry);
+---
+
+<BaseLayout title="変更履歴 | AI-DLC ドキュメント" description={changelogEntry.data.description}>
+	<Header />
+	<main id="main-content" class="page-shell page-shell--narrow">
+		<p class="eyebrow">Historical Archive</p>
+		<p>
+			<a class="primary-link" href={withBase("/")}>トップページへ戻る</a>
+		</p>
+		<article class="surface-card content-article">
+			<Content />
+		</article>
+		<Footer />
+	</main>
+</BaseLayout>

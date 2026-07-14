@@ -1,0 +1,181 @@
+---
+title: スキルとランナーコマンド
+description: "`/aidlc` と、スコープ・ステージ・セットアップ用ランナーコマンド群の関係を説明します。"
+sidebarOrder: 17
+sourcePath: docs/guide/17-skills.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: a6b0c44e3b774fecefd7a973a7a7ecdce18f3a52a88309e4eba8df25d01b80df
+translationStatus: current
+---
+
+<a id="skills-and-runner-commands"></a>
+# スキルとランナーコマンド
+
+**AI-DLC はコマンド群です。** `/aidlc` オーケストレーターに加えて、直接入力できる 1 語のランナーコマンド群を提供します。スコープごとに 1 つ、ステージごとに 1 つ、セットアップ用に 1 つです。これらは、オーケストレーターがすでに公開している一部分への便利な入口です。`/aidlc` だけでフレームワーク全体を利用することも、フラグを省いて必要な入口名を直接入力することもできます。
+
+> **ハーネスに関する注記。** この章では Claude Code の操作面を使います。スキルは `.claude/skills/` の下にあり、選択画面から `/` を先頭に付けて入力します。Kiro では同じランナー群が `.kiro/skills/` にあり、同じく `/` で入力します。Codex では `.agents/skills/` に配置され、`$`（`$aidlc-bugfix` など）で入力します。ランナーの**集合**と各ランナーの機能はどのハーネスでも同じで、違うのはディレクトリと接頭辞だけです。[他のハーネスでの実行](harnesses/README.md) を参照してください。
+
+---
+
+<a id="many-skills-one-engine"></a>
+## 多数のスキル、1 つのエンジン
+
+この実装に含まれる各コマンドはすべて `.claude/skills/` 配下のスキルです。いずれも同じ決定論的エンジンを駆動しており、違うのは開始前に何を組み込んでいるかだけです。
+
+- **`/aidlc`** — 完全なオーケストレーター。フラグは組み込まれていません。スコープの検出（または、作りたいものの説明）から始まり、そのスコープに含まれる全ステージを完了まで駆動します。最もよく使う入口です。
+- **スコープランナー** — `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch`。同じ完全ワークフローですが、スコープが固定され、スコープ検出を省略します。
+- **ステージランナー** — `/aidlc-application-design`、`/aidlc-code-generation` など計 29 個。1 つのステージだけを独立実行し、メインワークフローには一切触れません。
+- **`/aidlc-init`** — 最初のインテントを作成します（初期化フェーズ全体を 1 ステップで実行）。エンジンの自動作成機能を明示的に使うためのパッケージです。
+- **セッションスキル** — `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack`。ワークフローの読み取り専用表示であり、詳細は [セッション管理](11-session-management.md) で扱います。
+
+ランナーが行うことはすべて `/aidlc` にフラグを付ければ実行できます。ランナーは機能をまとめたものです。`/aidlc-bugfix` と入力でき、`/` メニューに表示されるのは使いやすさのためです。すべてのランナーを削除すれば短縮入口は消えますが、機能自体は `/aidlc` のフラグ経由で残ります。
+
+---
+
+<a id="scope-runners-a-named-door-per-problem-class"></a>
+## スコープランナー — 問題クラスごとの名前付き入口
+
+スコープランナーは、1 つのスコープを固定して完全ワークフローを駆動します。作業の種類が最初から分かっていて、スコープ検出を省きたいときに使います。
+
+```
+/aidlc-bugfix          Fix a specific bug — minimal depth, streamlined path
+/aidlc-feature         Build a new feature — standard depth, all stages
+/aidlc-mvp             Ship the core — skips late operations stages
+/aidlc-security-patch  CVE / vulnerability response
+```
+
+どれも、オーケストレーターへ `--scope` を渡すのと同じです。
+
+```
+/aidlc-bugfix          ==  /aidlc --scope bugfix
+/aidlc-feature         ==  /aidlc --scope feature
+```
+
+説明やフラグは、`/aidlc` へ渡す場合と同じように、そのまま直通で渡せます。
+
+```
+/aidlc-bugfix The profile API returns 500 when display_name is null
+/aidlc-feature --status
+```
+
+**ランナーが用意されるスコープは 4 つだけです。** 利用頻度が高いものに限られます。フレームワークが定義するスコープは全部で 9 個あり（[スコープ、深さ、テスト戦略](05-scopes-and-depth.md) を参照）、その他の `enterprise`、`poc`、`infra`、`refactor`、`workshop` は、常にオーケストレーター経由で到達できます。
+
+```
+/aidlc --scope enterprise
+/aidlc --scope poc
+```
+
+ワークフローがいったん始まると、そのスコープは `aidlc-state.md` に固定されます。そのため同じランナーを再実行すると、再スタートではなく再開になります。別スコープで動かしたい場合は `/aidlc --scope <name>` を使ってください。
+
+---
+
+<a id="stage-runners-run-one-stage-leave-your-workflow-alone"></a>
+## ステージランナー — 1 ステージだけを実行し、ワークフローはそのままにする
+
+ステージランナーは**1 つのステージを独立実行**します。メインワークフローの `Current Stage` を進めることはなく、その独立性はツール自体が強制します。
+
+```
+/aidlc-application-design
+/aidlc-code-generation
+/aidlc-requirements-analysis
+/aidlc-reverse-engineering
+```
+
+どれも `/aidlc --stage <slug> --single` をパッケージ化したものです。
+
+```
+/aidlc-code-generation    ==  /aidlc --stage code-generation --single
+```
+
+<a id="when-youd-use-one"></a>
+### こういうときに使う
+
+- **方法論の一部分だけを適用し、完全なワークフローには入らない。** ある問題について要件分析だけ欲しいが、ライフサイクル全体を回す準備はまだない場合、`/aidlc-requirements-analysis` を実行して成果物を取得し、そこで止める。
+- **利用者自身がオーケストレーターである。** 作業の順序を自分で決め、フレームワークには目の前のステージだけを実行させたい場合、人間が流れを握り、フレームワークが 1 ステージ分の方法論を提供する。
+- **ステージを独立して再実行する。** メインワークフローを別の地点に止めたまま、1 つのステージだけをやり直したい場合、単独ステージ実行なら影響を与えない。
+
+<a id="why-its-safe"></a>
+### なぜ安全なのか
+
+`--single` の不変条件はツールが強制します。単独ステージ実行は作業を合成ワークフロー ID の下に記録し、メインワークフローの `Current Stage` への書き込みを拒否します。ランナーがメインポインターを進めようとすると、エンジンがエラーを返します。つまり文書の説明が間違っていても、この安全性はエンジンが保証します。
+
+起動準備用の 3 つの**初期化**ステージにはステージランナーがありません。インテントを途中まで作成しても単独では意味を持たないためです。代わりに初期化フェーズ全体を 1 つのコマンドへまとめています。
+
+```
+/aidlc-init [--scope <name>] [description]   birth the first intent (== running /aidlc on a fresh workspace)
+```
+
+---
+
+<a id="the-runner-families-at-a-glance"></a>
+## ランナーファミリー一覧
+
+| ファミリー | 例 | 機能 | オーケストレーターでの同等表現 |
+|---|---|---|---|
+| オーケストレーター | `/aidlc` | 完全ワークフロー。スコープは検出 | — |
+| スコープランナー | `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch` | 完全ワークフロー。スコープ固定、検出なし | `/aidlc --scope <name>` |
+| ステージランナー | `/aidlc-application-design`、`/aidlc-code-generation`、…（計 29 個） | 1 ステージのみ独立実行。ワークフローは進めない | `/aidlc --stage <slug> --single` |
+| 初期化ラッパー | `/aidlc-init` | 最初のインテントを作成する（初期化を実行） | 新しいワークスペースでの `/aidlc` |
+| セッション表示 | `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack` | 読み取り専用のワークフローレポート | [セッション管理](11-session-management.md) を参照 |
+
+ライフサイクル内の実行可能なすべてのステージには、対応するステージランナーが 1 つずつあります。完全な一覧を見るには、スキルディレクトリを列挙してください。
+
+```bash
+ls .claude/skills/
+```
+
+---
+
+<a id="author-your-own-runner-write-a-stage-file"></a>
+## 自分用ランナーを作る — ステージファイルを書く
+
+フレームワークをカスタマイズするときに重要なのはここです。**ランナーは手書きしません。** コンパイル済みステージグラフとスコープファイルから生成されます。
+
+ステージランナーを追加したいなら、ステージを追加します。ステージファイルを書き、グラフを再コンパイルして再生成します。
+
+```bash
+bun .claude/tools/aidlc-runner-gen.ts write
+```
+
+生成ツールはコンパイル済みステージ一覧（唯一の正本）を読み、実行可能な各ステージに対するランナー外殻を生成します。新しいステージの `/aidlc-<your-stage>` コマンドは自動で現れます。手書きするランナーファイルも、流用する定型コードもありません。スコープランナーも同じです。`.claude/scopes/` の下へスコープファイルを置いて再生成すれば、そのランナーが追随します。
+
+```bash
+bun .claude/tools/aidlc-runner-gen.ts scopes      # generate scope-runners
+```
+
+ランナー集合は手作業で保守せず派生生成するため、対象のステージやスコープとずれません。ディスク上の集合が正本とずれた時点で、2 つの検査が CI を失敗させます。
+
+```bash
+bun .claude/tools/aidlc-runner-gen.ts check            # stage-runner drift
+bun .claude/tools/aidlc-runner-gen.ts scopes --check   # scope-runner drift
+```
+
+グラフにステージを追加したのにランナーを再生成していない場合や、削除済みステージに対する孤立ランナーが残っている場合は、差分付きで明示的に失敗します。ステージファイルを追加して再生成することが作成手順のすべてであり、ランナーはその結果として生成ツールが保守します。
+
+ステージファイルの書き方については [カスタマイズ](13-customization.md) と [フェーズとステージ](04-phases-and-stages.md) を参照してください。エンジン、指示契約、ランナー外殻が内部でどのように `next` / `report` を駆動するかについては、リファレンス章 [スキルシステム](../reference/17-skill-system.md) を参照してください。
+
+---
+
+<a id="quick-reference"></a>
+## クイックリファレンス
+
+```
+# Full workflow
+/aidlc                              detect scope, run everything
+/aidlc --scope enterprise           any of the 9 scopes
+
+# Scope-runners (the 4 high-traffic doors)
+/aidlc-bugfix · /aidlc-feature · /aidlc-mvp · /aidlc-security-patch
+
+# One stage, isolated (never advances your workflow)
+/aidlc-code-generation              == /aidlc --stage code-generation --single
+
+# Birth the first intent (Initialization phase)
+/aidlc-init [--scope <name>]        == /aidlc on a fresh workspace
+
+# Add your own: write a stage/scope file, then
+bun .claude/tools/aidlc-runner-gen.ts write
+bun .claude/tools/aidlc-runner-gen.ts scopes
+```
+
+関連: [CLI コマンド](12-cli-commands.md) ・ [スコープ、深さ、テスト戦略](05-scopes-and-depth.md) ・ [カスタマイズ](13-customization.md)

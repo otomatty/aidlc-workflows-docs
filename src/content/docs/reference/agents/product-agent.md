@@ -1,0 +1,109 @@
+---
+title: aidlc-product-agent — 技術リファレンス
+description: aidlc-product-agent の識別情報、ステージ担当、連携パターン、ナレッジソースを定義します。
+sidebarOrder: 1
+sourcePath: docs/reference/agents/product-agent.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 1fb584966aa8977d9b00727746145eea5b88f7c6d8309013ece2fe37ea254a27
+translationStatus: current
+---
+
+<a id="aidlc-product-agent----technical-reference"></a>
+# aidlc-product-agent -- 技術リファレンス
+
+<a id="identity"></a>
+## 識別情報
+
+| 項目 | 値 |
+|------|----|
+| 名前 | aidlc-product-agent |
+| ティア | **judgment** |
+| 許可された Claude Code ツール | Read, Edit, Write, Glob, Grep, WebSearch, AskUserQuestion |
+| 許可されていない Claude Code ツール | Task |
+
+---
+
+<a id="stage-ownership"></a>
+## 担当ステージ
+
+<a id="lead-stages"></a>
+### 主担当ステージ
+
+| ステージ | 名称 | このエージェントの役割 |
+|-------|------|------------------------|
+| intent-capture | 意図の捕捉とフレーミング | ステークホルダー入力から、ビジネス上の意図、問題定義、成功指標、初期制約を捉える |
+| market-research | 市場調査と競合分析 | 競争環境、市場動向、内製対購入のトレードオフ、差別化の機会を調査する |
+| scope-definition | スコープ定義と優先順位付け | スコープ境界（対象内／対象外）を定義し、優先順位付けフレームワークを適用して、インテントバックログ を作成する |
+| requirements-analysis | 要件分析 | アイデア創出 成果物から要件を構造化・形式化し、追跡可能でテスト可能な仕様にする |
+| user-stories | ユーザーストーリー | 要件を、ペルソナ、受け入れ基準、依存関係マッピングを備えた INVEST 準拠のユーザーストーリーへ変換する |
+
+<a id="support-stages"></a>
+### 支援ステージ
+
+| ステージ | 名称 | このエージェントの貢献内容 |
+|-------|------|------------------------------|
+| rough-mockups | ラフモックアップとコンセプト可視化 | ワイヤーフレームが捉えた意図とユーザーニーズに沿っているかを検証する |
+| approval-handoff | イニシアチブ承認と引き継ぎ | フェーズ移行前にイニシアチブ概要の完全性を検証する |
+| refined-mockups | 洗練されたモックアップと UX 設計 | 洗練された設計がユーザーストーリーと受け入れ基準に沿っているかを検証する |
+
+---
+
+<a id="collaboration-patterns"></a>
+## 連携パターン
+
+<a id="receives-from"></a>
+### 受け取るもの
+
+| 提供元 | 成果物 |
+|--------|--------|
+| ユーザー／ステークホルダー入力 | 生のビジネスニーズ、ドメイン知識、プロジェクト記述 |
+| 既存ドキュメント | 既存成果物、レガシーシステム文書 |
+| aidlc-operations-agent | 次の アイデア創出 サイクルに向けた本番環境からの運用フィードバック（ライフサイクルのループを閉じる） |
+
+<a id="hands-off-to"></a>
+### 引き継ぐ先
+
+| 引き継ぎ先 | 成果物 |
+|------------|--------|
+| aidlc-architect-agent | システム設計と分解に向けて検証済みの要件 |
+| aidlc-developer-agent | コード生成向けのストーリー仕様 |
+| aidlc-quality-agent | テストケース設計向けの受け入れ基準 |
+| aidlc-delivery-agent | デリバリ計画向けの優先順位付きバックログ |
+
+---
+
+<a id="knowledge-sources"></a>
+## ナレッジソース
+
+<a id="methodology-tier-1"></a>
+### 方法論（ティア 1）
+
+パス: `.claude/knowledge/aidlc-product-agent/`
+
+| ファイル | 内容 |
+|----------|------|
+| functional-design-guide.md | 機能設計の方法論 |
+| market-research-methods.md | 市場調査の手法とテンプレート |
+| prioritization-frameworks.md | MoSCoW、WSJF、RICE、Kano の各フレームワーク |
+| product-guide.md | プロダクトマネジメントの方法論 |
+| requirements-elicitation.md | 要件収集の手法 |
+| requirements-guide.md | 要件分析の方法論 |
+| user-story-patterns.md | INVEST 基準、ストーリーパターン、受け入れ基準テンプレート |
+
+<a id="team-tier-2"></a>
+### チーム（ティア 2）
+
+パス: `aidlc/knowledge/aidlc-product-agent/`（スペースレベルのナレッジディレクトリ。ユーザー管理）
+
+チームがコンテンツを持つ場合に作成するスペースレベルのディレクトリです（エンジンは `aidlc/knowledge/` を空のまま提供します）。既存のペルソナ、市場調査、ドメイン用語集、
+ステークホルダーとのコミュニケーション方針など、プロジェクト固有のプロダクト知識をチームが格納します。
+
+---
+
+<a id="cross-references"></a>
+## 相互参照
+
+- [エージェントリファレンス概要](README.md)
+- [エージェントガイド: aidlc-product-agent](../../guide/agents/product-agent.md)
+- [ステージドキュメント](../04-stages/)
+- ソース: [`dist/claude/.claude/agents/aidlc-product-agent.md`](../../../dist/claude/.claude/agents/aidlc-product-agent.md)

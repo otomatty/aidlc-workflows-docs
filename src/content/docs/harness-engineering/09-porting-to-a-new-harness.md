@@ -1,0 +1,92 @@
+---
+title: 新しいハーネスへの移植
+description: 1 つの `harness/<name>/` ディレクトリと 1 行のマニフェスト行で AI-DLC を新しい CLI ハーネスへ移植する契約を説明します。
+sidebarOrder: 9
+sourcePath: docs/harness-engineering/09-porting-to-a-new-harness.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 6eb424343c5369e088d37b25c00b4cd8f8643e03ef996185cc89ff53d4c3e14b
+translationStatus: current
+---
+
+<a id="porting-ai-dlc-to-a-new-harness"></a>
+# 新しいハーネスへの AI-DLC 移植
+
+AI-DLC は **1 つのコアと複数のハーネス** という形で出荷されます。現在は Claude Code、Kiro CLI、Kiro IDE、Codex CLI に対応しており、この対応先の集合は開いています。人が著述するソースは、ハーネス中立な `core/` と、CLI ごとに薄く用意する `harness/<name>/` サーフェスです。パッケージャー（`scripts/package.ts`）が、コミット済みの各 `dist/<harness>/` ツリーを再生成します。新しいハーネスを追加するのに必要なのは **1 つのディレクトリと 1 行のマニフェスト行** だけです。エンジン、方法論、ハーネスディレクトリとルールディレクトリの解決のために `core/` を編集する必要はありません。唯一の任意例外が、ハーネスごとの `--doctor` 分岐です（手順 2 を参照）。このページでは、その契約を説明します。
+
+> このリポジトリでの「ハーネス」には 3 つの意味があります。**`harness/`**（トップレベル。ここで扱う CLI ごとの配布サーフェス）、**`docs/harness-engineering/`**（このガイド）、**`tests/harness/`**（テストスイートの補助ライブラリ）です。互いに無関係で、配布物なのは最初の 1 つだけです。
+
+<a id="the-shape"></a>
+## 形
+
+```
+core/                      # harness-neutral source — not edited to add a harness (save the optional --doctor arm)
+harness/
+  claude/  manifest.ts · skills/aidlc/ · CLAUDE.md · settings.json
+  kiro/    manifest.ts · skills/aidlc/ · agents/*.json · hooks/aidlc-kiro-adapter.ts · settings/cli.json · AGENTS.md
+  codex/   manifest.ts · emit.ts · skills/aidlc/ · hooks/aidlc-codex-adapter.ts
+scripts/
+  package.ts               # bun scripts/package.ts [<name>] [--check]
+  manifest-types.ts        # the HarnessManifest contract every manifest implements
+dist/<name>/               # GENERATED, committed, drift-guarded
+```
+
+`core/` の本文は、`{{HARNESS_DIR}}` トークンでハーネスディレクトリを指します。パッケージャーは、それをマニフェストが宣言する `harnessDir`（`.claude` / `.kiro` / `.codex` / あなたの `.foo`）へ置換します。`.ts` は変換なしでそのままバイトコピーされます。実行時の `harnessDir()` の継ぎ目（`core/tools/aidlc-lib.ts`）は、実行時に配布ツリーの配置からディレクトリ名を導出します。閉じたリストではなく、ツール自身のパスからディレクトリ名を読む開放集合です。だから、同じツールソースがどのツリーでも動きます。受け入れゲートは **バイト一致** です。ハーネスを再生成したとき、コミット済みの配布ツリーを完全再現しなければなりません（`package.ts --check`）。
+
+パッケージャーは `harness/` 配下の `manifest.ts` を走査してハーネスを **検出** します。したがって、新しいディレクトリはパッケージャー本体の編集なしに、既定の `bun scripts/package.ts` と `--check` の対象になります。これが「1 ディレクトリ、1 マニフェスト行、共有コード編集なし」の文字どおりの意味です。
+
+<a id="step-1--the-manifest-the-declarative-80"></a>
+## 手順 1 — マニフェスト（宣言的な 80%）
+
+`HarnessManifest`（`scripts/manifest-types.ts`）をエクスポートする `harness/<name>/manifest.ts` を作成します。フィールドは次のとおりです。
+
+- `name` / `harnessDir` — トークン置換先となるディレクトリ（例: `.foo`）。
+- `coreDirs: DirMap[]` — `core/<src>` のどのディレクトリを `<harnessDir>/<dst>` へ射影するか。ここでディレクトリ名の変更や除外を行います（`Kiro CLI` では `rules → steering`、`Codex CLI` では `rules → aidlc-rules` かつ `skills/` は除外。`emit` を参照）。3 つのセッションスキルはツリー内ハーネス（`Claude Code` 系、`Kiro CLI` 系）ではコアディレクトリです。`Codex CLI` では代わりに `emit` します。
+- `harnessFiles: FileMap[]` — `harness/<name>/<src>` から配布ツリーへそのままコピーする、人が著述したサーフェスです（`.md` にはトークン置換があります）。`projectRoot: true` を付けると、ファイルはハーネスディレクトリの横、たとえば `AGENTS.md` のようにプロジェクトルート側へ着地します。
+- `frontmatterAdditions`（任意） - `core/` から投影される `.md` のフロントマターに、射影中だけ追記するファイルごとの YAML 行です。ほかのハーネスへ出荷してはならないハーネス固有フィールドを注入するときに使います（Kiro IDE は委譲先エージェントファイルの `.md` フロントマターへ `tools: ["read", "write", "shell"]` を注入します。IDE はそこからサブエージェント用ツール権限を読みます）。これは `core/` を単一ソースに保つため、マニフェストデータとして宣言されます。パッケージャーは、タイプミスのあるパス、フロントマターブロックの欠落、あるいは `core/` がすでに宣言しているキーの重複でエラーにします。
+- `rulesRename` — リネームされたルールディレクトリ（`"steering"` | `"aidlc-rules"` | `null`）。パッケージャーはこれを、コピーされたディレクトリ自体、本文中の `<harnessDir>/rules/` 参照、コンパイル済みステージグラフ内のルールパスのすべてへ適用します（コンパイル時に `AIDLC_RULES_DIR` を設定し、`loadRules` がリネーム済みディレクトリを見付けられるようにします）。さらに生成される `tools/data/harness.json` にも書き出し、実行時の `rulesSubdir()` シームがそこを読みます。こうして、実インストール環境でもハードコードなしにリネーム後のディレクトリが解決されます。`rulesRename` が純粋なマニフェストデータで済むのはこのシームのおかげです。ここで設定すれば、ビルド本文、コンパイル済みパス、ランタイムの全層が追従し、`core/` の編集は不要です。
+- `authoredExempt: RegExp[]` — `core/` からコピーされるディレクトリの内部で、生成物ではなく手書きとみなすファイルです（孤立ファイル走査を飛ばします）。例: `^hooks/aidlc-<name>-adapter\.ts$`。
+- `skipRunnerGen` — そのハーネスが `<harnessDir>/skills/` を出荷しない場合に設定します（`Codex CLI` はスキルツリーを `emit` で `.agents/skills/` へ出します）。そうするとパッケージャーは標準のランナー生成手順を飛ばします。
+- `emit` — 任意のプラグイン（手順 3）。不要なハーネスでは `null`。
+
+`Claude Code` のマニフェストは最小の参照実装です（リネームなし、`emit` なし）。`Kiro CLI` ではリネームと `harnessFiles`（エージェント JSON、アダプター、プロジェクトルートの `AGENTS.md`）が加わります。
+
+<a id="step-2--the-hook-adapter-the-per-harness-shim"></a>
+## 手順 2 — フックアダプター（ハーネスごとの橋渡し）
+
+コアフックは、`Claude Code` 形の標準入力を正規形として受け取ります。新しいハーネスでは **1 つの手書きアダプター**（`harness/<name>/hooks/aidlc-<name>-adapter.ts`。`harnessFiles` と `authoredExempt` に登録する）を出荷し、ハーネス固有のフックペイロードをその契約へ正規化して、共有コアフックへサブプロセス経由でパイプします。コアフックをロジックとアダプターに分割してはいけません。`core/` の本体は全ハーネス間でバイト共有のままに保ちます（`--check` がその証拠で、配布ツリー内のすべての `.ts` は `core/` のソースとバイト単位で同一です）。
+
+アダプターのハーネスイベントへの配線方法は、そのハーネス自身の流儀に従います。`Kiro CLI` は `agents/aidlc.json` に対象を登録し、`Codex CLI` は `hooks.json` を `emit` します。登録するのは、実際にコアフックの受け手があるイベントだけにしてください。
+
+2 つのフックはフロー変更型であり、単にパイプするだけではなく遮断チャネルを転送する必要があります。停止フックは標準出力で `{"decision":"block"}` を返し、レビューアースコープフックは終了コード 2 と理由を標準エラー出力で返します（アダプターがその終了コードを中継した場合、そのツール呼び出しは拒否されなければなりません）。もし新しいハーネスが事前ツールシームからツール呼び出しを強制遮断できないなら、レビューアースコープの登録は外し、その欠けを文書化してください。死んだフックをつなぐよりましです。その場合でも、ステージプロトコル §12a に束縛された本文は有効です。ハーネスのペイロードがサブエージェント識別子を持たないなら、そのハーネスがエージェント単位フックをサポートする場合に限り、レビューアーエージェント自体へ登録を絞ってください（`Kiro CLI` のパターンです。この場合アダプターは `agent_type` で照合せず、`scoped_registration` を表明します）。
+
+> **`core/` 編集として唯一公認されているものは `/aidlc --doctor` 用の分岐です。** `/aidlc --doctor`（`core/tools/aidlc-utility.ts`）は、インストール済みツリーの健全性を検査します。新しいハーネスは、そこへ自分専用のハーネス別分岐を追加し、自分のインストールサーフェス（アダプターと配線ファイルの存在、必要ならバイナリの最小対応バージョン）を確認します。これは意図的にハーネス固有の *ロジック* であり、データではありません。バージョン検査は CLI を起動してセマンティックバージョン比較するため、マニフェスト 1 行では表現できないからです（三関心ルールに従えば、こうした知識はコードに住みます）。したがって、これは「`core/` 編集ゼロ」への違反ではなく、そのために設けられた例外です（意図的な設計上のトレードオフです）。ただし、穏当な劣化動作になっており、分岐がないハーネスは失敗せず汎用検査だけを受けます。それ以外、つまりディレクトリ解決、ルールディレクトリのリネーム、パッケージングはすべて純粋なマニフェストデータのままです。
+
+<a id="step-3--emitts-the-imperative-20-only-if-needed"></a>
+## 手順 3 — `emit.ts`（命令的な 20%、必要な場合のみ）
+
+宣言的な 1 行では表現し切れない構造的な分岐は `emit.ts` で扱います。これは、マニフェストが参照するプラグインであり、パッケージャーが `EmitContext`（`coreRoot`、`harnessRoot`、`distRoot`、`harnessDir`、`substituteToken`、`check`）を渡して呼び出し、書き込んだパスを返します。`Codex CLI` がその実例です。`config.toml`、`hooks.json`、フック信頼の事前投入、`AGENTS.md` のマージ、エージェント TOML の転置、そして `.agents/skills/` ツリーを生成します。このとき、`core/tools/aidlc-runner-gen.ts` からエクスポートされた描画関数を `AIDLC_HARNESS_DIR` の下で組み合わせるのであって、再実装はしません。サーフェスのすべてが手書きファイルで済むハーネス（`Claude Code`、`Kiro CLI`）は `emit: null` です。
+
+`emit` は `ctx.check` を尊重します。`--check` のときは出力を書き込まず差分を返すため、ドリフトガードは `<harnessDir>` の外にある `emit` 所有ファイル（例: `.agents/skills/`、ルートの `AGENTS.md`）まで含めて監視できます。
+
+<a id="step-4--the-one-transform-class"></a>
+## 手順 4 — 唯一の変換クラス
+
+許可されているテキスト変換は、スラッシュで固定されたハーネスディレクトリ一族だけです。つまり `.md` 本文での `{{HARNESS_DIR}}` → ハーネスディレクトリの置換と、ルールディレクトリのリネームです。闇雲な `sed` はしません。`core/` にあるハーネス固有で正直なリテラル（`$CLAUDE_PROJECT_DIR` の注記、ワークスペース検出におけるハーネスディレクトリ列挙など）はトークンを持たず、そのまま通ります。コア衛生テスト（`t146-core-hygiene`）が、新しい生パスリテラルの紛れ込みを防ぎます。
+
+<a id="step-5--tests--the-gate"></a>
+## 手順 5 — テストとゲート
+
+- パッケージング一致テスト（`t145`）は `package.ts --check` を実行し、マニフェストを持つすべてのハーネスを自動的に対象にします。
+- `<name>` フックアダプター契約テストは、生で取得したペイロードをアダプターに通し、観測可能なコアフック効果を検証します。
+- ライブジャーニーは `skipReason()` 付きのエンドツーエンドテストとして出荷します（`AIDLC_<NAME>_*_LIVE=1` の環境変数、バイナリの存在、認証済みであること）。そのため決定的ティアではきれいにスキップされ、移植をマージする前にローカルでグリーンにできます。
+
+再生成は `bun scripts/package.ts <name>`、ドリフトガードは `--check`、そして決定的スイート（`bash tests/run-tests.sh --smoke --unit --integration -P 8`）とライブジャーニーをゲートとして実行してください。
+
+<a id="next"></a>
+## 次へ
+
+これで 1 周が閉じます。あなたはデータサーフェス（01–08 章）を形作り、最後にそのコアを新しい CLI へ描画しました。ここから先は次のとおりです。
+
+- 全体の地図へ戻るなら、[ハーネスエンジニアガイド概要](00-overview.md)。
+- 新しいハーネスには **利用者向けの章** を 1 つ追加します。読み味は、ユーザーガイドの [他のハーネスでの実行](../guide/harnesses/README.md) 一式を参照してください。
+- マニフェスト型、`emit` プラグイン API、`harnessDir()` シームを含む正式なビルド契約は、開発者リファレンスの [アーキテクチャ § ソースと配布](../reference/01-architecture.md#source-vs-distribution-one-core-many-harnesses) にあります。

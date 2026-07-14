@@ -1,0 +1,52 @@
+---
+title: パイプラインとデプロイエージェント
+description: aidlc-pipeline-deploy-agent の CI/CD 責務、主導ステージ、連携方法、運用原則を説明します。
+sidebarOrder: 10
+sourcePath: docs/guide/agents/pipeline-deploy-agent.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 9107007efae491365644547842f3b0cb649a7aaea2cf2fc64bbe03b2cb345fcb
+translationStatus: current
+---
+
+<a id="pipeline--deploy-agent"></a>
+# パイプラインとデプロイエージェント
+
+> **エージェント詳細** · [ユーザーガイド](../00-introduction.md) › [エージェント](../06-agents.md) › [詳細一覧](README.md) · 技術リファレンス: [pipeline-deploy-agent](../../reference/agents/pipeline-deploy-agent.md)
+
+aidlc-pipeline-deploy-agent は、あなたの CI/CD エンジニア兼リリースマネージャーです。ビルド仕様とインフラターゲットを、コミットから本番環境までコードを運ぶ完全自動化パイプラインへ変換します。そこには品質ゲート、ロールバックの安全性、完全な監査可能性が含まれます。
+
+aidlc-pipeline-deploy-agent は、構想、構築、運用にまたがる 4 つのステージを主導します。パイプラインツール、デプロイスクリプト、スモークテストコマンドを実行するために Bash を利用できます。
+
+<a id="stages-led"></a>
+## 主導ステージ
+
+| ステージ | フェーズ | 説明 |
+|-------|-------|-------------|
+| 2.2 Practices Discovery | 構想 | チームの実践とエンジニアリングルールを発見し、確認後にチーム／プロジェクトルールへ昇格 |
+| 3.7 CI Pipeline | 構築 | 品質ゲートを備えた CI パイプライン設定 |
+| 4.1 Deployment Pipeline | 運用 | デプロイ戦略とロールバック手順を備えた CD パイプライン |
+| 4.3 Deployment Execution | 運用 | デプロイを実行し、スモークテストを走らせ、健全性を監視 |
+
+<a id="stages-supported"></a>
+## 支援ステージ
+
+aidlc-pipeline-deploy-agent は、助言役として支援するステージを持ちません。
+
+<a id="what-to-expect"></a>
+## 期待できること
+
+aidlc-pipeline-deploy-agent が有効なときは、既存の CI/CD 基盤、デプロイ先、ブランチ戦略、ロールバック要件について質問します。パイプライン設定（CI 設定ファイル、品質ゲート定義）、デプロイ戦略（ブルーグリーン、カナリア、ローリング）、ロールバック手順書を作成します。Deployment Execution では、実際のデプロイを統括し、スモークテストを実行し、健全性メトリクスを監視します。
+
+<a id="how-it-collaborates"></a>
+## 連携方法
+
+aidlc-pipeline-deploy-agent は、aidlc-developer-agent からビルド可能なソースコードとテストスイートを、aidlc-quality-agent から品質ゲート定義を、aidlc-aws-platform-agent から環境エンドポイントを受け取ります。デプロイ済みサービスは可観測性の設定のために aidlc-operations-agent へ引き渡され、デプロイ成果物は性能検証のために aidlc-quality-agent へ渡されます。
+
+<a id="key-principles"></a>
+## 主要原則
+
+- すべてのコミットはリリース候補であり、すべてのゲートを通過すれば本番投入可能である
+- すべてのデプロイには検証済みのロールバック経路が必要である
+- CI パイプラインは数分で完了すべきであり、数時間かかる設計はバッチ化を招く
+- 品質ゲートは欠陥のある成果物をユーザーへ届かせないために存在する
+- スモークテストがサービス健全性を確認するまで、デプロイは完了ではない

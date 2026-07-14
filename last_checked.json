@@ -1,8 +1,0 @@
-{
-  "branch": "v2",
-  "last_checked_commit_sha": "83ed7a812c4024904f2c5e4d744e28077e0a5acd",
-  "last_checked_commit_date": "2026-07-10 13:22:01 +1000",
-  "last_checked_commit_message": "fix: refuse scope-change under autonomous Construction (2.3.3) (#542)",
-  "checked_at": "2026-07-12",
-  "site_version": "2.3.3"
-}
