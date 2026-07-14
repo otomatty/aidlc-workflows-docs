@@ -9,7 +9,10 @@ const DOC_FRONTMATTER_PATTERN = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 export const CONTENT_ROOT = "docs";
 
 // Content under docs/ that is not a translation of an upstream docs/ file.
-export const NON_TRANSLATION_PATHS = new Set(["docs/changelog.mdx"]);
+export const NON_TRANSLATION_PATHS = new Set([
+	"docs/changelog.mdx",
+	"docs/watch-prompt.mdx",
+]);
 const EXCLUDED_DIRECTORIES = new Set(["superpowers"]);
 
 export const EXPECTED_JSON_EXAMPLES = [

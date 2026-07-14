@@ -9,6 +9,7 @@
 - `/aidlc-workflows-docs/` — 翻訳ドキュメントのトップ（上流 `docs/README.md` の翻訳）
 - `/aidlc-workflows-docs/guide/…` `/harness-engineering/…` `/reference/…` — 各ガイド（ルートはファイル名の数字プレフィックスを除いた形）
 - `/aidlc-workflows-docs/changelog/` — 旧 v2 ウォッチサイトの changelog アーカイブ
+- `/aidlc-workflows-docs/watch-prompt/` — サイトを自動更新する定期ウォッチタスクのプロンプト全文（翻訳対象外）
 - 旧 `architecture.html` / `workflow.html` / `agents.html` / `changelog.html` は静的リダイレクト
 
 ## ローカル開発

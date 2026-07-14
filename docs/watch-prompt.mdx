@@ -1,0 +1,87 @@
+---
+title: 定期ウォッチ用プロンプト
+description: このサイトを自動更新する Claude 定期実行タスクに渡しているプロンプトの全文です。
+---
+このページは、上流 `awslabs/aidlc-workflows`（v2 ブランチ）の変更を検知してこのサイトを自動更新する、Claude の定期実行タスクに渡しているプロンプトの全文を公開するものです。上流ドキュメントの翻訳ではなく、このサイト独自の運用ドキュメントです（[変更履歴](/changelog)と同じ扱い）。
+
+タスクは毎回まっさらなセッションで実行され、上流の新規コミット検知 → `docs/changelog.mdx` への追記 → 翻訳ページの同期 → main への push（GitHub Actions が自動デプロイ）までを自己完結で行います。
+
+<a id="prompt"></a>
+## プロンプト全文
+
+````text
+awslabs/aidlc-workflows（公開GitHubリポジトリ、v2ブランチ）の前回チェック以降の変更を検知し、日本語ドキュメントサイト（Blume製MDXサイト、GitHub Pagesで公開）を自動更新するタスク。毎回まっさらなセッションで実行されるため、以下を自己完結で実行すること。すべて日本語で報告する。
+
+※監視対象は v2 ブランチ（2.x系）。main（v1系）ではない。
+※サイトは旧HTML構成から移行済み。ページは docs/**/*.mdx（上流 docs/ の日本語翻訳）+ docs/changelog.mdx（変更履歴アーカイブ）。デプロイは docs_repo の main へ push すると GitHub Actions が自動で行う。
+
+【0. 設定の読み込み】
+- aidlc-watch/ フォルダを使う。未接続なら request_cowork_directory で接続を依頼。接続できない場合は変更の要約のみ行い、「サイト更新には aidlc-watch フォルダの接続が必要」と報告して終了。
+- aidlc-watch/site_config.json を読む。スキーマ: {"docs_repo": "<owner>/<repo>", "token_file": "github_token.txt"}。token本体は aidlc-watch/github_token.txt（1行、Fine-grained PAT、docs_repoへのContents: Read/Write権限）。
+- site_config.json または token が無い場合: 差分要約のみ行い、「GitHub公開の初期設定が未完了。site_config.json と github_token.txt を aidlc-watch に置いてほしい」と報告して終了。
+
+【1. ドキュメントサイトのリポジトリを取得】
+- サンドボックスのbashで: git clone --depth 1 https://x-access-token:<TOKEN>@github.com/<docs_repo>.git /tmp/docs
+- 差分基準は /tmp/docs/data/last_checked.json（docsリポジトリ内で管理）。last_checked_commit_sha と last_checked_commit_date を読む。ファイルが無い、または branch が "v2" でなければ初回扱い（直近7日）。
+
+【2. 上流の新規コミットを検知】
+- bashで: git clone --depth 100 --branch v2 https://github.com/awslabs/aidlc-workflows.git /tmp/upstream
+- git log <last_checked_commit_sha>..HEAD --format='%h|%ci|%s' で新規コミットを列挙（shaが浅いcloneに無い場合は --since='<last_checked_commit_date>' で代替）。
+- 各コミットの詳細は git show --stat <sha> と git show <sha> -- <重要ファイル> で確認。CHANGELOG.md の差分・READMEのバージョンバッジでバージョン遷移（例 2.3.3 → 2.3.4）を検出。
+- git cloneが失敗する場合のみ、従来どおり Claude in Chrome で https://api.github.com/repos/awslabs/aidlc-workflows/commits?sha=v2 を開き JSON.parse で取得（sha文字列は c.sha.slice(0,7).split('').join(' ') のように空白挟みで抽出）。
+- 新規コミット0件なら: 何もpushせず、【5. 報告】のサマリー表＋「本日の変更なし」1行のみ報告して終了。
+
+【3. サイトを更新】（新規コミットがある場合のみ）
+
+3a. changelog.mdx（毎回）
+- /tmp/docs/docs/changelog.mdx の冒頭説明文の直後・最初の「## 」見出しの直前に新エントリを挿入する。書式は既存エントリに厳密に合わせる:
+  - リリース（バージョン変化）: 「## X.Y.Z」見出し、続けて「- 日付: YYYY-MM-DD（コミット <sha>、M/D検知）」と「- 種別: feat|fix」の箇条書き、その後に日本語要約の段落。アップグレード手順があれば「**アップグレード: …**」で太字。
+  - リリースを伴わない日次差分: 「## 日次差分（YYYY-MM-DD（コミット <sha>、M/D検知））」で同様の書式。
+- 要約はコミット単位で「何がどう変わったか」を上流の CHANGELOG.md とコミット内容に基づき日本語で書く。
+
+3b. 翻訳ページの同期（上流の docs/ 配下に変更があるコミットが含まれる場合のみ）
+- bunが無ければインストール（npm i -g bun または curl -fsSL https://bun.sh/install | bash）。/tmp/docs で bun install。
+- bun run sync -- --upstream /tmp/upstream を実行し、changed / added / deleted / untranslated を確認する。
+- changed: 対応する docs/**/*.mdx を上流の差分（git diff <last_sha>..HEAD -- <sourcePath>）に基づき更新する。全文再翻訳ではなく変更箇所のみ反映する。
+- deleted: 対応する翻訳ファイルを削除。added: 新規翻訳を作成。ただし added/changed 合計が5ファイルを超える、または大規模改稿の場合は、確実に訳せる分だけ更新し、残りは報告で「未反映（次回以降）」と明記する（manifestに記録しなければ次回も changed として検出される）。
+- 翻訳ルール（READMEの規約に従う）: 見出し・本文・表・Mermaidラベルは自然な日本語へ / コマンド・フラグ・パス・ID・スキーマキー・fence本文はバイト一致で保持 / 見出し直前に上流英語見出し由来の <a id="..."> を維持 / frontmatterは title・description のみ / MDXなのでHTMLコメントは {/* … */}、GitHub alertsは :::note 形式、表セル内コードの | は \| にエスケープ、上流への相対リンクはルート絶対（/guide/…）またはGitHub blob URLへ。
+- 更新した翻訳を記録: bun run sync -- --upstream /tmp/upstream --record docs/<更新したページ>.mdx …（新規翻訳は引数なしの --record）。
+- 検証: bun run check を実行し、失敗したら修正してから先へ進む（時間の制約で無理な場合は最低限 bun run validate:content と bun run build を通す）。
+- 上流の docs/ に変更が無いコミットのみの場合、3bは丸ごとスキップしてよい（changelogと last_checked のみ更新）。
+
+3c. last_checked.json
+- /tmp/docs/data/last_checked.json に最新コミットの sha・date・message、確認日時、site_version を書く。branch は "v2"。
+
+【4. コミット & プッシュ】
+- /tmp/docs 内で: git add -A && git -c user.name='aidlc-watch-bot' -c user.email='saedgewell@gmail.com' commit -m 'docs: <日付> v2差分反映（<要約>）' && git push origin main
+- push成功後、GitHub Actionsが自動デプロイする。公開URL https://otomatty.github.io/aidlc-workflows-docs/ を報告に含める。
+- pushが失敗した場合: 更新済みファイルを aidlc-watch/site-backup/ にコピーして保存し、エラー内容を報告する。
+
+【5. 報告】
+- まず以下のサマリー表を必ず出力する（変更なしの日も表は出す）:
+
+| 項目 | 結果 |
+|---|---|
+| 新規コミット | 🟢 N件 ／ ➖ なし |
+| バージョン変化 | 🚀 X.Y.Z → X.Y.Z' ／ ➖ なし |
+| 上流 /docs の更新 | 📝 あり（Nファイル: added X / changed Y / deleted Z）／ ➖ なし |
+| 更新規模 | 🔥 大 ／ 🟡 中 ／ 🟢 小 ／ ➖ なし |
+| 翻訳反映 | ✅ N/N 反映 ／ ⚠️ M/N 反映（残りは次回）／ ➖ 対象なし |
+| changelog | ✅ X.Y.Z 追加 ／ ✅ 日次差分 追加 ／ ➖ 追加なし |
+| デプロイ | ✅ push成功（Actionsが自動デプロイ）／ ❌ push失敗（site-backupへ保存）|
+
+- 更新規模の判定基準: 🟢 小 = /docs 変更が1〜2ファイルかつ軽微な修正のみ ／ 🟡 中 = 3〜5ファイル、または1ファイルでも大きな書き換え ／ 🔥 大 = 6ファイル以上、またはファイルの追加・削除・リネームや章構成の変更を含む。判定に迷ったら大きい方に倒す。
+- 「上流 /docs の更新」の数字は 3b の bun run sync の出力（added / changed / deleted）を使う。3bをスキップした日（/docs 変更なし）は git log <last_sha>..HEAD --name-only -- docs が空であることを根拠に ➖ とする。
+- 表の後に、新規コミットの主な内容・特筆すべき変更（破壊的変更、アップグレード手順の有無など）・公開URL（https://otomatty.github.io/aidlc-workflows-docs/）を3〜5行の日本語で書く。
+- 「本日の変更なし」の日は、表＋1行（「本日の変更なし」）のみでよい。
+
+【安全面】
+- 書き込み先は docs_repo（自分のドキュメントリポジトリ）のみ。上流リポジトリへの書き込み・Issue/PR作成・Slack投稿・メール送信・ファイル削除（3bのdeleted対応を除く）は行わない。tokenの値をレポートやログに出力しない。
+````
+
+<a id="notes"></a>
+## 運用メモ
+
+- 差分基準 `data/last_checked.json` はこのリポジトリ内で管理し、実行のたびにタスク自身が更新します。ファイルが無い場合は「直近7日」を初回として扱います。
+- 翻訳マニフェスト（`data/translation-manifest.json`）に未記録の差分は、次回実行時にも `changed` として再検出されるため、1回の実行で反映しきれなくても取りこぼしにはなりません。
+- このページ自体は `lib/translated-docs.ts` の `NON_TRANSLATION_PATHS` に登録された翻訳対象外ページです。
