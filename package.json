@@ -25,5 +25,8 @@
 		"vitest": "^4.1.10",
 		"yaml": "^2.6.0",
 		"zod": "^3.24.0"
+	},
+	"patchedDependencies": {
+		"@astrojs/mdx@7.0.3": "patches/@astrojs%2Fmdx@7.0.3.patch"
 	}
 }

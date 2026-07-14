@@ -1,0 +1,13 @@
+diff --git a/dist/satteri/index.js b/dist/satteri/index.js
+index eb47cc9016025f845b7dfa81bd9e39c750437b77..a855adaa3c87c2125a0c38f4dc2160aba5d66f15 100644
+--- a/dist/satteri/index.js
++++ b/dist/satteri/index.js
+@@ -52,7 +52,7 @@ function createMdxProcessor(mdxOptions, satteriOptions, ctx) {
+       ];
+       const hastPlugins = [];
+       if (highlightFn) {
+-        hastPlugins.push(satteriHighlightPlugin(highlightFn, excludeLangs));
++        hastPlugins.push(satteriHighlightPlugin(highlightFn, excludeLangs, { mdx: true }));
+       }
+       if (satteriOptions.hastPlugins.length) {
+         hastPlugins.push(...satteriOptions.hastPlugins);
