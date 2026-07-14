@@ -1,0 +1,42 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import Mermaid from "../components/Mermaid.astro";
+import Search from "../components/Search.astro";
+import { siteMetadata } from "../data/site";
+import BaseLayout from "./BaseLayout.astro";
+import "../styles/docs.css";
+
+interface Props {
+	title: string;
+	description: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<BaseLayout
+	title={`${title} | ${siteMetadata.title}`}
+	description={description}
+	noindex={true}
+>
+	<Header />
+	<main id="main-content" class="page-shell">
+		<section class="surface-card">
+			<div class="docs-toolbar">
+				<Search />
+			</div>
+			<article class="doc-article">
+				<header class="doc-article__header">
+					<p class="doc-article__eyebrow">テストフィクスチャ</p>
+					<p class="doc-article__description">{description}</p>
+				</header>
+				<div class="doc-article__body">
+					<slot />
+				</div>
+			</article>
+		</section>
+		<Footer />
+	</main>
+	<Mermaid />
+</BaseLayout>

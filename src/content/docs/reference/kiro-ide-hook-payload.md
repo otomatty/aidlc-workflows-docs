@@ -1,0 +1,63 @@
+---
+title: Kiro IDE フックペイロード — 実測リファレンス
+description: Kiro IDE が `runCommand` フックへ渡すコンテキストの実測結果
+sidebarOrder: 20
+sourcePath: docs/reference/kiro-ide-hook-payload.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: f023e270f0815796d03a76362228a30a0ce00e0a19da781342f946e9cdff8fff
+translationStatus: current
+---
+<a id="kiro-ide-hook-payload--empirical-reference"></a>
+# Kiro IDE フックペイロード — 実測リファレンス
+
+Kiro IDE が `runCommand` フックにコンテキストを渡す方法を、標準入力・引数配列・環境全体をダンプするプローブ用 `.kiro.hook` ファイルを登録し、Kiro IDE 0.12 系で実測した結果です。これは `harness/kiro-ide/` アダプターの IDE 分岐の根拠です。CLI ハーネス（`harness/kiro/`）は異なる、標準入力ベースの仕組みを使用します。
+
+<a id="the-channel-user_prompt-env-var-not-stdin"></a>
+## チャネル: 標準入力ではなく `USER_PROMPT` 環境変数
+
+Kiro IDE の `runCommand` フックは、標準入力ではなく **`USER_PROMPT` 環境変数**を通じてイベントコンテキストを受け取ります。
+
+- **標準入力**は開かれますが、書き込みもクローズもされないため、`Bun.stdin.text()` はハングします。旧アダプターの標準入力読み取りは IDE では機能しませんでした（2 秒のタイムアウト後、空のペイロードで処理を続行していました）。
+- **`USER_PROMPT`** は次の形式の JSON 文字列です。
+
+  ```json
+  { "toolName": "fs_write", "toolArgs": {}, "toolResult": "Created the /abs/path/file.md file.", "toolSuccess": true }
+  ```
+
+`VSCODE_IPC_HOOK` / `VSCODE_PID` も IDE には存在します（CLI にはありません）が、アダプターはコンテキストチャネルとして `USER_PROMPT` を使用します。
+
+<a id="per-event-captures"></a>
+## イベント別のキャプチャ結果
+
+| イベント | `toolName` | `toolArgs` | `toolResult` | 復元可能か |
+|-------|-----------|-----------|-------------|--------------|
+| ツール使用後（書き込み） — 作成 | `fs_write` | `{}`（空） | `Created the <ABS_PATH> file.` | パス: `toolResult` の文面からのみ |
+| ツール使用後（書き込み） — 編集 | `str_replace` | `{}`（空） | `Replaced text in <ABS_PATH>` | パス: `toolResult` の文面からのみ |
+| ツール使用後（書き込み） — 追記 | `fs_append` | `{}`（空） | `Appended the text to the <ABS_PATH> file.` | パス: `toolResult` の文面からのみ |
+| ツール使用後（シェル） | `execute_bash` | `{}`（空） | `Output:\n<stdout>\n\nExit Code: 0` | コマンド: **復元不可**（標準出力のみ） |
+
+<a id="critical-limitations"></a>
+### 重大な制約
+
+1. **`toolArgs` は常に `{}` です。** IDE はツール入力を渡しません。そのため、書き込み先ファイルパスは `toolResult` の文面から抽出する必要があり、シェルコマンド自体は存在しません（標準出力と終了コードのみ）。
+2. **標準入力は使用できません。** アダプターは `process.env.USER_PROMPT` を読み取ります。
+3. **`toolResult` 内のパスはワークスペース相対です**が、コアフックは絶対レコードルートと比較します。そのため、アダプターは転送前に絶対パスへ解決します。
+
+<a id="consequences-for-each-hook"></a>
+## 各フックへの影響
+
+- **監査ロガー / センサー発火** — 復元可能です。`toolResult` からファイルパスを抽出して絶対パスへ解決し、Claude 形式の `{tool_input:{file_path}}` をコアフックに渡します。既知のパターンに一致しない文面の書き込み系ツールでは、可視のフックドロップを記録します（暗黙の何もしない処理にはしません）。
+- **ランタイムコンパイル** — シェルコマンドは復元できないため、IDE パスではコマンドフィルターを外し、監査末尾のみをゲートにします。更新時刻の冪等性ガードにより、`WORKFLOW_COMPLETED` 後などの残留遷移で、その後の各シェルコマンドごとに再コンパイルされることを防ぎます。
+- **ステータスライン同期** — IDE はタスクペイロードを渡さないため、監査末尾の最新 `STAGE_STARTED` から現在のステージを導出します。これは**前方のみ**のミラーです。`Current Stage` を完了またはスキップ済みのステージに巻き戻すことはなく、ワークフローが `Running` でない場合は実行されません（完了済みワークフローの復活を防止）。`shell` イベントに接続されます。`spec` イベントは IDE では発火しません。
+- **セッション開始 / セッション終了 / 停止** — ペイロードを必要としないため、変更ありません。
+
+<a id="toolresult-path-extraction-patterns"></a>
+## `toolResult` のパス抽出パターン
+
+| `toolName` | 文面 | 正規ツール |
+|----------|---------|----------------|
+| `fs_write` | `Created the <PATH> file.` | `Write` |
+| `str_replace` | `Replaced text in <PATH>`（末尾に ` (N occurrences)` が付く場合あり） | `Edit` |
+| `fs_append` | `Appended the text to the <PATH> file.` | `Edit` |
+
+抽出器は一致判定前に末尾の空白と改行を除去し、`str_replace` 形式では末尾の括弧書きを取り除きます。`fs_write` は `Write` に対応します。`str_replace`/`fs_append` は `Edit` に対応します（どちらも既存ファイルを対象とするため、コア監査ロガーは `ARTIFACT_UPDATED` を記録します）。

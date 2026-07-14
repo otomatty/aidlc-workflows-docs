@@ -1,0 +1,25 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { withBase } from "../lib/routes";
+---
+
+<BaseLayout title="ページが見つかりません | AI-DLC ドキュメントサイト" noindex={true}>
+	<Header />
+	<main id="main-content" class="page-shell page-shell--narrow">
+		<section class="surface-card empty-state">
+			<p class="empty-state__eyebrow">404</p>
+			<h1>ページが見つかりません</h1>
+			<p>
+				指定された URL に対応する日本語ドキュメントは見つかりませんでした。
+			</p>
+			<p>
+				<a class="primary-link" href={withBase("/docs/")}>
+					ドキュメント一覧へ戻る
+				</a>
+			</p>
+		</section>
+		<Footer />
+	</main>
+</BaseLayout>

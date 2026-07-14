@@ -1,0 +1,63 @@
+---
+import type { GuideNavigation } from "../lib/navigation";
+import { withBase } from "../lib/routes";
+
+interface Props {
+	navigation: GuideNavigation[];
+	currentContentId: string;
+}
+
+const { navigation, currentContentId } = Astro.props;
+const docsHref = withBase("/docs/");
+---
+
+<aside class="docs-sidebar" aria-label="ドキュメントナビゲーション">
+	<nav aria-label="ドキュメント全体">
+		<div class="docs-sidebar__section-label">ドキュメント</div>
+		<a
+			class:list={[
+				"docs-sidebar__home",
+				{ "is-current": currentContentId === "index" },
+			]}
+			href={docsHref}
+			aria-current={currentContentId === "index" ? "page" : undefined}
+		>
+			AI-DLC ドキュメント
+		</a>
+
+		{
+			navigation.map((group) => (
+				<section class="docs-sidebar__group" aria-label={group.title}>
+					<h2 class="docs-sidebar__group-title">{group.title}</h2>
+					{group.sections.map((section) => (
+						<div class="docs-sidebar__section">
+							{
+								section.title !== group.title && (
+									<h3 class="docs-sidebar__section-title">{section.title}</h3>
+								)
+							}
+							<ul class="docs-sidebar__links">
+								{section.links.map((link) => (
+									<li>
+										<a
+											class:list={[
+												"docs-sidebar__link",
+												{ "is-current": link.id === currentContentId },
+											]}
+											href={link.href}
+											aria-current={
+												link.id === currentContentId ? "page" : undefined
+											}
+										>
+											{link.title}
+										</a>
+									</li>
+								))}
+							</ul>
+						</div>
+					))}
+				</section>
+			))
+		}
+	</nav>
+</aside>

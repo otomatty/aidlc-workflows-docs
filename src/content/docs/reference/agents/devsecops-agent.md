@@ -1,0 +1,102 @@
+---
+title: aidlc-devsecops-agent — 技術リファレンス
+description: aidlc-devsecops-agent の識別情報、ステージ担当、連携パターン、ナレッジソースを定義します。
+sidebarOrder: 7
+sourcePath: docs/reference/agents/devsecops-agent.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 55eebb47d585bf1acb94a87ffefaa3cf0161cfa8649a82eabb3ab6359511fdef
+translationStatus: current
+---
+
+<a id="aidlc-devsecops-agent----technical-reference"></a>
+# aidlc-devsecops-agent -- 技術リファレンス
+
+<a id="identity"></a>
+## 識別情報
+
+| 項目 | 値 |
+|------|----|
+| 名前 | aidlc-devsecops-agent |
+| 階層 | **judgment** |
+| 許可される Claude Code ツール | Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion |
+| 許可されない Claude Code ツール | Task |
+
+---
+
+<a id="stage-ownership"></a>
+## 担当ステージ
+
+<a id="lead-stages"></a>
+### 主担当ステージ
+
+このエージェントに主担当ステージはありません。構想具体化、構築、
+運用の各フェーズにまたがる複数のステージで、支援役として専従します。
+
+<a id="support-stages"></a>
+### 支援ステージ
+
+| ステージ | 名称 | このエージェントの貢献内容 |
+|----------|------|------------------------------|
+| practices-discovery | プラクティス発見 | 発見されたチームプラクティスに対する、セキュリティおよび DevSecOps の実践入力（スキャン、シークレットの扱い、セキュアなパイプライン規約） |
+| nfr-requirements | NFR 要件 | セキュリティ統制の仕様化と脅威モデルの統合 |
+| infrastructure-design | インフラストラクチャ設計 | IAM ポリシーのレビュー、セキュリティグループの検証、ネットワークセキュリティ評価 |
+| build-and-test | ビルドとテスト | SAST/DAST スキャン設定、依存関係の脆弱性スキャン、IaC セキュリティリント |
+| environment-provisioning | 環境プロビジョニング | セキュリティ態勢の検証（Security Hub、Inspector、GuardDuty、暗号化、CloudTrail、VPC Flow Logs） |
+
+---
+
+<a id="collaboration-patterns"></a>
+## 連携パターン
+
+<a id="receives-from"></a>
+### 受け取る相手
+
+| ソース | 成果物 |
+|--------|--------|
+| aidlc-compliance-agent | アイデア創出 からの規制要件（制約レジスター、RAID ログ） |
+| aidlc-architect-agent | 脅威モデリング用のシステム設計、コンポーネント境界 |
+
+<a id="hands-off-to"></a>
+### 引き渡す相手
+
+| ターゲット | 成果物 |
+|----------|--------|
+| aidlc-developer-agent | セキュアコーディング要件、脆弱性修正仕様 |
+| aidlc-quality-agent | 実行用のセキュリティテストケース |
+| aidlc-pipeline-deploy-agent | CI/CD パイプライン統合用のセキュリティゲート |
+
+---
+
+<a id="knowledge-sources"></a>
+## ナレッジソース
+
+<a id="methodology-tier-1"></a>
+### 手法論（第1層）
+
+パス: `.claude/knowledge/aidlc-devsecops-agent/`
+
+| ファイル | 内容 |
+|----------|------|
+| devsecops-pipeline-patterns.md | セキュリティパイプライン統合パターン（SAST、DAST、IaC スキャン） |
+| nfr-requirements-guide.md | セキュリティ重視の NFR 要件手法 |
+| security-guide.md | アプリケーションおよびクラウドセキュリティの手法 |
+| threat-modelling-stride.md | STRIDE 脅威モデリングの手法とテンプレート |
+
+<a id="team-tier-2"></a>
+### チーム（第2層）
+
+パス: `aidlc/knowledge/aidlc-devsecops-agent/`（スペースレベルのナレッジディレクトリ。ユーザー管理）
+
+チームが内容を持つときに作成するスペースレベルのディレクトリです（エンジンは `aidlc/knowledge/` を空で提供します）。既存の脅威モデル、セキュリティポリシー、承認済みの
+暗号化標準、ペネトレーションテスト所見など、プロジェクト固有の
+セキュリティ文脈をチームがここに格納します。
+
+---
+
+<a id="cross-references"></a>
+## 相互参照
+
+- [エージェントリファレンス概要](README.md)
+- [エージェントガイド: aidlc-devsecops-agent](../../guide/agents/devsecops-agent.md)
+- [ステージドキュメント](../04-stages/)
+- 出典: [`dist/claude/.claude/agents/aidlc-devsecops-agent.md`](../../../dist/claude/.claude/agents/aidlc-devsecops-agent.md)

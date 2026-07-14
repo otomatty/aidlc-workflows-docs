@@ -1,0 +1,199 @@
+---
+title: スペースとインテント
+description: 1 つの workspace の中で AI-DLC が複数の作業を spaces と intents でどう整理するかを説明します。
+sidebarOrder: 3
+sourcePath: docs/guide/03-spaces-and-intents.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: 1be3e1e661b4ad25d5fdbd4048f757c296abbaf23344ab82d2dbb3666cda254b
+translationStatus: current
+---
+
+<a id="spaces-and-intents"></a>
+# スペースとインテント (Spaces and Intents)
+
+[最初のワークフロー](02-your-first-workflow.md) では、1 つの run を最初から最後まで追いました。しかし、実際の作業はたいてい 1 つではありません。feature の作業中に緊急の bug が入り、別チームが同じ repo を共有することもあります。この章では、AI-DLC が **多くの** 作業を **1 つの** 場所、すなわち *workspace* にどう整理するか、そしてそれを辿るために使う 2 つの概念、**spaces** と **intents** を説明します。
+
+短く言うと、**intent** は 1 つの作業（lifecycle の 1 回の run）であり、**space** はあるチームの intents、knowledge、practices がある世界です。ほとんどの人は 1 つの space（`default`）だけで作業し、spaces を意識することはありません。ただ intents を始めて切り替えるだけです。この章の残りでは、それがどう機能し、何がどこにあるのかを示します。
+
+---
+
+<a id="one-workspace-organized-by-what-youre-working-on"></a>
+## 1 つのワークスペースを、作業対象で整理する
+
+AI-DLC をインストールすると、その engine を project にコピーします。これは harness-specific な 1 つの directory です（Claude Code では `.claude/`、Kiro では `.kiro/`、Codex では `.codex/`）。この directory だけが harness ごとに異なる部分です。以後、AI-DLC が生成するものはすべて project root の 1 つの中立的な `aidlc/` directory の下に置かれます。整理の軸は *どの harness を使っているか* ではなく、*何に取り組んでいるか* です。見るのは `aidlc/` であり、engine directory を開く必要はありません。
+
+以下は、2 つの team と複数の in-flight intents を含む完全な workspace の例です（engine directory は `.claude/` として表示していますが、それぞれの harness では `.kiro/` や `.codex/` と読み替えてください）。上から下へ読んでください。これが、この章の残りが前提とする mental model です。
+
+```
+my-project/
+│
+├── .claude/                      THE ENGINE — tools, hooks, skills, agents.
+│                                 (or .kiro/ / .codex/ — the one harness-specific dir)
+│                                 You never browse this; it just runs /aidlc.
+│
+├── aidlc/                        EVERYTHING AI-DLC — neutral, browsable, committed to git
+│   ├── active-space              ← cursor: which space you're in (gitignored, per-user)
+│   └── spaces/
+│       ├── default/              ★ the only space most people ever see
+│       │   ├── memory/           THE METHOD — how this team works (committed)
+│       │   │   ├── org.md          framework defaults
+│       │   │   ├── team.md         your team's practices  (overrides org)
+│       │   │   ├── project.md      project-specific practices (overrides team)
+│       │   │   ├── phases/         phase-scoped rules
+│       │   │   └── templates/      your output-format overrides, one per artifact
+│       │   │
+│       │   ├── knowledge/        DOMAIN KNOWLEDGE — standards an agent reads (committed)
+│       │   │                       free-form; empty until you add files
+│       │   ├── codekb/           CODE KNOWLEDGE — what each repo is (committed, per-repo)
+│       │   │   └── <repo>/          architecture, component inventory, freshness marker
+│       │   │
+│       │   └── intents/          THE RECORD — one subdir per piece of work
+│       │       ├── active-intent   ← cursor: which intent is current (gitignored)
+│       │       ├── intents.json    the registry: every intent + its scope/repos/status
+│       │       ├── 260620-inventory-api/        ✓ a completed intent
+│       │       └── 260624-export-bug/           ◷ an in-flight intent
+│       │           ├── aidlc-state.md             where this intent is in the lifecycle
+│       │           ├── audit/                     the decision trail
+│       │           └── inception/requirements-analysis/requirements.md   …artifacts
+│       │
+│       └── payments-team/        another SPACE (another team) — identical shape
+│           └── memory/  knowledge/  codekb/  intents/
+│
+├── repo-a/                       YOUR CODE REPOS live as siblings (each its own git)
+└── repo-b/                       an intent can span more than one
+```
+
+この tree から取り出しておきたい点は 3 つあります。これこそが全体の考え方だからです。
+
+- **`aidlc/spaces/<space>/`** は、1 つの team の自己完結した世界です。method（`memory/`）、knowledge、code knowledge、そしてすべての intents の記録を含みます。`spaces/default/` は最初から使え、solo developer や単一チームなら通常それ以上を見る必要はありません
+- **`intents/<YYMMDD>-<label>/`** は 1 つの作業です。つまり [最初のワークフロー](02-your-first-workflow.md) で埋まっていった per-run record です。`<YYMMDD>` は record を時系列順に並べるための短い UTC date、`<label>` は短い human-readable name です。識別子そのものは dir name ではなく registry にある UUIDv7 が担うため、同じ日・同じ label の intent が 2 つあっても区別できます
+- **2 つの cursor**、すなわち `active-space` と `active-intent` は、*今どこにいるか* を記録します。これは per-user（gitignored）なので、2 人の teammates が異なる intents に同時にいても、共有 file を奪い合うことはありません
+
+> **古いバージョンからアップグレードする場合:** 以前の release では project root に単一の flat directory で workflow を保持しており、新しい run を始めるとそれが上書きされていました。workspace model ではそれを上記の per-intent record dirs に置き換えるため、複数の作業を横に並べて保持でき、どれかが別のものを壊すことはありません。
+
+---
+
+<a id="intents-one-per-piece-of-work"></a>
+## インテント: 作業 1 件につき 1 つ
+
+**intent** とは、1 つの task に scope を絞った AI-DLC lifecycle の単一実行です。各 intent は、space の `intents.json` registry に 1 行（`{uuid, slug, dirName, scope, repos, status}`）を持ち、その run の state、audit trail、artifacts を保持する **record dir** を持ちます。`uuid`（UUIDv7）が衝突しない正規の識別子であり、`dirName` には human-readable な record-dir 名がそのまま記録されます。
+
+intent を special command で作ることはありません。最初に作業内容を説明したとき、engine があなたのために intent を **auto-birth** します。
+
+```
+/aidlc Build a REST API for inventory management
+```
+
+新しい workspace では、これにより intent が mint され、`aidlc/spaces/default/intents/260624-inventory-api/` に record dir が作られ、それが active intent となり、最初の stage が始まります。まさに前章で見た run です。
+
+<a id="starting-a-second-piece-of-work"></a>
+### 2 つ目の作業を始める
+
+workspace が本領を発揮するのはここです。たとえば feature 作業の途中で、無関係な bug に対応する必要が出たとします。何かを archive したり init command を実行したりする必要はありません。ただ新しい作業を説明するだけです。
+
+```
+/aidlc Fix the timeout on the export endpoint
+```
+
+すでに active な intent がある場合、AI-DLC はこれが現在の feature の続きではなく *新しく無関係な* 作業だと認識し、最初の intent と並行して 2 つ目の intent を始めるかを **提案** します。
+
+```
+▸ This looks like new work, separate from "inventory-api". Start a second intent?
+  (1) Yes — start a second intent (scope: bugfix)
+  (2) No — this continues the inventory-api work
+```
+
+- **Yes** を選ぶと、AI-DLC は 2 つ目の intent（ここでは `bugfix`）を birth し、それへ切り替え、最初の stage を開始します。inventory-api intent は一切触られず、record dir、state、progress はすべて離れたその場所にそのまま残ります
+- **No** を選ぶと、AI-DLC はその message を active intent の一部として扱います
+
+AI-DLC は、確認なしに 2 つ目の intent を birth することはありません。prompt が genuinely に現在の作業の follow-up、たとえば gate への回答や requirement の修正である場合、それは active intent に留まります。提案が出るのは、作業が明らかに別物である場合だけです。
+
+<a id="switching-between-intents"></a>
+### インテントを切り替える
+
+space 内の intents を一覧し、そのうち 1 つへ名前（slug）で切り替えます。
+
+```
+/aidlc intent                     List all intents in the active space
+/aidlc intent export-bug          Switch the active intent to "export-bug"
+```
+
+切り替えにより `active-intent` cursor が動きます。次の `/aidlc` は、その intent を停止地点から再開します。stage も state も audit trail も同じです。いくつでも intents を同時に持ち、それらの間を自由に行き来できます。それぞれが独立した run です。
+
+> 裸の `/aidlc intent` は read-only です。単に一覧するだけです。機械可読出力が必要なら `--json` を付けてください。完全な flag reference は [CLI コマンド](12-cli-commands.md) を参照してください。
+
+---
+
+<a id="spaces-one-per-team"></a>
+## スペース: チームごとに 1 つ
+
+**space** とは、1 つの team の完全な世界です。独自の `memory/`（method）、`knowledge/`、`codekb/`、`intents/` を持ちます。ここまでの説明はすべて `default` という単一の space の中で起きていました。これは自動的に作成されます。**solo developer または単一チームであれば、話はそこで終わりです。space に名前を付ける必要はなく、そのまま動作します。**
+
+spaces が存在するのは、**複数の team が 1 つの project を共有し**、各 team が衝突せずに独自の method、knowledge、record を持ちたい場合のためです。team を追加することは純粋に加算的です。同じ shape を持つ新しい `spaces/<name>/` が `default/` の横に現れるだけで、何かが移動したり移行されたりすることはありません。
+
+space の作成、一覧、切り替えは、intent verbs をそのまま写した verbs で行います。
+
+```
+/aidlc space                      List all spaces
+/aidlc space-create payments-team Create a new space, seeded from the framework baseline
+/aidlc space payments-team        Switch the active space to "payments-team"
+```
+
+新しく作られた space は framework の default method（`org.md`）と、空の `team.md` / `project.md` practice files で始まります。新しい team は他チームの practices を継承するのではなく、自分たちの practices を獲得していくからです。`knowledge/` と `codekb/` も空から始まります。
+
+space を切り替えると、2 つのことが自動的に cursor に従います。
+
+1. **AI-DLC 自身の resolvers**。次に始める intent や、agents が読み込む practices と knowledge は、切り替えたその space から取得されます
+2. **harness が context に読み込む rules**。切り替えにより harness の native rule include（Claude の `@`-import、Kiro の resources glob、Codex の rules dir）が新しい space の `memory/` を指し直すため、次の turn はその team の method の下で動作します
+
+`default` では、この指し直しは no-op です。そのため単一チームの workspace では committed files が churn しません。
+
+<a id="knowing-which-space-youre-in"></a>
+### 今どのスペースにいるかを知る
+
+複数の space が存在する場合、status line には active な `space · intent` が永続的な「現在地」として表示されます。shell prompt が current directory を示すのと同じです。これにより、誤った space に作業が落ちることを防げます。単一チームの利用者は `default` しか持たないため、space token 自体が表示されません。
+
+---
+
+<a id="multiple-repos-in-one-intent"></a>
+## 1 つのインテントに複数のリポジトリを含める
+
+intent は 1 つの repository に限定されません。code repos は workspace の sibling として存在し（どれか 1 つの下にネストされるわけではありません）、そのため intent は必要なだけ多くの repo をまたげます。
+
+repo set は **intent が birth される時点で** 記録されます。追加で何か入力する必要はありません。既定では AI-DLC が sibling repos を auto-discover し（workspace root の直下にあり、自分自身の `.git` を持つ immediate child）、その集合を intent の `intents.json` row に記録します。Construction 中の各 git operation は、その後自動的に正しい repo へ anchor されます。
+
+```
+my-project/
+├── aidlc/          # the workspace
+├── checkout-api/   # repo-a   ┐ both auto-discovered as siblings;
+└── checkout-web/   # repo-b   ┘ an intent here can touch either or both
+```
+
+repo が記録されない intent は、通常の single-repo case です。record-dir の詳細は [成果物リファレンス](14-artifacts-reference.md)、用語としての [マルチリポジトリインテント](glossary.md) は glossary を参照してください。
+
+---
+
+<a id="whats-committed-and-whats-not"></a>
+## コミットされるものと、されないもの
+
+`aidlc/` は git に commit されます。そうすることで team が作業を **共有** できるからです。method、intent registry、各 intent の state、audit trail、artifacts はすべて repo と一緒に移動します。その一方で、2 種類の file は意図的に **gitignored** されています。
+
+| Git 追跡対象外（ユーザー別、ローカルマシンのみ） | 理由 |
+|---|---|
+| `aidlc/active-space`, `…/intents/active-intent` | Cursors、つまり「今どこにいるか」です。これを commit すると、`/aidlc` のたびに tree が dirty になり、切り替えるたびに teammates が cursor を奪い合うことになります |
+| `…/intents/<id>/runtime-graph.json`, `.aidlc-*`, `aidlc/.aidlc-sessions/` | 派生物であり、machine-local な runtime state です |
+
+space の下にあるそれ以外、つまり `memory/**`、`knowledge/**`、`codekb/**`、`intents.json`、各 record の `aidlc-state.md`、`audit/` shards、artifacts はすべて commit されます。経験則としては、**cursors と runtime scratch はローカル、共有すべき作業は commit** です。
+
+---
+
+<a id="next-steps"></a>
+## 次のステップ
+
+- [フェーズとステージ](04-phases-and-stages.md) — 1 つの intent の run の中で何が起きるか
+- [ナレッジ](08-knowledge.md) — team の standards を space の `knowledge/` に追加する方法
+- [ルールと学習ループ](09-rules-and-the-learning-loop.md) — space の `memory/` method がどう著述され学習されるか
+- [成果物リファレンス](14-artifacts-reference.md) — per-intent record dir の詳細
+- [CLI コマンド](12-cli-commands.md) — `space` / `intent` verbs の完全リファレンス
+- [用語集](glossary.md) — Space、Intent、Record dir、Multi-repo intent の定義
+```

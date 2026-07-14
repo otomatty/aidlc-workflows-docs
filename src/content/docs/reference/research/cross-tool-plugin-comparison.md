@@ -1,0 +1,344 @@
+---
+title: ツール横断プラグインマニフェスト比較
+description: Codex、Claude Code、Cursor、OpenCode、Pi のプラグインマニフェストと配布モデルを横断比較する調査補遺です。
+sidebarOrder: 20
+sourcePath: docs/reference/research/Cross-Tool Plugin Comparison.md
+sourceCommit: 3c76878775915b6dc510fa7e1ef0991ba510cd53
+sourceHash: e974be12f738ebb4fbcfd30d4a0e6a0929309332309cf418ebc802d9ad9d7e2b
+translationStatus: current
+---
+
+<a id="cross-tool-plugin-manifest-comparison"></a>
+# ツール横断プラグインマニフェスト比較
+
+> **Codex Manifest Shape Report への補遺** | 2026 年 6 月 26 日  
+> **出典**: OpenAI Codex docs、Anthropic Claude Code docs、Cursor official plugins repo、OpenCode docs、HuggingFace Context Course  
+> **比較対象プラットフォーム**: Codex、Claude Code、Cursor、OpenCode、Pi
+
+---
+
+<a id="platform-architecture-models"></a>
+## プラットフォームアーキテクチャモデル
+
+AI coding tool のエコシステムは、基本的に 2 つのアプローチへ分かれています。
+
+| モデル | プラットフォーム | 特徴 |
+|-------|-----------|-----------------|
+| **マニフェスト優先** | Codex, Claude Code | 宣言的な JSON manifest とルートレベルの component dirs を使う。インストール時にコードは実行されない。 |
+| **コード優先** | OpenCode | JS/TS modules が hook functions を export する。プラグインそのものがコードである。 |
+| **IDE 拡張** | Cursor (VS Code fork) | VS Code extension model を継承しつつ、新しい plugin specs を追加する |
+| **パッケージベース** | Pi | 規約ベースのディレクトリを持つ `package.json` を使う |
+
+---
+
+<a id="side-by-side-manifest-comparison"></a>
+## 並列マニフェスト比較
+
+<a id="codex-codex-pluginpluginjson"></a>
+### Codex `.codex-plugin/plugin.json`
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "description": "Text analysis skills",
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "apps": "./.app.json",
+  "hooks": "./hooks/hooks.json",
+  "interface": {
+    "displayName": "Text Processor",
+    "shortDescription": "Analyze text with AI",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "defaultPrompt": ["Analyze this text for readability"],
+    "brandColor": "#10A37F",
+    "logo": "./assets/logo.png"
+  }
+}
+```
+
+<a id="claude-code-claude-pluginpluginjson"></a>
+### Claude Code `.claude-plugin/plugin.json`
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "description": "Text analysis skills",
+  "author": { "name": "Your Name" }
+}
+```
+
+**注目点**: Claude Code の manifest はかなり簡素です。components は明示パスで参照されるのではなく、規約（ディレクトリの存在）によって発見されます。`interface` object もありません。
+
+<a id="opencode-no-manifest--code-is-the-plugin"></a>
+### OpenCode（マニフェストなし。コード自体がプラグイン）
+
+```typescript
+// .opencode/plugins/text-processor-plugin.ts
+import type { Plugin } from "@opencode-ai/plugin"
+
+export const TextProcessorPlugin: Plugin = async ({ project, client, $, directory }) => {
+  return {
+    "tool.execute.before": async (input) => {
+      if (input.tool === "read") {
+        await client.app.log({ body: { message: "Consider text analysis" } })
+      }
+    }
+  }
+}
+```
+
+<a id="pi-packagejson"></a>
+### Pi `package.json`
+
+```json
+{
+  "name": "text-processor-plugin",
+  "version": "1.0.0",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./skills"],
+    "extensions": ["./extensions"],
+    "prompts": ["./prompts"],
+    "themes": ["./themes"]
+  }
+}
+```
+
+---
+
+<a id="directory-structure-comparison"></a>
+## ディレクトリ構造比較
+
+<a id="codex"></a>
+### Codex
+```
+my-plugin/
+├── .codex-plugin/
+│   └── plugin.json          ← Manifest (ONLY file here)
+├── skills/
+│   └── analyze-text/
+│       └── SKILL.md
+├── .mcp.json                ← MCP server config
+├── .app.json                ← App/connector config  
+├── hooks/
+│   └── hooks.json
+└── assets/
+    ├── logo.png
+    └── screenshot-1.png
+```
+
+<a id="claude-code"></a>
+### Claude Code
+```
+my-plugin/
+├── .claude-plugin/
+│   └── plugin.json          ← Manifest (ONLY file here)
+├── skills/
+│   └── analyze-text/
+│       └── SKILL.md
+├── agents/                  ← UNIQUE: agent definitions
+│   └── reviewer.md
+├── .mcp.json                ← MCP server config
+├── .lsp.json                ← UNIQUE: LSP server config
+├── hooks/
+│   └── hooks.json
+├── monitors/                ← UNIQUE: background monitors
+│   └── monitors.json
+├── themes/                  ← UNIQUE: color themes
+│   └── dracula.json
+└── README.md
+```
+
+<a id="opencode"></a>
+### OpenCode
+```
+my-project/
+├── .opencode/
+│   ├── plugins/
+│   │   └── text-processor.ts   ← Plugin IS the code
+│   └── package.json
+├── opencode.json               ← npm plugin references
+└── README.md
+```
+
+<a id="pi"></a>
+### Pi
+```
+my-package/
+├── package.json                ← Manifest (no hidden dir)
+├── skills/
+│   └── analyze-text/
+│       └── SKILL.md
+├── extensions/                 ← Runtime TS/JS extensions
+│   └── text-processor.ts
+├── prompts/
+└── themes/
+```
+
+---
+
+<a id="manifest-field-comparison"></a>
+## マニフェストフィールド比較
+
+| 項目 | Codex | Claude Code | OpenCode | Pi |
+|-------|-------|-------------|----------|-----|
+| **配置場所** | `.codex-plugin/plugin.json` | `.claude-plugin/plugin.json` | N/A (code-first) | `package.json` |
+| **必須項目** | `name` のみ | `name` のみ | N/A | `name` |
+| **名前形式** | kebab-case | kebab-case | module export | npm-style |
+| **バージョン** | 任意（semver） | 任意（semver または git SHA） | N/A | 必須（semver） |
+| **コンポーネント参照** | 明示指定（`"skills": "./skills/"`） | 規約ベース（dirs を自動検出） | N/A | 明示指定（`"pi": {"skills": [...]}`) |
+| **Interface/UI metadata** | 豊富な `interface` object（15 項目） | なし。marketplace metadata は marketplace.json 側 | N/A | なし |
+| **MCP config** | `.mcp.json`（manifest から参照） | `.mcp.json`（ルートで自動検出） | 独立した config | 任意の `.mcp.json` |
+| **パス規則** | `./` で始まり、`..` は不可 | `./` で始まり、`..` は不可 | N/A | 標準の node resolution |
+| **前方互換性** | `extra` maps が未知項目を保持 | 未知フィールドは validation 失敗 | N/A | 標準の JSON |
+| **検証方式** | SDK（Elixir）— 寛容で extra を保持 | 厳格な schema — 未知項目を拒否 | N/A | npm validation |
+
+---
+
+<a id="component-types-supported"></a>
+## サポートされるコンポーネント種別
+
+| コンポーネント | Codex | Claude Code | OpenCode | Cursor | Pi |
+|-----------|:-----:|:-----------:|:--------:|:------:|:---:|
+| Skills (SKILL.md) | ✅ | ✅ | ❌（hooks を使用） | ❌ | ✅ |
+| MCP Servers | ✅ | ✅ | ❌（別管理） | ✅（consumer として） | ✅（adapter 経由） |
+| アプリコネクター | ✅（.app.json） | ❌ | ❌ | ❌ | ❌ |
+| ライフサイクルフック | ✅ | ✅（30+ events） | ✅（25+ events） | ❌ | ❌ |
+| エージェント/サブエージェント | ❌ | ✅（agents/） | ❌ | ❌ | ❌ |
+| LSP サーバー | ❌ | ✅（.lsp.json） | ❌ | ❌（VS Code native） | ❌ |
+| モニター | ❌ | ✅（experimental） | ❌ | ❌ | ❌ |
+| テーマ | ❌ | ✅（experimental） | ❌ | ❌（VS Code native） | ✅ |
+| カスタムツール | ❌（MCP 経由） | ❌（MCP 経由） | ✅（コード内） | ❌ | ✅（extensions 内） |
+
+---
+
+<a id="distribution-models"></a>
+## 配布モデル
+
+| 観点 | Codex | Claude Code | OpenCode | Cursor |
+|-----------|-------|-------------|----------|--------|
+| **主な配布形態** | Git リポジトリ | Git リポジトリ | npm + local files | VS Code Marketplace (OpenVSX) |
+| **Marketplace 形式** | `marketplace.json`（JSON catalog） | `marketplace.json`（JSON catalog） | `opencode.json` 配列 | `.vsix` パッケージ |
+| **スコープ** | Official、Repo、Personal | User、Project、Local、Managed | プロジェクトローカル | グローバル |
+| **インストールキャッシュ** | `~/.codex/plugins/cache/` | `~/.claude/plugins/` | `node_modules` | `~/.vscode/extensions/` |
+| **オフライン対応** | ✅（cache persists） | ✅（cache persists） | ✅（npm cache） | ✅ |
+| **Version pinning** | marketplace entry 内の `ref`/`sha` | git SHA または明示 version | npm semver | Extension version |
+| **CLI インストール** | `codex plugin install` | `claude plugin install` | npm install | ext install |
+| **Marketplace CLI** | `codex plugin marketplace add` | `marketplace.json` ファイル | N/A | N/A |
+| **ポリシー制御** | `AVAILABLE`/`PREINSTALLED`/`HIDDEN` | スコープ別 settings | N/A | N/A |
+
+---
+
+<a id="hookevent-systems"></a>
+## Hook/Event システム
+
+| 観点 | Codex | Claude Code | OpenCode |
+|--------|-------|-------------|----------|
+| **イベント数** | 約 5-6（SessionStart、Turn*、ToolCall*） | 30+ events | 25+ events |
+| **Hook 種別** | `command` のみ | `command`、`http`、`mcp_tool`、`prompt`、`agent` | JS/TS の handler functions |
+| **信頼モデル** | Non-managed（明示的なユーザー信頼が必要） | Non-managed（明示的な信頼） | Auto-loaded（project 内のコード） |
+| **Env vars** | `PLUGIN_ROOT`、`PLUGIN_DATA` | `CLAUDE_PLUGIN_ROOT`、`CLAUDE_PLUGIN_DATA`、`CLAUDE_PROJECT_DIR` | コード内の context object |
+| **イベントマッチャー** | N/A | Regex patterns（例: `"Write|Edit"`） | Tool 名マッチング |
+| **ブロッキング** | なし | あり（PreToolUse がブロック可能） | あり（before hooks がブロック可能） |
+
+---
+
+<a id="key-architectural-differences"></a>
+## 主要なアーキテクチャ上の違い
+
+<a id="1-explicit-pointers-vs-convention-discovery"></a>
+### 1. 明示ポインタ vs 規約による発見
+
+**Codex** は明示的な manifest pointers を要求します。
+```json
+{ "skills": "./skills/", "mcpServers": "./.mcp.json" }
+```
+
+**Claude Code** はディレクトリの存在によって自動発見します。プラグインルートに `skills/` が存在すれば skills がロードされます。manifest に必要なのは `name` だけです。これにより Claude Code プラグインは作成しやすくなりますが、挙動を読み解くのは難しくなります（暗黙的な挙動）。
+
+<a id="2-interface-metadata-codex-only"></a>
+### 2. Interface Metadata: Codex 専用
+
+Codex には marketplace 表示用の豊富な `interface` object（brand colors、logos、screenshots、starter prompts）があります。Claude Code の manifest には **同等のものがありません**。表示用 metadata はすべてプラグイン本体ではなく marketplace entry に存在します。
+
+**重要性**: Codex プラグインは marketplace 用途において自己記述的です。Claude Code プラグインは見つけやすさを marketplace entry に依存します。
+
+<a id="3-app-connectors-codex-exclusive"></a>
+### 3. App Connectors: Codex 専用
+
+サードパーティサービス認証（OAuth、API keys）のための `.app.json` を持つのは Codex だけです。Claude Code、OpenCode、Cursor はプラグインシステムに auth connectors を同梱しません。外部サービス統合は MCP servers が処理する前提です。
+
+**重要性**: Codex は「Slack/GitHub/Figma に接続すること」をプラグインの第一級の関心事として扱います。その他のツールはこれを全面的に MCP へ委ねています。
+
+<a id="4-subagents-claude-code-exclusive"></a>
+### 4. Subagents: Claude Code 専用
+
+`agents/` ディレクトリと agent definitions（model selection、tool restrictions、isolation）をサポートするのは Claude Code だけです。Codex には agent bundling がなく、その「subagent」概念はプラグインシステムの外側で動作します。
+
+<a id="5-lsp--monitors--themes-claude-codes-breadth"></a>
+### 5. LSP + Monitors + Themes: Claude Code の広さ
+
+Claude Code は最も広い component surface を持ちます。LSP servers（リアルタイムのコードインテリジェンス）、monitors（バックグラウンドの stdout watchers）、themes まで備えます。これにより Claude Code プラグインは完全な IDE extensions により近くなります。Codex は対象範囲がより狭い一方、その分クリーンです。
+
+<a id="6-validation-philosophy"></a>
+### 6. 検証方針
+
+| | Codex | Claude Code |
+|--|-------|-------------|
+| 未知キー | **保持される**（`extra` maps 内） | **拒否される** — validation 失敗 |
+| 前方互換 | ✅ round-trip 後も維持 | ❌ 未知項目を削除する必要がある |
+| 厳格さ | 寛容（必要なのは `name` のみ） | 厳格（schema enforcement） |
+
+これは重要な分岐です。Codex プラグインは前方互換な実験的フィールドを保持できます。Claude Code の厳格な検証では、新しい manifest features が現れると古いツールが壊れます。
+
+<a id="7-cross-tool-portability"></a>
+### 7. ツール横断の移植性
+
+| レイヤー | 移植可能か | 注記 |
+|-------|-----------|-------|
+| MCP servers | ✅ 普遍的 | 同じ `.mcp.json` が Codex、Claude Code、Cursor をまたいで動作 |
+| Skills (SKILL.md) | 🟡 ほぼ移植可能 | 形式は同じだが、自動発見と呼び出しが異なる |
+| Hooks | ❌ ツール固有 | events も schemas も異なる |
+| Manifest | ❌ ツール固有 | `.codex-plugin/` ≠ `.claude-plugin/` |
+| Marketplace | 🟡 ほぼ移植可能 | JSON 形式は同じだが、パスが異なる |
+
+**MCP は普遍的な相互運用レイヤーです。** よく作られた MCP server はすべてのツールで動作します。MCP より上のもの（skills、hooks、marketplace metadata）はツール固有ですが、機能ロジック（MCP server code）は一度書けばどこでも実行できます。
+
+---
+
+<a id="summary-when-to-use-which-model"></a>
+## まとめ: どのモデルをいつ使うか
+
+| こうしたい場合 | 最適なプラットフォームモデル |
+|----------------|-------------------|
+| 宣言的で検査可能な plugins がほしい | Codex または Claude Code（manifest-first） |
+| 充実した marketplace presentation がほしい | Codex（`interface` object） |
+| 最大の component variety がほしい | Claude Code（agents、LSP、monitors、themes） |
+| チーム横断で配布したい | Codex または Claude Code（Git marketplaces） |
+| コードレベルで hook を制御したい | OpenCode（programmatic hooks） |
+| IDE-native extensions がほしい | Cursor（VS Code model） |
+| MCP portability を重視する | すべて（MCP is universal） |
+| Forward-compatible schemas がほしい | Codex（extra maps） |
+| Strict validation safety を重視する | Claude Code（未知キーを拒否） |
+| サードパーティサービス auth が必要 | Codex（`.app.json` connectors） |
+
+---
+
+<a id="the-convergence-thesis"></a>
+## 収束仮説
+
+表面的な違いはあっても、エコシステムは収束しつつあります。
+
+1. **MCP as universal glue** — すべてのツールが MCP servers を消費します。これが一度書けば使い回せるレイヤーです。
+2. **Skills as a shared concept** — YAML frontmatter 付きの SKILL.md は Codex、Claude Code、Pi に現れます。形式はほぼ同一です。
+3. **Git-native distribution** — Codex も Claude Code も、Git repos を指す `marketplace.json` catalog を使います。コンパイルステップもビルドシステムもありません。
+4. **Plugin = directory** — どちらの manifest-first platform も同じ物理パターンを共有します。隠し設定ディレクトリ（`.codex-plugin/` または `.claude-plugin/`）に `plugin.json` があり、すべての components は plugin root に置かれます。
+
+決定的な違いは **野心のスコープ** にあります。Codex は Skills + MCP + Apps に集中します（クリーンでポータブル）。Claude Code は component variety を最大化します（agents、LSP、monitors、themes）。OpenCode は programmatic な方向へ進みます（完全な JS/TS control）。しかし、その下層の MCP があるため、どの wrapper を選んでも機能ツール自体はポータブルです。
+
+---
+
+*出典: [OpenAI Codex Plugins](https://developers.openai.com/codex/plugins/build), [Claude Code Plugins Reference](https://code.claude.com/docs/en/plugins-reference), [Cursor Plugin Ecosystem](https://pyshine.com/Cursor-Plugins-AI-Code-Editor-Plugin-Specification/), [OpenCode Plugins](http://opencode.ai/docs/plugins), [HuggingFace Context Course Unit 3](https://huggingface.co/learn/context-course/unit3/anatomy.md)*
