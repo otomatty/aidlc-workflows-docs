@@ -5,6 +5,7 @@
 			"**",
 			"!**/*.astro",
 			"!**/.astro",
+			"!.blume",
 			"!dist",
 			"!node_modules",
 			"!playwright-report",

@@ -1,13 +1,13 @@
 # aidlc-workflows-docs
 
-`awslabs/aidlc-workflows` の日本語ドキュメントサイトです。Astro で上流 `docs/` の Markdown を翻訳公開し、上流差分の検出と GitHub Pages デプロイまでをこのリポジトリで扱います。
+`awslabs/aidlc-workflows` の日本語ドキュメントサイトです。[Blume](https://useblume.dev) で上流 `docs/` の Markdown 翻訳を公開し、上流差分の検出と GitHub Pages デプロイまでをこのリポジトリで扱います。
 
 **公開URL:** https://otomatty.github.io/aidlc-workflows-docs/
 
 ## 主要ルート
 
-- `/aidlc-workflows-docs/` — 日本語ランディングページ
-- `/aidlc-workflows-docs/docs/` — 翻訳ドキュメントの一覧とナビゲーション
+- `/aidlc-workflows-docs/` — 翻訳ドキュメントのトップ（上流 `docs/README.md` の翻訳）
+- `/aidlc-workflows-docs/guide/…` `/harness-engineering/…` `/reference/…` — 各ガイド（ルートはファイル名の数字プレフィックスを除いた形）
 - `/aidlc-workflows-docs/changelog/` — 旧 v2 ウォッチサイトの changelog アーカイブ
 - 旧 `architecture.html` / `workflow.html` / `agents.html` / `changelog.html` は静的リダイレクト
 
@@ -22,43 +22,34 @@ bun run sync -- --upstream "../../aidlc-workflows"
 
 | コマンド | 用途 |
 |---|---|
-| `bun run dev` | Astro 開発サーバー |
-| `bun run check` | lint → unit test → content validation → build → link check |
+| `bun run dev` | Blume 開発サーバー |
+| `bun run check` | lint → unit test → content validation → build |
 | `bun run test:e2e` | Playwright（内部で build + preview） |
 | `bun run sync -- --upstream <path>` | 上流との差分レポート（追加 / 変更 / 削除 / 未翻訳 / current） |
-| `bun run sync -- --upstream <path> --record` | レビュー済み翻訳のハッシュをマニフェストへ記録 |
+| `bun run sync -- --upstream <path> --record [docs/…​.mdx]` | 翻訳をマニフェストへ記録（引数なしは新規のみ、既存の更新は対象パスを明示） |
 
-CI と同じ一連のコマンド:
-
-```bash
-bun install --frozen-lockfile
-bun run lint
-bun run test
-bun run validate:content
-bun run build
-bun run check:links
-bun run test:e2e
-```
+内部リンク・アンカー切れは `bun run build`（Blume のリンク検証）が検出します。
 
 ## 翻訳ルール
 
 - 読者向けの見出し・本文・表・Mermaid ラベルは自然な日本語へ翻訳する
 - コマンド、フラグ、パス、ID、スキーマキー、正確な UI 文言、非 Mermaid の fence 本文は LF 正規化後にバイト一致で保持する
 - 見出しの直前に、上流英語見出し由来の source-authentic `<a id="...">` を置く
-- frontmatter の `sourcePath` / `sourceCommit` / `sourceHash` / `translationStatus` を真実のソースに合わせる
+- frontmatter は `title` / `description` のみ（衝突回避が必要なページのみ `slug`）。ソース対応は `data/translation-manifest.json` が唯一の真実源
+- コンテンツは MDX として解釈されるため、GitHub alerts は `:::note` 形式、HTML コメントは `{/* … */}`、上流への相対リンクはルート絶対（`/guide/…`）または GitHub blob URL に書き換える。表セル内のインラインコードに含まれる `|` は `\|` にエスケープする
 
-## 同期と stale
+## 同期と更新の流れ
 
 1. 上流を clean なピン済みコミットに置く
-2. `bun run sync -- --upstream <path>` で差分を確認する
-3. 翻訳を更新し、構造・リンク・文言を確認する
-4. `bun run sync -- --upstream <path> --record` でレビュー済みとして記録する
+2. `bun run sync -- --upstream <path>` で差分を確認する（`changed` = 上流が動いたページ）
+3. 該当する翻訳（`docs/**/*.mdx`）を更新する
+4. `bun run sync -- --upstream <path> --record docs/<更新したページ>.mdx` で記録する（新規翻訳は引数なしの `--record` で自動記録）
 
-上流が動いて翻訳が追いついていないページは `translationStatus: stale` になります。サイトには掲載されますが、同期レポートでは stale として扱われます。上流でファイルがリネームされた場合は、旧翻訳を削除または `sourcePath` を更新し、新パスへ再翻訳してから `--record` します。
+マニフェストのハッシュが上流と合わないページは同期レポートで `changed` として現れ、更新されるまで `--record`（引数なし）が失敗します。上流でファイルがリネームされた場合は、旧翻訳を削除し、新パスへ再翻訳してから `--record` します。
 
 ## GitHub Pages
 
-- base path は `/aidlc-workflows-docs`
+- base path は `/aidlc-workflows-docs`（`blume.config.ts` の `deployment.base`）
 - Settings → Pages → Source を **GitHub Actions** にする
 - `main` への push で `.github/workflows/deploy-pages.yml` が `dist/` をデプロイする
 - PR では `.github/workflows/ci.yml` が検証のみ行い、デプロイしない
@@ -66,18 +57,19 @@ bun run test:e2e
 ## 構成
 
 ```text
+blume.config.ts         # サイト設定（タイトル・検索・deployment.base など）
+components.ts           # レイアウトスロット登録（PageFooter → SourceStatus）
+components/             # SourceStatus.astro（ページ下部の原文リンク）
+docs/                   # 翻訳 MDX（上流 docs/ をミラー）+ 各フォルダの meta.ts
+data/                   # translation-manifest.json（翻訳とソースの対応）
+lib/                    # ルート変換・マニフェスト・不変条件の共有ロジック
 public/                 # 静的資産・legacy redirect・JSON 例
-scripts/                # sync / validate / check-links
-src/content/docs/       # 翻訳 Markdown（89）
-src/content/site/       # サイト固有コンテンツ（changelog など）
-src/data/               # translation-manifest.json など
-src/pages/              # Astro ページ
+scripts/                # sync-upstream / validate-content
 tests/                  # Vitest と Playwright
 .github/workflows/      # CI と Pages デプロイ
 ```
 
 ## 由来と方針
 
-- ランディングページは旧要約サイトの要点を再構成したものです
 - changelog は旧 HTML を Markdown 化したアーカイブです
 - 本文の一次情報は `awslabs/aidlc-workflows` を参照してください

@@ -5,7 +5,7 @@ import {
 	extractFenceBlocks,
 	extractRawUrls,
 	hasJapaneseProse,
-} from "../../src/lib/translation-invariants";
+} from "../../lib/translation-invariants";
 
 describe("translation invariants", () => {
 	it("accepts matching non-Mermaid fences, URLs, unique anchors, and Japanese prose", () => {

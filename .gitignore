@@ -1,5 +1,6 @@
 node_modules
 .astro
+.blume
 dist
 playwright-report
 test-results

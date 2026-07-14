@@ -1,0 +1,27 @@
+---
+title: test-pro — 具体的な設定／JSON 例
+description: 出荷済み test-pro フィクスチャ向けのプラグイン設定ドキュメント例を示します。
+---
+これらは、プラグイン設計における**設定ドキュメント**を、出荷済みの `test-pro` フィクスチャ向けに具体化したものです。プラグイン機構を扱う唯一の章である [doc 18](/reference/plugin-mechanism) を例示します。**ここで描かれている内容の大半は、まだ実装が先送りされており**、出荷されていません。現時点で実際に接続されているもの（プラグインマニフェスト + compose シーム）と、設計済みだが将来対応のもの（マーケットプレイス解決、managed-settings による信頼、ロックファイル、および `aidlc plugin add` / `sync` インストーラ）の正確な区別については、doc 18 の §8「Status」を参照してください。これらが示しているのは現在の挙動ではなく、意図されたライフサイクルです。
+
+| ファイル | 役割 | 作成者 | 配置場所 |
+|---|---|---|---|
+| [`../../../../plugins/test-pro/.aidlc-plugin/plugin.json`](https://github.com/awslabs/aidlc-workflows/blob/main/plugins/test-pro/.aidlc-plugin/plugin.json) | **プラグインマニフェスト** — プラグインが何であり、何を出荷するか | プラグイン作者 | プラグインリポジトリ内（実在する作成済みファイル） |
+| [`marketplace.json`](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/examples/test-pro/marketplace.json) | **カタログエントリ** — プラグインをどのように発見し、バージョン管理するか | マーケットプレイス管理者 | マーケットプレイスリポジトリ |
+| [`managed-settings.json`](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/examples/test-pro/managed-settings.json) | **信頼許可リスト** — 組織がどのソースを許可するか | 組織管理者（managed スコープ） | そのマシンの managed-settings パス |
+| [`aidlc.lock.json`](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/examples/test-pro/aidlc.lock.json) \| **インストールロック** — 再現性のために合成結果を固定する \| `aidlc plugin` インストーラ | 利用側プロジェクト |
+
+<a id="status-of-these-files"></a>
+## これらのファイルのステータス
+
+- `plugin.json` は、リポジトリ内にある**実在する作成済みファイル**であり、出荷される `test-pro` フィクスチャのマニフェストです。（注: 現在のパッケージャーは、プラグイン内容をディレクトリ慣例で発見しており、マニフェストの `aidlc.contributes` ブロックはまだ読み取りません。doc 18 §3 を参照。）
+- `marketplace.json`、`managed-settings.json`、`aidlc.lock.json` は、設計レビュー専用の**説明用サンプル**です。これらを*生成*し、*消費*するインストーラ、マーケットプレイス解決、ロックファイルライターは、まだ**将来の作業**です（doc 18 の §8「Status」）。ロックファイル内のすべての `sha256:…` と `commit` の値は、**プレースホルダー**であり、計算済みハッシュではありません。
+
+<a id="the-lifecycle-these-files-trace"></a>
+## これらのファイルがたどるライフサイクル
+
+1. **作者**が `plugin.json` とプラグインのサブツリーを書き、git タグを公開します。
+2. **マーケットプレイス**は（任意で）発見のために、そのプラグインを `marketplace.json` に掲載します。
+3. **組織管理者**が `managed-settings.json` を設定し、承認済みソースだけをインストール可能にします。開発者はこれを上書きできません（managed スコープ、最優先）。
+4. **開発者**が `aidlc plugin add test-pro` を実行します。するとバージョン解決、許可リストとの照合、取得と検証、`bare core + test-pro` の合成、そして `aidlc.lock.json` の書き込みが行われます。
+5. **チームメイト**が、コミット済みの `aidlc.lock.json` に対して `aidlc plugin sync` を実行し、バイト単位で同一のインストール結果を取得します。

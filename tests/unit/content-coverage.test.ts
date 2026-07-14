@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
 	collectTranslatedDocs,
 	EXPECTED_JSON_EXAMPLES,
-} from "../../src/lib/translated-docs";
-import { readTranslationManifest } from "../../src/lib/translation-manifest";
+} from "../../lib/translated-docs";
+import { readTranslationManifest } from "../../lib/translation-manifest";
 
 describe("content coverage", () => {
 	it("matches manifest record count to translated markdown docs and JSON examples", async () => {
 		const projectRoot = process.cwd();
 		const manifest = await readTranslationManifest(
-			`${projectRoot}/src/data/translation-manifest.json`,
+			`${projectRoot}/data/translation-manifest.json`,
 		);
 		const docs = await collectTranslatedDocs(projectRoot);
 

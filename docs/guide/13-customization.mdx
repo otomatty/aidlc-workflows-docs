@@ -1,0 +1,239 @@
+---
+title: カスタマイズ
+description: 設定の上書き、スコープ設定、ステージ調整、ステータスライン、ツール権限の変更方法を説明します。
+---
+AI-DLC は、チームのニーズに適応できるよう設計されています。この章では、設定の上書き、スコープ設定、ステージのカスタマイズ、ステータスライン、ツール権限を扱います。
+
+> **ハーネス固有の設定。** スコープ設定、ステージの深さ、ナレッジ、ルールなど、ハーネスに依存しないカスタマイズはすべてのハーネスで適用されます。この章で扱う仕組み単位の設定（`settings.json` / `settings.local.json`、ステータスラインコマンド、`$CLAUDE_PROJECT_DIR`、ツール権限ブロック）は **Claude Code 固有** です。Kiro では `.kiro/settings/cli.json` とエージェント設定、Codex では `.codex/config.toml` と Starlark ルールで同等の設定を行います。各ハーネスの設定面については [Kiro CLI での実行](/guide/harnesses/kiro-cli) と [Codex CLI での実行](/guide/harnesses/codex-cli) を参照してください。
+
+---
+
+<a id="settings-overrides-settingslocaljson"></a>
+## 設定の上書き（`settings.local.json`）
+
+共有の `.claude/settings.json` はフレームワークと一緒に配布され、バージョン管理にコミットされます。チームへ影響させずにローカル環境だけで設定を上書きしたい場合は、個人用の上書きファイルを作成します。
+
+```bash
+cp .claude/settings.local.json.example .claude/settings.local.json
+```
+
+このファイルは `.gitignore` に入っているため、個人用の変更がコミットされることはありません。用途は次のとおりです。
+
+- モデル選択を上書きする（たとえば別の Opus / Sonnet モデル ID に切り替える）
+- ローカルセットアップ用の環境変数を設定する
+- セキュリティ要件に合わせてツール権限を調整する
+
+---
+
+<a id="agent-models-and-effort-tiers"></a>
+## エージェントのモデルと推論量（階層）
+
+同梱されるエージェントには `tier:`（`judgment` | `balanced` | `templated`）が記述されており、ビルド時に各ハーネス固有のモデルと推論量のキーへ投影されます。`judgment` エージェントはセッションのモデルと推論量を継承し、`balanced` エージェントは中規模モデルに固定され、`templated` エージェントは推論量がさらに抑えられます。完全な投影表は [エージェントシステム](/reference/agent-system) を参照してください。
+
+インストール済みコピー内で **1 つのエージェント**の挙動だけ変えたい場合は、投影済みの値を直接編集します。たとえば Claude エージェントの `.claude/agents/aidlc-*-agent.md` フロントマターで `model: opus` にするか、Kiro エージェント JSON の `"model"` を変更します。この編集は `dist/<harness>/` の実行環境を再コピーするまで残ります。ソースから独自の配布物をビルドする際に **すべてのエージェント**へ上限を設けたい場合は、`core/memory/org.md` / `project.md` のフロントマターに `tier_cap:` を設定するか、`AIDLC_TIER_CAP=<tier>` を付けてパッケージャーを実行します。どちらも実行時設定ではなく、`bun scripts/package.ts` に対するパッケージ作成時の調整値です。
+
+---
+
+<a id="per-project-default-scope"></a>
+## プロジェクトごとの既定スコープ
+
+プロジェクト内のすべてのワークフローを同じスコープで始めたい場合、たとえば参加者全員が `workshop` を実行すべきワークショップなら、`.claude/settings.json` の `env` ブロックに `AWS_AIDLC_DEFAULT_SCOPE` を設定します（配布済みファイルではすでに `workshop` が設定されています）。
+
+```json
+{
+  "env": {
+    "AWS_AIDLC_DEFAULT_SCOPE": "workshop"
+  }
+}
+```
+
+> 配布済みの `env` ブロックには Bedrock のモデル ID（`CLAUDE_CODE_USE_BEDROCK`、`ANTHROPIC_DEFAULT_OPUS_MODEL` など）も含まれます。分かりやすさのため、上の例ではスコープのキーだけを示しています。
+
+これを設定すると、引数なしの `/aidlc` 呼び出しは `workshop` を既定スコープとして使います。参加者は毎回 `/aidlc workshop` を覚える必要がありません。この環境変数はワークフロー初期化時にだけ読み込まれます。インテントの `aidlc-state.md`（その記録ディレクトリ内）が存在した後は、状態ファイルが正本となり、環境変数の変更は進行中ワークフローへ影響しません。
+
+**優先順位（高い順）:**
+
+1. 明示的な CLI フラグ: `/aidlc feature` または `/aidlc --scope bugfix`
+2. 自由形式テキストのキーワード検出: `/aidlc fix the login bug` は引き続き `bugfix` に対応付けられます。利用者は既存の確認プロンプトで検出結果を上書きできます
+3. `.claude/settings.json` の環境変数 `AWS_AIDLC_DEFAULT_SCOPE`
+4. ハードコードされた代替値（インテント作成では `poc`、未一致の自由形式入力では `feature`）
+
+**有効な値:** `enterprise`、`feature`、`mvp`、`poc`、`bugfix`、`refactor`、`infra`、`security-patch`、`workshop`。無効な値を指定すると、呼び出し時に明確なメッセージ付きでエラーになります。追加スコープは `.claude/scopes/aidlc-<name>.md` を配置し、対象ステージの `scopes:` 一覧にタグ付けして定義できます。詳細は [貢献ガイド: スコープの追加](/reference/contributing#adding-a-scope) を参照してください。追加エージェントも `.claude/agents/` に定義できます。詳細は [貢献ガイド: エージェントの追加](/reference/contributing#adding-an-agent) を参照してください。
+
+**設定の確認:** 環境変数が設定され有効かどうかは `/aidlc --doctor` で確認できます。
+
+```
+✓  AWS_AIDLC_DEFAULT_SCOPE=workshop (valid)
+```
+
+**初期化時の通知:** 環境変数の既定値が適用されると、オーケストレーターはワークフロー開始時に 1 行の通知（`Using scope=<value> from AWS_AIDLC_DEFAULT_SCOPE (.claude/settings.json)`）を表示します。スコープの取得元を、適用された時点で確認できます。
+
+なぜ深さやテスト戦略ではなくスコープだけなのか。それは、各スコープがすでに独自の深さとテスト戦略の既定値を宣言しているためです（workshop → Standard の深さ、Minimal のテスト戦略）。スコープを設定すれば、それらが自動的に連鎖適用されます。どちらかを上書きしたい場合は、CLI で `--depth` または `--test-strategy` を渡してください。
+
+**機密値:** `.claude/settings.json` はバージョン管理にコミットされます。秘密情報、資格情報、個人用の上書きはここに入れないでください。機密情報には Git 管理外の `.claude/settings.local.json` を使います。
+
+---
+
+<a id="scope-configuration"></a>
+## スコープ設定
+
+スコープは、どのステージをどの深さとテスト戦略で実行するかを制御します。AI-DLC には 9 個の名前付きスコープがあり、完全な表（EXECUTE / 全ステージ数、既定の深さ、テスト戦略、各用途）は [スコープ、深さ、テスト戦略 § 9 個のスコープ](/guide/scopes-and-depth#the-9-scopes) が唯一の正本です。この節では、その*設定*と上書きを扱います。
+
+<a id="choosing-a-scope"></a>
+### スコープを選ぶ
+
+明示的に指定することも、オーケストレーターに自動検出させることもできます。
+
+```
+/aidlc enterprise       # Explicit scope
+/aidlc Build a payments API  # Auto-detects "feature"
+/aidlc Fix the login bug     # Auto-detects "bugfix"
+```
+
+<a id="overriding-at-runtime"></a>
+### 実行時に上書きする
+
+ワークフロー中のどの時点でもスコープを上書きできます。
+
+- **任意の承認ゲートで**: 別のスコープや深さを要求する
+- **ユーティリティコマンド経由で**: `/aidlc --scope enterprise` が現在のスコープを変更する
+- **ステージの組み入れ**: アイデア創出フェーズと構想フェーズの承認ゲートでは、以前スキップしたステージをワークフローへ戻せる
+
+---
+
+<a id="stage-customization"></a>
+## ステージのカスタマイズ
+
+各ステージは `.claude/aidlc-common/stages/[phase]/` にある自己完結した `.md` ファイルです。ステージファイルには次が定義されています。
+
+- **メタデータ** — ステージ番号、フェーズ、実行方式、主担当 / 支援エージェント
+- **入力** — 読み込む前段成果物
+- **手順** — 番号付きの実行順序
+- **出力** — 生成する成果物
+- **完了条件** — 承認ゲートのパターン
+
+ステージの挙動を変更したい場合は、そのステージファイルを直接編集します。すべてのステージは、承認ゲート、質問形式、状態追跡といった共通パターンについてステージ手順を参照します。
+
+<a id="depth-levels"></a>
+### 深さレベル
+
+各スコープは、成果物の詳細度を制御する既定の深さを持っています。
+
+| 深さ | 説明 |
+|-------|-------------|
+| **Minimal** | 短い成果物、対象を絞った分析、任意内容なし |
+| **Standard** | 釣り合いの取れた詳細度で、主要事項と副次事項をカバーする |
+| **Comprehensive** | 最大限の詳細度で、広範な分析を行い、任意内容もすべて含める |
+
+任意の承認ゲートで別レベルを要求すれば、深さを上書きできます。
+
+---
+
+<a id="statusline-claude-code-only"></a>
+## ステータスライン（Claude Code のみ）
+
+**Claude Code** では、この実装は端末のステータスバーにワークフロー進捗を表示します。Kiro と Codex にステータスラインはありません。代わりに Kiro は `/aidlc --status`、Codex は `update_plan` のタスク進捗項目と `$aidlc --status` でワークフロー位置を示します。
+
+```
+[AIDLC] IDEATION [▓▓▓▓▓░░░░░] 4/7 > Intent Capture -- Product Agent
+```
+
+ここには順に、現在のフェーズ、フェーズ内進捗（バーと比率の両方）、ステージ表示名、主担当エージェントが表示されます。コンテキスト使用量は右側に出ます（例: `ctx:15%`）。残りコンテキストが減るにつれて色分けされます。
+
+<a id="configuration"></a>
+### 設定
+
+ステータスラインは `.claude/settings.json` で設定します。
+
+```json
+"statusLine": {
+  "type": "command",
+  "command": "bun \"$CLAUDE_PROJECT_DIR/.claude/hooks/aidlc-statusline.ts\""
+}
+```
+
+<a id="customizing-the-format"></a>
+### 表示形式を変える
+
+`.claude/hooks/aidlc-statusline.ts` を直接編集します。出力形式はファイル末尾近くの `main()` 関数で定義されています。フックは `aidlc-state.md` からフェーズ、ステージ、エージェントを読み、ステージのスラッグを表示名へ変換します。Unicode 進捗バーと `n/m` 比率は、同じフェーズ内チェックボックスの解析結果から組み立てます。
+
+<a id="disabling-the-statusline"></a>
+### ステータスラインを無効化する
+
+`settings.json` から `statusLine` ブロックを削除します。端末のステータスバーは Claude Code の既定表示に戻ります。
+
+---
+
+<a id="tool-permissions"></a>
+## ツール権限
+
+`.claude/settings.json` の `permissions.allow` 一覧は Claude Code ツールを事前承認し、ワークフローが呼び出しごとの権限プロンプトなしで動くようにします。
+
+```json
+"permissions": {
+  "allow": [
+    "Read", "Edit", "Write",
+    "Bash(bun \"$CLAUDE_PROJECT_DIR/.claude/tools/\"*)",
+    "Bash", "Glob", "Grep", "Task", "WebSearch"
+  ]
+}
+```
+
+範囲を限定した `Bash(bun "$CLAUDE_PROJECT_DIR/.claude/tools/"*)` 項目は、制限なしの `Bash` より前に置かれています。これにより、フレームワーク自身のツール呼び出しは常に先に狭いルールへ一致します。`$CLAUDE_PROJECT_DIR` は二重引用符で囲み（`*` は引用符の外）、プロジェクトパスに空白が含まれても単語分割を行うシェルでコマンドが壊れず、権限照合のグロブも機能します。
+
+<a id="how-permissions-work"></a>
+### 権限の仕組み
+
+- **プロジェクト全体の上限**: `settings.json` の許可一覧が利用可能なツールの最大集合になる
+- **エージェントは既定でセッション全体のツール群を継承する**。同梱される唯一の制限は `disallowedTools: Task` で、入れ子のサブエージェント起動を防ぐ
+- **エージェント単位の任意の絞り込み**: フロントマターに `tools:` 許可一覧を追加すると、そのエージェントが利用できるツールを絞れる。省略時はすべて継承する。`tools:` を列挙した場合、完全修飾された `mcp__<server>__<tool>` ID も明示しなければ、継承された MCP ツールは除外される
+
+<a id="expanding-permissions"></a>
+### 権限を広げる
+
+許可一覧へツールを追加するのは、追加機能を必要とする独自ステージを作る場合だけにしてください。
+
+<a id="narrowing-permissions"></a>
+### 権限を狭める
+
+許可一覧からツールを外すと、利用のたびに手動承認が必要になります。`Task` を外すと、サブエージェントステージ（2.1 リバースエンジニアリング、3.5 コード生成）は委譲ごとに権限確認が出る点に注意してください。ワークスペース検出（0.2）は `aidlc-utility init` の内部で決定論的に実行されるため、`Task` は使いません。
+
+---
+
+<a id="extending-ai-dlc"></a>
+## AI-DLC を拡張する
+
+ここまでに述べた設定、スコープ、深さ、ステージ編集は、実行するワークフローを日常的に調整するためのものです。チーム向けにフレームワーク自体を作り替えたい場合、つまりステージやエージェントの追加、スコープの定義、常設ルールの学習、決定論的な検査の接続、分野別ナレッジの追加を行いたい場合は、別の作業になります。そのための専用ガイドが **[ハーネスエンジニアガイド](/harness-engineering/overview)** です。
+
+境界線はデータとコードです。そのガイドにあるものはすべて、フレームワークが読む Markdown ファイル（YAML フロントマター付き）または JSON 設定であり、TypeScript の編集は不要です。拡張内容ごとの入口は次のとおりです。
+
+| したいこと | 開始地点 |
+|--------------|----------|
+| ステージの内容を編集する、または新しいステージを追加する | [ステージの構造](/harness-engineering/anatomy-of-a-stage)、[ステージの追加](/harness-engineering/adding-a-stage) |
+| エージェントを追加または変更する | [エージェントの追加](/harness-engineering/adding-an-agent) |
+| スコープを定義または調整する | [スコープ](/harness-engineering/scopes) |
+| 常設ルールを学習させる、または学習ループを運用する | [ルールと学習ループ](/harness-engineering/rules-and-the-loop) |
+| 決定論的な検査（センサー）をステージに接続する | [センサー](/harness-engineering/sensors) |
+| チームの分野別ナレッジを追加する | [チームナレッジ](/harness-engineering/team-knowledge) |
+
+変更対象がフレームワークの*コード*、つまりオーケストレーター、フック、CLI ツール、コンパイル処理であれば、それは [開発者リファレンス](/reference/overview) の領域です。
+
+---
+
+<a id="knowledge-and-rules"></a>
+## ナレッジとルール
+
+二層のナレッジシステムと、ルール / 学習ループシステムの詳細は次を参照してください。
+
+- [ナレッジ](/guide/knowledge) — チームナレッジのディレクトリと方法論リファレンスファイル
+- [ルールと学習ループ](/guide/rules-and-the-learning-loop) — 振る舞いルールと自己学習フロー
+
+---
+
+<a id="next-steps"></a>
+## 次のステップ
+
+- [スコープ、深さ、テスト戦略](/guide/scopes-and-depth) — 完全なスコープ対ステージ対応表
+- [エージェント](/guide/agents-overview) — エージェントの権限と能力
+- [トラブルシューティング](/guide/troubleshooting) — ステータスラインの問題、フック設定
+- [用語集](/guide/glossary) — スコープ、深さ、ガードレール、ナレッジの定義

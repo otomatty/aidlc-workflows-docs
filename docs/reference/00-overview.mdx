@@ -1,0 +1,67 @@
+---
+title: 開発者リファレンス概要
+description: AI-DLC の内部アーキテクチャ、実装構造、参照先の読み分けをまとめた開発者向け案内です。
+---
+> [AI-DLC ドキュメント](/) の一部 · [ユーザーガイド](/guide/introduction) · [ハーネスエンジニアガイド](/harness-engineering/overview) · **開発者リファレンス**
+
+このリファレンスは、AI-DLC の内部アーキテクチャと実装を文書化したものです。対象は、AI-DLC のコードベース自体、つまりオーケストレーター、フック、CLI ツール、ステージグラフのコンパイルパイプライン、監査分類体系、テストスイートを変更するコントリビューターです。
+
+AI-DLC を**使って**ソフトウェアを作るなら、まず [ユーザーガイド](/guide/introduction) を読んでください。設定によって AI-DLC の振る舞いを**作り変える**、つまりステージやエージェントを追加する、スコープを定義する、ルールやセンサーを著述する、チームナレッジを足す、といった作業なら [ハーネスエンジニアガイド](/harness-engineering/overview) から始めてください。そこはデータ変更の領域であり、コード変更ではありません。各章は、実務の流れを説明してから完全なスキーマをここへ戻して参照させます。
+
+> **このリファレンス中のパス表記について。** AI-DLC は 1 回だけ著述し、各ハーネス向けに生成します。そのため、ファイルのパスは意図に応じて次の 3 つの規約で表記します。
+> - **`core/…`** -- 人手で著述する、ハーネス中立な**唯一の正本**です（例: `core/tools/aidlc-orchestrate.ts`, `core/aidlc-common/stages/`）。編集するのはここです。ファイルが*どこで著述・変更されるか*を示すときは `core/` パスを使います。
+> - **`dist/<harness>/…`** -- **生成済み・コミット済み・差分監視付き**の配布物です（`dist/claude/.claude/`, `dist/kiro/.kiro/`, `dist/codex/`）。手で編集してはいけません。`bun scripts/package.ts` がバイト単位で再現します。*何が出荷されるか*を説明するときだけ参照します。
+> - **`<harness-dir>/…`**（例: `.claude/`, `.kiro/`, `.codex/`） -- *インストール済み* プロジェクトの中にある**実行時**の場所です。ここでコマンドが動き、フレームワークがワークフロー中に読み書きします（`bun .claude/tools/aidlc-graph.ts compile`, `.claude/agents/` を読む `loadAgents()` など）。このディレクトリはハーネスのパラメーターです。
+>
+> このリファレンスで素の `.claude/` パスが出てきた場合は、Claude ハーネス固有の実行時位置として読んでください。同じファイルは `core/` に著述され、各ハーネスそれぞれのディレクトリへ出荷されます。
+
+<a id="what-this-reference-covers"></a>
+## このリファレンスが扱う内容
+
+| 章 | 話題 |
+|---------|-------|
+| [アーキテクチャ](/reference/architecture) | 5 層モデル、[設定レイヤー](/reference/architecture#configuration-layers) のルーティング原理、実行モデル、設計判断 |
+| [プレーンアーキテクチャ](/reference/plane-architecture) | コントロール / データ / マネジメントプレーンの分離とその境界 |
+| [オーケストレーター](/reference/orchestrator) | `SKILL.md` コンダクター: 転送ループ、ゲート儀式、それが駆動する状態機械 |
+| [ステージプロトコル](/reference/stage-protocol) | 振る舞い契約: 承認ゲート、コンプライアンスチェックリスト |
+| [ステージ群](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/04-stages/) | フェーズごとのステージ文書（5 ファイル） |
+| [エージェントシステム](/reference/agent-system) | エージェント構造、フロントマター契約、設定マトリクス |
+| [フックとツール](/reference/hooks-and-tools) | フックシステム、CLI ツール、68 イベントの監査分類体系 |
+| [センサーシステム](/reference/sensor-system) | センサーマニフェストのスキーマ、PULL インポート、発火モデル、既定重大度 |
+| [ルールシステム](/reference/rule-system) | ルールファイル配置、スコープ導出、レイヤーチェーン解決器、競合ゲート |
+| [テスト](/reference/testing) | テストピラミッド、ティア、スタブ、フィクスチャ、テストレジストリ |
+| [ナレッジシステム](/reference/knowledge-system) | 2 層アーキテクチャ、読み込み順、テンプレート |
+| [コントリビューション](/reference/contributing) | 開発ワークフロー、ユーティリティハンドラ追加チェックリスト、ドキュメント方針 |
+| [状態機械](/reference/state-machine) | ワークフロー / フェーズ / ステージの状態機械、68 イベント分類体系、監査ファースト規則 |
+| [ランタイムグラフ](/reference/runtime-graph) | コンパイル済み成果物 `runtime-graph.json`: ステージグラフのデータプレーン鏡像 |
+| [ハーネスプリミティブ対応](/reference/claude-features) | AI-DLC の各概念を各ハーネスのネイティブ機能へどう対応付けるか（Claude Code を詳説） |
+| [ステージ定義](/reference/stage-definition) | YAML フロントマター契約、3 区画本文、コンパイルパイプライン |
+| [成果物語彙](/reference/artifact-vocabulary) | 命名規則、衝突方針、ファイルシステム対応、ライブレジストリの見方 |
+| [エンジンとスキルシステム](/reference/skill-system) | オーケストレーションエンジン（`next` / `report`）、型付きディレクティブ契約、コンダクター、複数スキル、スコープ形状、スウォームレフェリー |
+| [プラグイン機構](/reference/plugin-mechanism) | AIDLC プラグインシステム: マニフェスト、実ホストプラグインとしてのインストール時コンポーズ、追加的コントリビューションの継ぎ目、マルチテナントガード、実装済みステータス。著述手順は [プラグインの著述](/harness-engineering/authoring-a-plugin) |
+| [図版集](/reference/diagrams) | Mermaid 図を 1 か所に集約 |
+| [エージェント群](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/agents/) | 技術的なエージェントリファレンス（フロントマター、ツール、ステージ担当） |
+
+<a id="how-to-navigate"></a>
+## どう読めばよいか
+
+- **新しい関心事（ルール、方法論、ナレッジの事実）はどこへ置くべきか?** [アーキテクチャ: 設定レイヤー](/reference/architecture#configuration-layers) を読んでください。著述者 × 消費時点の 2 軸モデルと境界テストで、正しいファイルへ振り分けられます。
+- **新しいステージを追加したい?** [ステージプロトコル](/reference/stage-protocol)、次に [ステージ群](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/04-stages/) の該当フェーズファイル、続いて [コントリビューション](/reference/contributing) を読んでください。
+- **ステージ定義フォーマットを変えたい?** どのステージ `.md` を編集する前でも [ステージ定義](/reference/stage-definition) を読んでください。ステージファイル形式はデータ駆動で、実行時はコンパイル済み JSON を読みます。
+- **成果物を追加または改名したい?** [成果物語彙](/reference/artifact-vocabulary) を読んでください。この章は命名規則、安定性方針（改名/削除 = メジャー、追加 = マイナー）を説明し、ライブ一覧を見る `bun aidlc-graph.ts artifacts` へ案内します。レジストリはステージファイルから導出されるもので、手書きではありません。
+- **新しいスコープを追加したい?** [コントリビューション: スコープの追加](/reference/contributing#adding-a-scope) を読んでください。スコープはファイル著述型であり、`.claude/scopes/aidlc-<name>.md` 1 つと、各所属ステージの `scopes:` タグで定義できます。TypeScript 編集は不要です。
+- **新しいエージェントを追加したい?** [コントリビューション: エージェントの追加](/reference/contributing#adding-an-agent) を読んでください。エージェントは `.md` フロントマターでデータ駆動化されており、TypeScript 編集は不要です。
+- **エージェントを変更したい?** [エージェントシステム](/reference/agent-system) と [エージェント群](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/agents/) の該当ファイルを読んでください。
+- **フックを触る?** [フックとツール](/reference/hooks-and-tools) と [テスト](/reference/testing) のフック用テストパターンを読んでください。
+- **オーケストレーターを変えたい?** [オーケストレーター](/reference/orchestrator) と [アーキテクチャ](/reference/architecture) を読んでください。監査イベントを追加・変更するなら、先に [状態機械](/reference/state-machine) を読んでください。差分監視テストが未対応を確実に拾います。
+
+<a id="relationship-to-the-user-guide"></a>
+## ユーザーガイドとの関係
+
+ユーザーガイド（`docs/guide/`）は AI-DLC が**何をするか**、そして**どう使うか**を説明します。この開発者リファレンスは、**どう動いているか**、そして**どう変更するか**を説明します。両方に出てくる話題もあります。
+
+| 話題 | ユーザーガイド | 開発者リファレンス |
+|-------|-----------|-------------------|
+| エージェント | 何をするか、いつ登場するか | フロントマター契約、追加・変更方法 |
+| ナレッジ | 会社標準の追加方法 | 読み込み順の内部、テンプレートシステム |
+| フック | 何が記録されるか | フック実装、監査イベント分類体系 |

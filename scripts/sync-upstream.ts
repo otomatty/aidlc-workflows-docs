@@ -3,17 +3,19 @@ import { existsSync } from "node:fs";
 import { readFile, rename, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-import { collectTranslatedDocs } from "../src/lib/translated-docs";
+import { sourcePathForTranslation } from "../lib/routes";
+import { collectTranslatedDocs } from "../lib/translated-docs";
 import {
 	compareUpstream,
 	computeSourceHash,
 	formatSyncStatus,
+	MANIFEST_RELATIVE_PATH,
 	readTranslationManifest,
 	type SyncReport,
 	serializeTranslationManifest,
 	type TranslationManifest,
 	type TranslationRecord,
-} from "../src/lib/translation-manifest";
+} from "../lib/translation-manifest";
 
 type OutputFormat = "text" | "json";
 
@@ -22,6 +24,14 @@ export interface RunSyncOptions {
 	projectRoot?: string;
 	manifestPath?: string;
 	record?: boolean;
+	/**
+	 * Translation paths (e.g. `docs/guide/01-getting-started.mdx`) whose records
+	 * should be re-blessed at the current upstream HEAD. Without explicit paths,
+	 * `--record` only adds records for new translations and fails when an
+	 * existing record no longer matches upstream — so an updated source can't be
+	 * silently marked translated.
+	 */
+	recordPaths?: string[];
 	format?: OutputFormat;
 }
 
@@ -31,12 +41,8 @@ export interface RunSyncResult {
 	manifestUpdated: boolean;
 }
 
-function toPosixPath(filePath: string): string {
-	return filePath.split(path.sep).join("/");
-}
-
 function getManifestPath(projectRoot: string, manifestPath?: string): string {
-	return manifestPath ?? path.join(projectRoot, "src/data/translation-manifest.json");
+	return manifestPath ?? path.join(projectRoot, MANIFEST_RELATIVE_PATH);
 }
 
 function runGit(upstreamRoot: string, args: string[]): string {
@@ -58,21 +64,27 @@ function ensureCleanUpstreamDocsTree(upstreamRoot: string): void {
 	}
 }
 
-async function validateRecordableTranslations(
+async function buildRecordedManifest(
 	projectRoot: string,
 	upstreamRoot: string,
 	manifest: TranslationManifest,
 	headCommit: string,
+	recordPaths: string[],
 ): Promise<TranslationManifest> {
 	const docs = await collectTranslatedDocs(projectRoot);
+	const requestedPaths = new Set(recordPaths);
 	const manifestByTranslationPath = new Map(
-		manifest.records.map((record) => [
-			toPosixPath(record.translationPath),
-			record,
-		]),
+		manifest.records.map((record) => [record.translationPath, record]),
 	);
+	const knownTranslationPaths = new Set(docs.map((doc) => doc.relativePath));
 	const errors: string[] = [];
 	const records: TranslationRecord[] = [];
+
+	for (const requestedPath of requestedPaths) {
+		if (!knownTranslationPaths.has(requestedPath)) {
+			errors.push(`no such translation file: ${requestedPath}`);
+		}
+	}
 
 	for (const doc of docs) {
 		if (doc.frontmatterError) {
@@ -80,19 +92,13 @@ async function validateRecordableTranslations(
 			continue;
 		}
 
-		const frontmatter = doc.frontmatter;
-		if (!frontmatter) {
-			continue;
-		}
-
-		if (frontmatter.translationStatus !== "current") {
-			errors.push(
-				`TranslationStatus must be current for --record: ${doc.relativePath} declares ${frontmatter.translationStatus}`,
-			);
-			continue;
-		}
-
-		const sourceAbsolutePath = path.resolve(upstreamRoot, frontmatter.sourcePath);
+		const existingRecord = manifestByTranslationPath.get(doc.relativePath);
+		// The manifest is authoritative for sourcePath (upstream filenames don't
+		// always mirror the translation); the structural mirror only seeds new
+		// records.
+		const sourcePath =
+			existingRecord?.sourcePath ?? sourcePathForTranslation(doc.relativePath);
+		const sourceAbsolutePath = path.resolve(upstreamRoot, sourcePath);
 		const upstreamDocsRoot = path.resolve(upstreamRoot, "docs");
 		const relativeToDocs = path.relative(upstreamDocsRoot, sourceAbsolutePath);
 		if (
@@ -101,7 +107,7 @@ async function validateRecordableTranslations(
 			!existsSync(sourceAbsolutePath)
 		) {
 			errors.push(
-				`Missing upstream source for translated file: ${frontmatter.sourcePath} (${doc.relativePath})`,
+				`missing upstream source for translated file: ${sourcePath} (${doc.relativePath})`,
 			);
 			continue;
 		}
@@ -109,33 +115,26 @@ async function validateRecordableTranslations(
 		const currentHash = await computeSourceHash(
 			await readFile(sourceAbsolutePath, "utf8"),
 		);
-		if (frontmatter.sourceHash !== currentHash) {
-			errors.push(
-				`Source hash does not match current upstream for ${doc.relativePath}: ${frontmatter.sourcePath} expected ${currentHash}, found ${frontmatter.sourceHash}`,
-			);
+
+		if (existingRecord && existingRecord.sourceHash === currentHash) {
+			records.push(existingRecord);
 			continue;
 		}
 
-		const previousRecord = manifestByTranslationPath.get(doc.relativePath);
-		const matchesPreviousRecord =
-			previousRecord?.sourcePath === frontmatter.sourcePath &&
-			previousRecord.sourceCommit === frontmatter.sourceCommit &&
-			previousRecord.sourceHash === frontmatter.sourceHash;
-		if (
-			!matchesPreviousRecord &&
-			frontmatter.sourceCommit !== headCommit
-		) {
-			errors.push(
-				`Reviewed translation must record upstream HEAD ${headCommit} in ${doc.relativePath}; found ${frontmatter.sourceCommit}`,
-			);
+		if (!existingRecord || requestedPaths.has(doc.relativePath)) {
+			records.push({
+				...existingRecord,
+				sourcePath,
+				translationPath: doc.relativePath,
+				sourceCommit: headCommit,
+				sourceHash: currentHash,
+			});
+			continue;
 		}
 
-		records.push({
-			sourcePath: frontmatter.sourcePath,
-			translationPath: doc.relativePath,
-			sourceCommit: frontmatter.sourceCommit,
-			sourceHash: frontmatter.sourceHash,
-		});
+		errors.push(
+			`stale record for ${doc.relativePath}: upstream ${sourcePath} changed since it was recorded. Update the translation, then run --record ${doc.relativePath}`,
+		);
 	}
 
 	if (errors.length > 0) {
@@ -152,7 +151,11 @@ async function writeManifestAtomically(
 	const temporaryPath = `${manifestPath}.${process.pid}.${crypto.randomUUID()}.tmp`;
 
 	try {
-		await writeFile(temporaryPath, serializeTranslationManifest(manifest), "utf8");
+		await writeFile(
+			temporaryPath,
+			serializeTranslationManifest(manifest),
+			"utf8",
+		);
 		await rename(temporaryPath, manifestPath);
 	} finally {
 		await rm(temporaryPath, { force: true });
@@ -173,9 +176,7 @@ function formatTextReport(report: SyncReport): string {
 	return `${lines.join("\n")}\n`;
 }
 
-export async function runSync(
-	options: RunSyncOptions,
-): Promise<RunSyncResult> {
+export async function runSync(options: RunSyncOptions): Promise<RunSyncResult> {
 	const projectRoot = path.resolve(options.projectRoot ?? process.cwd());
 	const upstreamRoot = path.resolve(options.upstreamRoot);
 	const manifestPath = getManifestPath(projectRoot, options.manifestPath);
@@ -187,15 +188,20 @@ export async function runSync(
 		ensureUpstreamIsGitRepository(upstreamRoot);
 		ensureCleanUpstreamDocsTree(upstreamRoot);
 		const headCommit = runGit(upstreamRoot, ["rev-parse", "HEAD"]);
-		recordedManifest = await validateRecordableTranslations(
+		recordedManifest = await buildRecordedManifest(
 			projectRoot,
 			upstreamRoot,
 			manifest,
 			headCommit,
+			options.recordPaths ?? [],
 		);
 	}
 
-	const report = await compareUpstream(upstreamRoot, manifest, { projectRoot });
+	const report = await compareUpstream(
+		upstreamRoot,
+		recordedManifest ?? manifest,
+		{ projectRoot },
+	);
 	let manifestUpdated = false;
 
 	if (recordedManifest) {
@@ -218,6 +224,7 @@ function parseCliArgs(argv: string[]): RunSyncOptions {
 		upstreamRoot: "",
 		format: "text",
 		record: false,
+		recordPaths: [],
 	};
 
 	for (let index = 0; index < argv.length; index += 1) {
@@ -246,12 +253,19 @@ function parseCliArgs(argv: string[]): RunSyncOptions {
 				options.record = true;
 				break;
 			default:
-				throw new Error(`Unknown argument: ${argument}`);
+				if (argument.startsWith("--")) {
+					throw new Error(`Unknown argument: ${argument}`);
+				}
+				options.recordPaths?.push(argument.split(path.sep).join("/"));
 		}
 	}
 
 	if (!options.upstreamRoot) {
 		throw new Error("Missing required --upstream path.");
+	}
+
+	if (!options.record && (options.recordPaths?.length ?? 0) > 0) {
+		throw new Error("Translation paths are only valid with --record.");
 	}
 
 	return options;

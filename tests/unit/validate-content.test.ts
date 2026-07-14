@@ -1,13 +1,13 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
-import { validateContent } from "../../scripts/validate-content";
 import {
 	computeSourceHash,
 	type TranslationManifest,
-} from "../../src/lib/translation-manifest";
+} from "../../lib/translation-manifest";
+import { validateContent } from "../../scripts/validate-content";
 
 const SOURCE_COMMIT = "abcdefabcdefabcdefabcdefabcdefabcdefabcd";
 const temporaryDirectories: string[] = [];
@@ -24,13 +24,25 @@ async function writeFileEnsuringDirectory(
 	await writeFile(filePath, contents, "utf8");
 }
 
+function createTranslation(title: string, body: string[]): string {
+	return [
+		"---",
+		`title: ${title}`,
+		`description: ${title} translation`,
+		"---",
+		"",
+		...body,
+		"",
+	].join("\n");
+}
+
 async function createValidProject(): Promise<{
 	projectRoot: string;
 	upstreamRoot: string;
 	manifestPath: string;
 }> {
-	const projectRoot = await createTempDirectory("task7-validate-project-");
-	const upstreamRoot = await createTempDirectory("task7-validate-upstream-");
+	const projectRoot = await createTempDirectory("validate-project-");
+	const upstreamRoot = await createTempDirectory("validate-upstream-");
 
 	temporaryDirectories.push(projectRoot, upstreamRoot);
 
@@ -51,41 +63,21 @@ async function createValidProject(): Promise<{
 	);
 
 	await writeFileEnsuringDirectory(
-		path.join(projectRoot, "src/content/docs/index.md"),
-		[
-			"---",
-			"title: Index",
-			"description: Index translation",
-			"sidebarOrder: 0",
-			"sourcePath: docs/README.md",
-			`sourceCommit: ${SOURCE_COMMIT}`,
-			`sourceHash: ${readmeHash}`,
-			"translationStatus: current",
-			"---",
-			"",
+		path.join(projectRoot, "docs/index.mdx"),
+		createTranslation("Index", [
 			"# Index",
 			"",
-			"<a id=\"index-heading\"></a>",
+			'<a id="index-heading"></a>',
 			"## 概要",
 			"",
 			"See https://example.com/readme.",
 			"",
 			"[jump](#index-heading)",
-		].join("\n"),
+		]),
 	);
 	await writeFileEnsuringDirectory(
-		path.join(projectRoot, "src/content/docs/guide/current.md"),
-		[
-			"---",
-			"title: Guide",
-			"description: Guide translation",
-			"sidebarOrder: 1",
-			"sourcePath: docs/guide/current.md",
-			`sourceCommit: ${SOURCE_COMMIT}`,
-			`sourceHash: ${guideHash}`,
-			"translationStatus: current",
-			"---",
-			"",
+		path.join(projectRoot, "docs/guide/current.mdx"),
+		createTranslation("Guide", [
 			"# Guide",
 			"",
 			"ガイド本文です。",
@@ -93,30 +85,27 @@ async function createValidProject(): Promise<{
 			"```bash",
 			"echo hi",
 			"```",
-		].join("\n"),
+		]),
 	);
 
 	const manifest: TranslationManifest = {
 		records: [
 			{
 				sourcePath: "docs/README.md",
-				translationPath: "src/content/docs/index.md",
+				translationPath: "docs/index.mdx",
 				sourceCommit: SOURCE_COMMIT,
 				sourceHash: readmeHash,
 			},
 			{
 				sourcePath: "docs/guide/current.md",
-				translationPath: "src/content/docs/guide/current.md",
+				translationPath: "docs/guide/current.mdx",
 				sourceCommit: SOURCE_COMMIT,
 				sourceHash: guideHash,
 			},
 		],
 	};
 
-	const manifestPath = path.join(
-		projectRoot,
-		"src/data/translation-manifest.json",
-	);
+	const manifestPath = path.join(projectRoot, "data/translation-manifest.json");
 	await writeFileEnsuringDirectory(
 		manifestPath,
 		JSON.stringify(manifest, null, "\t"),
@@ -129,7 +118,7 @@ async function createValidProject(): Promise<{
 	]) {
 		await writeFileEnsuringDirectory(
 			path.join(projectRoot, "public/examples/test-pro", exampleName),
-			"{\"ok\":true}\n",
+			'{"ok":true}\n',
 		);
 	}
 
@@ -138,15 +127,18 @@ async function createValidProject(): Promise<{
 
 afterEach(async () => {
 	await Promise.all(
-		temporaryDirectories.splice(0).map((directoryPath) =>
-			rm(directoryPath, { recursive: true, force: true }),
-		),
+		temporaryDirectories
+			.splice(0)
+			.map((directoryPath) =>
+				rm(directoryPath, { recursive: true, force: true }),
+			),
 	);
 });
 
 describe("validateContent", () => {
 	it("passes for a project whose translations, manifest, anchors, and examples are aligned", async () => {
-		const { projectRoot, upstreamRoot, manifestPath } = await createValidProject();
+		const { projectRoot, upstreamRoot, manifestPath } =
+			await createValidProject();
 
 		const result = await validateContent({
 			projectRoot,
@@ -158,75 +150,32 @@ describe("validateContent", () => {
 		expect(result.errors).toEqual([]);
 	});
 
-	it("reports actionable failures for coverage, metadata, routes, anchors, and JSON examples", async () => {
-		const { projectRoot, upstreamRoot, manifestPath } = await createValidProject();
+	it("reports actionable failures for coverage, routes, anchors, frontmatter, and JSON examples", async () => {
+		const { projectRoot, upstreamRoot, manifestPath } =
+			await createValidProject();
 
-		await rm(path.join(projectRoot, "src/content/docs/guide/current.md"));
+		await rm(path.join(projectRoot, "docs/guide/current.mdx"));
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/index.md"),
-			[
-				"---",
-				"title: Index",
-				"description: Index translation",
-				"sidebarOrder: 0",
-				"sourcePath: docs/README.md",
-				`sourceCommit: ${SOURCE_COMMIT}`,
-				"sourceHash: \"1111111111111111111111111111111111111111111111111111111111111111\"",
-				"translationStatus: current",
-				"---",
-				"",
+			path.join(projectRoot, "docs/index.mdx"),
+			createTranslation("Index", [
 				"# Index",
 				"",
-				"<a id=\"Bad Anchor\"></a>",
+				'<a id="Bad Anchor"></a>',
 				"Paragraph without heading after the anchor.",
-			].join("\n"),
+			]),
+		);
+		// Two files whose routes collide after numeric-prefix stripping.
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/guide/01-foo-bar.mdx"),
+			createTranslation("Duplicate One", ["# Duplicate One"]),
 		);
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/unrecorded-one.md"),
-			[
-				"---",
-				"title: Duplicate One",
-				"description: First duplicate route",
-				"sidebarOrder: 2",
-				"sourcePath: docs/guide/Foo Bar.md",
-				`sourceCommit: ${SOURCE_COMMIT}`,
-				"sourceHash: \"2222222222222222222222222222222222222222222222222222222222222222\"",
-				"translationStatus: current",
-				"---",
-				"",
-				"# Duplicate One",
-			].join("\n"),
+			path.join(projectRoot, "docs/guide/foo-bar.mdx"),
+			createTranslation("Duplicate Two", ["# Duplicate Two"]),
 		);
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/unrecorded-two.md"),
-			[
-				"---",
-				"title: Duplicate Two",
-				"description: Second duplicate route",
-				"sidebarOrder: 3",
-				"sourcePath: docs/guide/foo-bar.md",
-				`sourceCommit: ${SOURCE_COMMIT}`,
-				"sourceHash: \"3333333333333333333333333333333333333333333333333333333333333333\"",
-				"translationStatus: current",
-				"---",
-				"",
-				"# Duplicate Two",
-			].join("\n"),
-		);
-		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/invalid-frontmatter.md"),
-			[
-				"---",
-				"title: Invalid Frontmatter",
-				"description: Missing source hash",
-				"sidebarOrder: 4",
-				"sourcePath: docs/guide/invalid.md",
-				"sourceCommit: not-a-commit",
-				"translationStatus: current",
-				"---",
-				"",
-				"# Invalid Frontmatter",
-			].join("\n"),
+			path.join(projectRoot, "docs/guide/invalid-frontmatter.mdx"),
+			["---", "title: Invalid Frontmatter", "---", "", "# Invalid"].join("\n"),
 		);
 		await rm(
 			path.join(projectRoot, "public/examples/test-pro/marketplace.json"),
@@ -240,100 +189,78 @@ describe("validateContent", () => {
 		const combinedErrors = result.errors.join("\n");
 
 		expect(result.ok).toBe(false);
-		expect(combinedErrors).toContain("missing translation for manifest record: docs/guide/current.md");
+		expect(combinedErrors).toContain(
+			"missing translation for manifest record: docs/guide/current.md",
+		);
 		expect(combinedErrors).toContain("translation without manifest record");
-		expect(combinedErrors).toContain("duplicate public route");
+		expect(combinedErrors).toContain("duplicate public route: /guide/foo-bar");
 		expect(combinedErrors).toContain("invalid frontmatter");
-		expect(combinedErrors).toContain("source metadata differs from manifest");
 		expect(combinedErrors).toContain("Invalid source anchors");
 		expect(combinedErrors).toContain("missing JSON example");
 	});
 
-	it("accepts stale status when current upstream differs from recorded source hash", async () => {
-		const { projectRoot, upstreamRoot, manifestPath } = await createValidProject();
-		const translationPath = path.join(
-			projectRoot,
-			"src/content/docs/guide/current.md",
+	it("requires the manifest route override to match a frontmatter slug", async () => {
+		const { projectRoot, manifestPath } = await createValidProject();
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/guide/current.mdx"),
+			[
+				"---",
+				"title: Guide",
+				"description: Guide translation",
+				"slug: guide/current-overview",
+				"---",
+				"",
+				"# Guide",
+				"",
+				"ガイド本文です。",
+			].join("\n"),
 		);
-		const translation = await readFile(translationPath, "utf8");
-		await writeFile(
-			translationPath,
-			translation.replace(
-				"translationStatus: current",
-				"translationStatus: stale",
-			),
-			"utf8",
+
+		const result = await validateContent({ projectRoot, manifestPath });
+
+		expect(result.ok).toBe(false);
+		expect(result.errors.join("\n")).toContain(
+			"manifest route mismatch: docs/guide/current.mdx renders at /guide/current-overview but the manifest resolves /guide/current",
 		);
+	});
+
+	it("skips invariants for a record lagging upstream and checks them for a current one", async () => {
+		const { projectRoot, upstreamRoot, manifestPath } =
+			await createValidProject();
+		// Upstream moved on: recorded hash no longer matches, so the fence/URL
+		// invariants are skipped for this page and validation still passes.
 		await writeFile(
 			path.join(upstreamRoot, "docs/guide/current.md"),
 			"# Guide\n\nUpstream changed after translation.\n",
 			"utf8",
 		);
 
-		const result = await validateContent({
+		const stale = await validateContent({
 			projectRoot,
 			upstreamRoot,
 			manifestPath,
 		});
+		expect(stale).toEqual({ ok: true, errors: [] });
 
-		expect(result).toEqual({ ok: true, errors: [] });
+		// A current record whose translation drops a source URL fails invariants.
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/index.mdx"),
+			createTranslation("Index", ["# Index", "", "URL を落とした翻訳です。"]),
+		);
+		const current = await validateContent({
+			projectRoot,
+			upstreamRoot,
+			manifestPath,
+		});
+		expect(current.ok).toBe(false);
+		expect(current.errors.join("\n")).toContain(
+			"raw URL set mismatch: docs/index.mdx",
+		);
 	});
 
-	it.each([
-		{
-			name: "current status for changed upstream",
-			status: "current",
-			changeUpstream: true,
-			expectedReality: "stale",
-		},
-		{
-			name: "stale status for matching upstream",
-			status: "stale",
-			changeUpstream: false,
-			expectedReality: "current",
-		},
-	])(
-		"rejects $name",
-		async ({ status, changeUpstream, expectedReality }) => {
-			const { projectRoot, upstreamRoot, manifestPath } =
-				await createValidProject();
-			const translationPath = path.join(
-				projectRoot,
-				"src/content/docs/guide/current.md",
-			);
-			const translation = await readFile(translationPath, "utf8");
-			await writeFile(
-				translationPath,
-				translation.replace(
-					"translationStatus: current",
-					`translationStatus: ${status}`,
-				),
-				"utf8",
-			);
-
-			if (changeUpstream) {
-				await writeFile(
-					path.join(upstreamRoot, "docs/guide/current.md"),
-					"# Guide\n\nUpstream changed after translation.\n",
-					"utf8",
-				);
-			}
-
-			const result = await validateContent({
-				projectRoot,
-				upstreamRoot,
-				manifestPath,
-			});
-
-			expect(result.ok).toBe(false);
-			expect(result.errors.join("\n")).toContain(
-				`translationStatus mismatch: src/content/docs/guide/current.md declares ${status} but upstream is ${expectedReality}`,
-			);
-		},
-	);
-
 	it("rejects a recorded translation whose upstream source is missing", async () => {
-		const { projectRoot, upstreamRoot, manifestPath } = await createValidProject();
+		const { projectRoot, upstreamRoot, manifestPath } =
+			await createValidProject();
 		await rm(path.join(upstreamRoot, "docs/guide/current.md"));
 
 		const result = await validateContent({
