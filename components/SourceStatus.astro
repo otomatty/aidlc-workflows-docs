@@ -1,0 +1,52 @@
+---
+import manifest from "../data/translation-manifest.json";
+import { routeForTranslationPath } from "../lib/routes";
+
+interface Props {
+	page: { title: string; description?: string; route: string };
+}
+
+const { page } = Astro.props;
+
+const UPSTREAM = "https://github.com/awslabs/aidlc-workflows";
+const BASE = "/aidlc-workflows-docs";
+
+const route = page.route.startsWith(BASE)
+	? page.route.slice(BASE.length) || "/"
+	: page.route;
+const record = manifest.records.find(
+	(candidate) => routeForTranslationPath(candidate.translationPath) === route,
+);
+const sourceHref = record
+	? `${UPSTREAM}/blob/${record.sourceCommit}/${record.sourcePath}`
+	: undefined;
+---
+
+{
+	record && (
+		<aside class="source-status" aria-label="ソース情報">
+			原文: <a href={sourceHref}>
+				<code>{record.sourcePath}</code> ({record.sourceCommit.slice(0, 7)})
+			</a>
+			<span class="source-status__note">
+				翻訳のソース状態は <code>bun run sync</code> で確認できます。
+			</span>
+		</aside>
+	)
+}
+
+<style>
+	.source-status {
+		margin-top: 2rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+		border-radius: 0.5rem;
+		font-size: 0.8125rem;
+		opacity: 0.85;
+	}
+	.source-status__note {
+		display: block;
+		margin-top: 0.25rem;
+		opacity: 0.7;
+	}
+</style>

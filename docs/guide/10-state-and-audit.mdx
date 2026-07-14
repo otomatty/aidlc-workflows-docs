@@ -1,0 +1,188 @@
+---
+title: 状態管理と監査証跡
+description: "`aidlc-state.md` と `audit/` がワークフロー進行と完全な追跡性をどう支えるかを説明します。"
+---
+AI-DLC は、intent から production までの完全な traceability を提供するために、2 つの永続ファイルを維持します。**状態ファイル** はワークフローのどこにいるかを追跡し、**監査証跡** はその過程におけるすべての decision、action、event を記録します。
+
+---
+
+<a id="state-file-aidlc-statemd"></a>
+## 状態ファイル（State File: `aidlc-state.md`）
+
+各 intent は `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/aidlc-state.md` に自身の状態ファイルを持ちます（intent の記録ディレクトリの下です）。これがその intent のワークフロー progress に関する唯一の正式な情報源です。engine は session start のたびに active intent の状態ファイルを読み、何が completed で、何が in progress で、次に何が来るかを判断します。
+
+<a id="what-it-contains"></a>
+### 含まれるもの
+
+| セクション | 目的 |
+|---------|---------|
+| **プロジェクト情報（Project Information）** | プロジェクトの説明、種類（新規開発（greenfield）／既存開発（brownfield））、スコープ、開始日、現在のフェーズ、稼働中のエージェント |
+| **スコープ設定（Scope Configuration）** | 実行するステージ、スキップするステージ（理由付き）、深度レベル |
+| **ワークスペース状態（Workspace State）** | プロジェクトルート、検出した言語、フレームワーク、ビルドシステム |
+| **実行計画の概要（Execution Plan Summary）** | ステージの総数、完了数、進行中のステージ |
+| **実行時状態（Runtime State）** | 現在のステージの修正回数 |
+| **ステージ進捗（Stage Progress）** | 完了状態を追跡するステージごとのチェックボックス |
+| **現在の状態（Current Status）** | ライフサイクルフェーズ、現在／次のステージ、状態、最終更新日時 |
+| **セッション再開地点（Session Resume Point）** | 最後に完了したステージ、次のアクション、保留中の成果物 |
+
+<a id="six-state-checkboxes"></a>
+### 6 状態のチェックボックス
+
+ステージ progress には、6 状態の checkbox 記法を使います。
+
+| チェックボックス | 意味 |
+|----------|---------|
+| `[ ]` | 未開始 |
+| `[-]` | 進行中 |
+| `[?]` | あなたの承認待ち（ゲートが開いている） |
+| `[R]` | 修正中（あなたがゲートで却下し、ステージを改訂中） |
+| `[x]` | 完了 |
+| `[S]` \| スキップ（スコープ対象外、`skip` で除外、または `--stage`／`--phase` で移動して迂回） |
+
+正常系では、ステージは `[ ]` → `[-]` → `[?]` → `[x]` と遷移します。ゲートで reject すると、revision 中は `[R]` に移り、再び ready になると `[?]` に戻り、承認で最終的に `[x]` になります。`/aidlc --status` は checkbox を読み、誰がボトルネックになっているかを示します。`[?]` なら "Awaiting your approval on \<stage>"、`[R]` なら "Revising \<stage> (revision N of 3)" という具合です。
+
+canonical な state-machine reference（transition tables、audit-event emitters）については [Developer Reference: State Machine](/reference/state-machine) を参照してください。
+
+<a id="state-transitions"></a>
+### 状態遷移
+
+```mermaid
+stateDiagram-v2
+    state "[ ] 未開始" as NotStarted
+    state "[-] 進行中" as InProgress
+    state "[?] 承認待ち" as Awaiting
+    state "[R] 修正中" as Revising
+    state "[x] 完了" as Completed
+    state "[S] スキップ" as Skipped
+
+    [*] --> NotStarted
+    NotStarted --> InProgress : ステージ開始
+    InProgress --> Awaiting : 作業完了、ゲート開始
+    Awaiting --> Completed : あなたが承認
+    Awaiting --> Revising : あなたが変更を依頼
+    Revising --> Awaiting : 修正完了、ゲートに再入場
+    NotStarted --> Skipped : --stage/--phase で移動、またはスコープ対象外
+    InProgress --> Skipped : 実行中に中止
+    Revising --> Skipped : 却下後に放棄
+    Completed --> NotStarted : やり直し（成果物を削除）
+```
+
+\{/* テキスト代替: ステージが始まると [ ] 未開始から [-] 進行中へ遷移します。作業が完了してゲートが開くと、[-] 進行中から [?] 承認待ちへ遷移します。承認すると [?] 承認待ちから [x] 完了へ、変更を依頼すると [R] 修正中へ遷移します。修正が完了すると [R] 修正中から [?] 承認待ちへ戻ります。[ ] 未開始、[-] 進行中、[R] 修正中は、jump、スコープ対象外、放棄によって [S] スキップへ遷移できます。[x] 完了は redo（成果物を削除）によって [ ] 未開始へ戻ります。 */\}
+
+<a id="normal-revision-skip-redo-and-jump-flows"></a>
+### normal、revision、skip、redo、jump の流れ
+
+- **Normal flow**: `[ ]` -> `[-]` -> `[?]` -> `[x]`（ステージが始まり、作業が完了し、ゲートが開き、あなたが承認する）
+- **Revision flow**: `[?]` -> `[R]` -> `[?]` -> `[x]`（あなたが reject し、ステージが修正され、ゲートが再度開き、あなたが承認する）
+- **Scope skip flow**: `[ ]` -> `[S]`（そのワークフローのスコープに含まれず、init 時に mark される）
+- **Redo flow**: `[x]` or `[-]` -> `[ ]` -> `[-]`（あなたが redo を要求し、成果物が削除され、ステージが再実行される）
+- **Jump flow**: ステージ A で `[-]` の状態から、ステージ B への jump を要求すると、間のステージは `[S]` として記録される
+
+---
+
+<a id="audit-trail-audit"></a>
+## 監査証跡（Audit Trail: `audit/`）
+
+監査証跡は intent の記録ディレクトリ内、`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/audit/` にあります。これは **per-clone shards**（`<host>-<clone>.md`）として書かれる append-only event log です。各 clone は自分自身の shard にしか追記しないため、sibling worktrees からの concurrent appends でも git conflict が起きません。reader は `audit/*.md` を glob して ISO timestamp 順に merge-sort し、decision と event の完全な時系列履歴を復元します。
+
+<a id="68-event-taxonomy"></a>
+### 68 種類のイベント分類
+
+events は 18 の categories に整理されています。
+
+| カテゴリ | 件数 | イベント |
+|----------|------:|--------|
+| **ワークフローのライフサイクル** | 4 | `WORKFLOW_STARTED`, `WORKFLOW_COMPLETED`, `WORKFLOW_PARKED`, `WORKFLOW_UNPARKED` |
+| **フェーズのライフサイクル** | 4 | `PHASE_STARTED`, `PHASE_COMPLETED`, `PHASE_VERIFIED`, `PHASE_SKIPPED` |
+| **ステージのライフサイクル** | 6 | `STAGE_STARTED`, `STAGE_AWAITING_APPROVAL`, `STAGE_REVISING`, `STAGE_COMPLETED`, `STAGE_SKIPPED`, `STAGE_JUMPED` |
+| **セッション** | 4 | `SESSION_STARTED`, `SESSION_RESUMED`, `SESSION_COMPACTED`, `SESSION_ENDED`（hook が出力） |
+| **初期化** | 3 | `WORKSPACE_SCAFFOLDED`, `WORKSPACE_SCANNED`, `WORKSPACE_INITIALISED` |
+| **移動** | 4 | `SCOPE_CHANGED`, `SCOPE_DETECTED`, `DEPTH_CHANGED`, `TEST_STRATEGY_CHANGED` |
+| **対話** | 4 | `DECISION_RECORDED`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED` |
+| **成果物** | 3 | `ARTIFACT_CREATED`, `ARTIFACT_UPDATED`（audit-logger hook）、`ARTIFACT_REUSED` |
+| **サブエージェント** | 1 | `SUBAGENT_COMPLETED`（log-subagent hook） |
+| **ユーティリティ** | 1 | `HEALTH_CHECKED` |
+| **エラー／回復** | 2 | `ERROR_LOGGED`, `RECOVERY_COMPLETED` |
+| **構築ボルト（Construction Bolt）** | 4 | `BOLT_STARTED`, `BOLT_COMPLETED`, `BOLT_FAILED`, `AUTONOMY_MODE_SET` |
+| **ワークツリー（Worktree）** | 7 | `WORKTREE_CREATED`, `WORKTREE_MERGED`, `WORKTREE_DISCARDED`, `STATE_FORKED`, `STATE_MERGED`, `AUDIT_FORKED`, `AUDIT_MERGED` |
+| **プラクティス** | 4 | `PRACTICES_DISCOVERED`, `PRACTICES_AFFIRMED`, `PRACTICES_OVERRIDE`, `PRACTICES_SECTION_EMPTY` |
+| **マージ委譲** | 3 | `MERGE_DISPATCH_INVOKED`, `MERGE_DISPATCH_RETURNED`, `MERGE_DISPATCH_FALLBACK` |
+| **センサー** | 5 | `SENSOR_FIRED`, `SENSOR_PASSED`, `SENSOR_FAILED`, `SENSOR_BUDGET_OVERRIDE`, `GUARDRAIL_LOADED` |
+| **学習ループ** | 3 | `MEMORY_EMPTY`, `RULE_LEARNED`, `SENSOR_PROPOSED` |
+| **スウォーム** | 6 | `SWARM_STARTED`, `SWARM_UNIT_CONVERGED`, `SWARM_UNIT_FAILED`, `SWARM_BATON_RETURNED`, `SWARM_COMPLETED`, `SWARM_DEGRADED` |
+
+<a id="what-gets-logged-and-when"></a>
+### 何が、いつ記録されるか
+
+- **すべてのステージ開始と completion** は `STAGE_STARTED` と `STAGE_COMPLETED` events として記録されます
+- **intent の記録ディレクトリへのすべてのファイル write**（`audit/` shards 自体を除く）は、audit-logger hook によって自動的に記録されます
+- **すべての承認ゲート decision**（approve、request changes、accept-as-is）が記録されます
+- **あなたが答えたすべての question** が記録されます
+- **すべての subagent completion** は log-subagent hook によって記録されます
+- **すべての error と recovery** が記録されます
+
+<a id="how-to-read-the-audit-log"></a>
+### audit log の読み方
+
+各 entry は次の fields を持つ構造化形式です。
+
+- **タイムスタンプ（Timestamp）** — ISO 8601 形式の日時
+- **イベント（Event）** — 68 種類の event type のいずれか
+- **詳細（Details）** — event ごとのデータ（ステージ name、decision、成果物 path など）
+
+entries は時系列順に append されます。特定のステージの履歴を見たいなら、その `STAGE_STARTED` と `STAGE_COMPLETED` entries を探し、その間にあるものを見てください。
+
+<a id="audit-event-flow"></a>
+### 監査イベントの流れ
+
+ステージが実行されて成果物を生成すると、監査証跡はその全 sequence を記録します。
+
+```mermaid
+sequenceDiagram
+    participant O as オーケストレーター
+    participant S as ステージ実行
+    participant H as 監査フック
+    participant A as audit/ シャード
+
+    O->>A: STAGE_STARTED を記録
+    O->>S: ステージ作業を実行
+    S->>S: 成果物を intent の記録ディレクトリに書き込む
+    S->>H: PostToolUse フックが発火
+    H->>A: ARTIFACT_CREATED または ARTIFACT_UPDATED を追記
+    S->>O: ステージ作業が完了
+    O->>A: 承認ゲートの選択肢を記録
+    O->>O: ユーザーに承認ゲートを提示
+    O->>A: GATE_APPROVED / GATE_REJECTED を記録
+    O->>A: STAGE_COMPLETED を記録
+```
+
+\{/* テキスト代替: Orchestrator はこの clone の audit/ shard に STAGE_STARTED を記録します。ステージ実行が成果物を書き込むと PostToolUse hook が発火し、ARTIFACT_CREATED または ARTIFACT_UPDATED event を追記します。ステージが完了すると、Orchestrator は承認ゲートの選択肢、ユーザーの判断、STAGE_COMPLETED の順に記録します。 */\}
+
+---
+
+<a id="how-state-and-audit-work-together"></a>
+## state と audit はどう連携するか
+
+状態ファイルと監査証跡は、補完し合う役割を担います。
+
+| 観点 | 状態ファイル | 監査証跡 |
+|---------|-----------|-------------|
+| **目的** | 現在位置と進捗を追跡する | イベントの完全な履歴を記録する |
+| **読み手** | オーケストレーター（経路選択と再開のため） | ユーザーと監査担当者（追跡可能性のため） |
+| **更新方法** | 状態変化のたびに上書き | 追記のみ（決して変更しない） |
+| **セッション再開** | どこから続けるかを判断する主情報源 | 元のプロジェクト説明と意思決定コンテキストを提供する |
+| **Git ポリシー** | バージョン管理へ commit する | commit する（`audit/` 配下の clone ごとの shard。マージ競合なし） |
+
+orchestrator は、routing decisions のために `aidlc-state.md` を使います。routing のために `audit/` shards を読むことはありません。監査証跡は traceability record であり、intent から production までのすべての decision をたどれるようにするものです。
+
+状態ファイルが壊れた場合でも、`STAGE_STARTED` と `STAGE_COMPLETED` events を見直せば監査証跡から復元できます。修復手順は [トラブルシューティング](/guide/troubleshooting) を参照してください。
+
+---
+
+<a id="next-steps"></a>
+## 次のステップ
+
+- [セッション管理](/guide/session-management) — state が session resume にどう使われるか
+- [成果物リファレンス](/guide/artifacts-reference) — intent の記録ディレクトリに何が保存されるか
+- [トラブルシューティング](/guide/troubleshooting) — state corruption の修復
+- [用語集](/guide/glossary) — 状態ファイル、監査証跡、checkpoint、compaction の定義

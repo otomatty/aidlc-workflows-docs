@@ -1,0 +1,261 @@
+---
+title: トラブルシューティング
+description: よくある症状ごとの原因と対処方法をまとめています。
+---
+この章では、よくある問題とその解決策を、症状ごとに整理して扱います。
+
+> **ハーネスに関する注記。** 以下の症状と対処は **Claude Code** を前提に書かれています（フックのファイル名、`settings.json` ブロック、コンパクションの挙動など）。決定論的なコア、つまり状態、監査、エンジンの挙動はどのハーネスでも同じですが、実行環境ごとの操作面は異なります。Kiro と Codex ではフックや設定の結び方が異なります（[他のハーネスでの実行](/guide/harnesses) を参照）。対処の中に `.claude/` パスや Claude 固有の仕組みが出てくる場合、同等のものは利用中ハーネスの設定ディレクトリにあります。
+
+---
+
+<a id="quick-fix-table"></a>
+## クイック修正表
+
+| 症状 | すぐ試す対処 |
+|---------|-----------|
+| 監査エントリが現れない | `bun` がインストール済みで PATH にあることを確認する |
+| 状態ファイルが破損している | `/aidlc --doctor` を実行し、状態ファイルの雛形と照合する |
+| 承認ゲートで止まる | 応答を入力する。必要なら `/aidlc --stage <target>` で飛び越える |
+| セッション途中でコンテキストが圧縮された | `/aidlc` を実行してチェックポイントから再開する |
+| 監査ログが大きすぎる | `audit-YYYY-MM.md` に改名する。新しいものは自動作成される |
+| フックが固まったように見える | システム一時ディレクトリに残った古いロックディレクトリを削除する（後述） |
+| ステータスラインが "ready" を表示する | `aidlc-state.md` に `**Lifecycle Phase**` フィールドがあるか確認する |
+| ステータスラインが表示されない | `bun` が PATH にあり、`settings.json` の `statusLine.command` が `aidlc-statusline.ts` を参照しているか確認する |
+| サブエージェントがタイムアウトした | `/aidlc` を実行して再試行するか、そのステージをインライン実行する |
+
+---
+
+<a id="hooks-not-firing"></a>
+## フックが発火しない
+
+**症状**: インテントの `audit/` シャードにファイル書き込み後の項目が現れない、またはサブエージェント完了ログが出ない。
+
+<a id="bun-not-installed-or-not-on-path"></a>
+### `bun` がインストールされていない、または PATH にない
+
+12 個の TypeScript フック（`aidlc-mint-presence.ts`、`aidlc-reviewer-scope.ts`、`aidlc-audit-logger.ts`、`aidlc-sensor-fire.ts`、`aidlc-runtime-compile.ts`、`aidlc-log-subagent.ts`、`aidlc-stop.ts`、`aidlc-validate-state.ts`、`aidlc-sync-statusline.ts`、`aidlc-session-start.ts`、`aidlc-session-end.ts`、`aidlc-statusline.ts`）はすべて `bun` を必要とします。`bun` がない、または非対話シェルの PATH に載っていない場合、これらのフックは発火しません。
+
+```bash
+# macOS / Linux
+curl -fsSL https://bun.sh/install | bash
+
+# Windows
+npm install -g bun
+# or: powershell -c "irm bun.sh/install.ps1 | iex"
+
+# Verify
+bun --version
+```
+
+`bun` が `~/.zshenv`（zsh）または `~/.bashrc`（bash / Windows 上の Git Bash）で PATH に入っていることを確認してください。`~/.zshrc` だけでは不十分です。Windows PowerShell では、`npm install -g bun` が設定するシステム PATH 項目で十分です。
+
+<a id="reviewer-tool-calls-refused-reviewer-read-scope"></a>
+### レビュー担当者のツール呼び出しが拒否される（"reviewer read-scope: ..."）
+
+作業ユニットごとの構築レビュー中、レビュー範囲フックは、委譲されたレビュー担当者のツール呼び出しが同階層作業ユニットの `construction/` パスへ到達すると拒否します（ステージ手順 §12a の読み取り範囲制限）。拒否メッセージには対象の作業ユニットと許可済み契約パスが含まれ、各拒否は `REVIEWER_SCOPE_BLOCKED` 監査行として記録されます。ソースツリー自体に AI-DLC の作業ユニットとは無関係な `construction/` ディレクトリがあり、正当な読み取りが拒否される場合は、`AIDLC_DISABLE_REVIEWER_SCOPE_HOOK=1` を設定して強制処理を無効化してください。文書上の制限自体は引き続き有効です。レビュー実行中ではないのに拒否される場合は、古い委譲記録の可能性があります。`/aidlc --doctor` のフック処理落ち件数（`reviewer-scope.drops`）を確認し、存在するなら `<record>/.aidlc-reviewer-dispatch.json` を削除してください（6 時間を超えた記録は無視され、自動削除されます）。
+
+<a id="hook-not-configured"></a>
+### フックが設定されていない
+
+フックは `.claude/settings.json` にプロジェクト全体向けとして登録されます（v0.6.0 以降。以前のバージョンではワークフロー中核フックを SKILL.md のフロントマターで宣言していました）。`settings.json` に `PreToolUse`、`PostToolUse`、`PreCompact`、`SubagentStop`、`Stop`（加えて `SessionStart` / `SessionEnd`）の各項目を含む `hooks` ブロックがあることを確認してください。移行を含む更新を取り込んだ一方、手元の `settings.json` が古い場合は、配布済み `settings.json` の `hooks` ブロックを再コピーしてください。
+
+---
+
+<a id="state-file-issues"></a>
+## 状態ファイルの問題
+
+**症状**: オーケストレーターが状態破損を報告する、またはワークフローの挙動が想定と違う。
+
+<a id="state-file-missing"></a>
+### 状態ファイルがない
+
+状態ファイルは初期化中、または `/aidlc` にスコープを渡したときに作成されます。
+
+- `/aidlc --status` を実行して、アクティブなワークフローがないことを確認する
+- `/aidlc` または `/aidlc <scope>` を実行して、新しいワークフローを開始する
+
+<a id="state-file-corrupted"></a>
+### 状態ファイルが破損している
+
+`validate-state.ts` フックは、コンパクションのたびに 2 つの必須セクション `## Stage Progress` と `## Current Status` を検査します。手動で修復する場合は次のとおりです。
+
+1. 現在のインテントの `aidlc-state.md` を開く（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` の下）
+2. 次のセクションが存在することを確認する: `Project Information`、`Scope Configuration`、`Workspace State`、`Stage Progress`、`Current Status`、`Session Resume Point`
+3. `.claude/knowledge/aidlc-shared/state-template.md` にある雛形と比較する
+4. 足りないセクションを雛形から復元し、`audit/` シャードの履歴を使って値を埋める
+
+---
+
+<a id="subagent-timeouts"></a>
+## サブエージェントのタイムアウト
+
+**症状**: サブエージェントステージ（ワークスペース検出、リバースエンジニアリング、コード生成）がエラーで戻る、または出力が途中で切れる。
+
+<a id="what-happens"></a>
+### 何が起きるか
+
+フレームワークは組み込みの再試行手順に従います。
+
+1. **自動再試行（Automatic retry）**を、コンテキストを減らしたプロンプトで試みる
+2. **再試行が失敗した場合**は 2 つの選択肢がある
+   - **インライン実行（Run inline）** — メインの会話内でそのステージを直接実行する（サブエージェント境界なし）
+   - **スキップして後で再訪（Skip and revisit）** — そのステージを未完了として後で戻る
+
+<a id="manual-recovery"></a>
+### 手動で回復する
+
+`/aidlc` を再実行します。すると `[-]`（進行中）状態が検出され、そのステージを再開するかやり直すかを提示します。失敗内容を把握するには `audit/` シャードのエラー項目を確認してください。
+
+---
+
+<a id="approval-gate-stuck"></a>
+## 承認ゲートで止まる
+
+**症状**: ワークフローが承認ゲートであなたの応答を待っている。
+
+<a id="how-to-proceed"></a>
+### 進め方
+
+求められたら応答を入力してください。選べるものは次のとおりです。
+
+- **承認（Approve）** — 次のステージへ進む
+- **Request Changes** — 修正フィードバックを返す
+
+<a id="revision-loop-escape-hatch"></a>
+### 改訂ループの退避口
+
+同じステージで 3 回の改訂サイクルが起きると、3 つ目の選択肢 **Accept as-is** が現れます。これを選ぶと現在版がアーカイブされ、そのまま先へ進みます。
+
+<a id="skipping-a-stage"></a>
+### ステージをスキップする
+
+`/aidlc --stage <target>` を使って別のステージへ移動します。間にあるステージは状態ファイル上で `[S]`（スキップ済み）として記録されます。
+
+---
+
+<a id="context-compaction"></a>
+## コンテキスト圧縮
+
+**症状**: Claude Code が以前の会話コンテキストを要約した。セッションが直近の議論を「忘れた」ように感じられることがある。
+
+<a id="what-is-preserved"></a>
+### 保持されるもの
+
+記録ディレクトリ内の成果物、`aidlc-state.md`、`audit/` シャード、`.aidlc-recovery.md` はすべてディスク上に残ります。失われるのは、メモリ上の会話コンテキストと、まだファイルへ書かれていない途中作業だけです。
+
+<a id="how-to-recover"></a>
+### 回復方法
+
+コンパクション後に `/aidlc` を実行します。フレームワークは次を行います。
+
+1. `aidlc-state.md` を読んでワークフロー位置を読み込む
+2. `.aidlc-recovery.md` と状態ファイルを比較する。差があれば警告する
+3. 4 つの再開オプションを提示する
+
+復旧用目印が不一致を警告した場合は、進行中だったステージを安全に再実行するために **Redo current stage** を選んでください。
+
+---
+
+<a id="audit-log-growing-too-large"></a>
+## 監査ログが大きくなりすぎる
+
+**症状**: このクローンの監査シャードが、長いプロジェクトで数千行まで増えている。
+
+<a id="how-to-archive"></a>
+### アーカイブ方法
+
+```bash
+# from the intent's record dir; <host>-<clone>.md is this clone's shard
+mv audit/<host>-<clone>.md audit-archive/<host>-<clone>-2026-02.md
+```
+
+次に `/aidlc` を実行したとき（またはフック起点の書き込みが起きたとき）に、新しいシャードが作られます。すべての監査内容は安全にアーカイブできます。エンジンは経路選択のために `audit/` シャードを読みません。
+
+<a id="git-considerations"></a>
+### Git に関する注意
+
+`audit/` シャードはコミット対象です（Gitignore の対象ではありません）。詳細は [コミットするものと Gitignore に入れるもの](/guide/artifacts-reference#what-to-commit-vs-gitignore) を参照してください。各クローンは自分専用の `<host>-<clone>.md` シャードへ書くため、同時追記でもマージ競合は起きません。差分を扱いやすくするため、コミット前に上記のようなアーカイブを検討してください。
+
+---
+
+<a id="lock-files-left-behind"></a>
+## ロックファイルが残る
+
+**症状**: フックが短時間固まったように見え、その後スキップされる。続く監査項目が書き込まれない。
+
+監査フックは `lib.ts` 経由の `mkdir` ベースのロックを使い、同時書き込みを防ぎます。フックが中断されると、ロックディレクトリが残ることがあります。ロックファイルはシステム一時ディレクトリ（`os.tmpdir()`。通常は macOS / Linux では `/tmp/`、Windows では `%TEMP%`）に作成されます。
+
+<a id="finding-stale-locks"></a>
+### 古いロックを見つける
+
+```bash
+# macOS / Linux
+ls -la /tmp/.aidlc-*
+
+# Windows (PowerShell)
+Get-ChildItem $env:TEMP -Filter ".aidlc-*"
+```
+
+ロックディレクトリ名は `.aidlc-audit-<hash>.lock` と `.aidlc-subagent-<hash>.lock` で、システム一時ディレクトリの下に置かれます。
+
+<a id="clearing-stale-locks"></a>
+### 古いロックを削除する
+
+```bash
+# macOS / Linux
+rm -rf /tmp/.aidlc-audit-*.lock /tmp/.aidlc-subagent-*.lock
+
+# Windows (PowerShell)
+Remove-Item "$env:TEMP\.aidlc-audit-*.lock", "$env:TEMP\.aidlc-subagent-*.lock" -Recurse -Force
+```
+
+AI-DLC ワークフローが何も実行中でないときなら、いつ実行しても安全です。ロックは一時的なもので、フック呼び出しのたびに再作成されます。
+
+---
+
+<a id="statusline-issues"></a>
+## ステータスラインの問題
+
+<a id="shows-ready-when-workflow-is-active"></a>
+### ワークフロー実行中なのに "ready" と表示される
+
+ステータスラインは `aidlc-state.md` の `**Lifecycle Phase**` フィールドを読みます。このフィールドがない、または空なら `[AIDLC] ready` へ切り替わります。
+
+**対処:** `/aidlc --doctor` を実行して状態ファイル整合性を確認してください。`## Current Status` セクションに `**Lifecycle Phase**` 項目があることを確認します。
+
+<a id="shows-stale-data"></a>
+### 古い情報が表示される
+
+これは想定どおりの挙動です。ステータスラインは通常、ステージ遷移時など、次に状態ファイルが書かれたときに更新されます。
+
+<a id="not-appearing-at-all"></a>
+### まったく表示されない
+
+1. `bun` が PATH にない。ステータスラインは `bun .claude/hooks/aidlc-statusline.ts` として起動される
+2. `settings.json` ブロックがない。`statusLine` 設定が存在するか確認する
+3. 状態ファイルがない。ワークフローがないときに `[AIDLC] ready` を表示するのは正常
+
+---
+
+<a id="using-doctor"></a>
+## `--doctor` を使う
+
+`--doctor` ユーティリティコマンドはセットアップを検証します。何かおかしいと感じたら実行してください。
+
+```
+/aidlc --doctor
+```
+
+検証内容は、前提条件（`bun`）、フックの利用可否（`settings.json` が配線する 12 個のフレームワークフックが `.claude/hooks/` に存在すること。配線済みなのに欠けているフックは明示的に失敗する）、プロジェクト構造（`settings.json`）、ワークスペース環境の準備状態（`.claude/` + `aidlc/spaces/default/memory/`）、状態と監査の整合性、フックの生存確認、グラフの整合性（循環がなく、各グラフ項目にファイルがあること）、9 個すべてのスコープの検証、ステージスキーマとグラフ参照、スコープ間のキーワード重複です。また、常に成功扱いの助言行が 2 つあります。**ルールのずれ**（内容のある組織方針見出しと重複するチーム / プロジェクトルールを矛盾レビュー対象として示す）と、**対応センサーの網羅性**（`pairing:` を持つルールが名前付きセンサーへ解決される）です。さらに、**フックの処理落ち**は条件付きです。フックが静かに機能低下した場合（たとえばプラグイン合成が追加内容を適用できなかった場合や、再コンパイルが失敗した場合）、`<hooks-health>/<hook>.drops` に重大度付きで記録されます。`[degraded]` の処理落ちは**健全性検査を失敗**させ、半適用のプラグインを CI ゲートで検出できるようにします。一方 `[advisory]` の処理落ちは成功行です。プラグイン合成フックは実行ごとに処理落ちファイルを書き直すため、原因を直して再合成すれば自動的に解消します。完全成功なら終了コード 0、何か失敗すれば 1 を返します。どちらの場合もレポートは標準出力へ出ます。`--doctor` は**読み取り専用**で、インテントがまだない新しい実行環境では何も作成しません。異常を感じたとき最初に試す操作として安全です。インテントが存在するようになった後は、`HEALTH_CHECKED`（および `GUARDRAIL_LOADED`）監査行を記録します。
+
+[CLI コマンド](/guide/cli-commands#aidlc---doctor-health-check) には、各チェックが何を検証し、失敗した場合にどう直すかの完全な詳細があります。
+
+---
+
+<a id="next-steps"></a>
+## 次のステップ
+
+- [状態追跡と監査証跡](/guide/state-and-audit) — 状態ファイル構造
+- [セッション管理](/guide/session-management) — コンパクション後の再開オプション
+- [CLI コマンド](/guide/cli-commands) — `--doctor`、`--status`、`--stage` の使い方
+- [用語集](/guide/glossary) — コンパクション、復旧用目印、フックの定義

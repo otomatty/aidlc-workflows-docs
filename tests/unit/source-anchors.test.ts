@@ -1,10 +1,6 @@
-import { createMarkdownProcessor } from "@astrojs/markdown-remark";
 import { describe, expect, it } from "vitest";
 
-import {
-	remarkValidateSourceAnchors,
-	validateSourceAnchors,
-} from "../../src/lib/markdown/source-anchors";
+import { validateSourceAnchors } from "../../lib/source-anchors";
 
 describe("validateSourceAnchors", () => {
 	it("accepts explicit source anchors before translated headings", () => {
@@ -112,32 +108,5 @@ See [missing](#missing-anchor).
 
 		expect(result.ok).toBe(false);
 		expect(result.misplacedAnchorIds).toEqual(["configuration-layers"]);
-	});
-});
-
-describe("remarkValidateSourceAnchors", () => {
-	it("fails markdown processing with actionable validation details", async () => {
-		const processor = await createMarkdownProcessor({
-			remarkPlugins: [remarkValidateSourceAnchors],
-		});
-		const markdown = [
-			'<a id="Configuration Layers"></a>',
-			"",
-			"## 設定レイヤー",
-			"",
-			'<a id="duplicate"></a>',
-			"## 重複1",
-			"",
-			'<a id="duplicate"></a>',
-			"## 重複2",
-			"",
-			"[missing](#missing-anchor)",
-		].join("\n");
-
-		await expect(
-			processor.render(markdown),
-		).rejects.toThrow(
-			'Invalid source anchors: duplicate IDs: "duplicate"; invalid IDs: "Configuration Layers"; missing local hash targets: "missing-anchor"; anchors not immediately followed by an ATX heading: "Configuration Layers"',
-		);
 	});
 });

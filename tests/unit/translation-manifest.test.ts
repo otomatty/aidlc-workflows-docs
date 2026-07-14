@@ -5,7 +5,7 @@ import {
 	formatSyncStatus,
 	serializeTranslationManifest,
 	type TranslationManifest,
-} from "../../src/lib/translation-manifest";
+} from "../../lib/translation-manifest";
 
 describe("translation manifest helpers", () => {
 	it("normalizes CRLF to LF before hashing without trimming other whitespace", async () => {

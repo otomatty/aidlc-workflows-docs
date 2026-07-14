@@ -1,0 +1,30 @@
+---
+title: AI-DLC ドキュメント
+description: AI-DLC ドキュメント全体の案内ページです。
+---
+**AI-DLC は方法論です**。これは AI 支援ソフトウェア開発を、構造化され、ゲートで区切られた反復可能な進め方として定義するものです（AWS により定義されています）。**このリポジトリは、そのネイティブなマルチハーネス実装です。** 方法論は、ハーネス中立な単一の `core/` から skills、agents、hooks、tools として具現化されるため、あなたがすでに使っている CLI harness の中でネイティブに動作します。現在は Claude Code、Kiro CLI、Kiro IDE、Codex CLI に対応しており、移植先の任意の対応 CLI でも動作します。方法論が *what*、各 harness distribution がそれぞれの実行環境における *how* を担い、すべての distribution は同じソースから生成されます。
+
+初めての方は、インストールの Quick Start と "pick your harness" 表がある [README](https://github.com/awslabs/aidlc-workflows/blob/main/README.md) を参照してください。このページはドキュメント自体の地図です。
+
+<a id="three-guides-one-per-reader"></a>
+## 読者ごとの 3 つのガイド
+
+何を変えたいかで選んでください。
+
+| ガイド | あなたは… | 変更するのは… |
+|-------|----------|-------------|
+| <a id="user-guide" aria-hidden="true"></a>**[ユーザーガイド](/guide/introduction)** | AI-DLC *を使って* ソフトウェアを構築する人 | フレームワーク自体は何も変えません。`/aidlc` を実行し、ゲートで回答し、成果物をレビューします |
+| <a id="harness-engineer-guide" aria-hidden="true"></a>**[ハーネスエンジニアガイド](/harness-engineering/overview)** | チーム向けに AI-DLC の振る舞いを *どう変えるか* を設計する人 | フレームワークが読む **データ**、つまり stages、agents、scopes、rules、sensors、knowledge と、新しい harness への移植 |
+| <a id="developer-reference" aria-hidden="true"></a>**[開発者リファレンス](/reference/overview)** | AI-DLC *そのもの* を変更する人 | そのデータを読む **コード**、つまり engine、hooks、CLI tools、compile pipeline、test suite |
+
+ハーネスエンジニアガイドと開発者リファレンスの境界は **data と code**、ユーザーガイドとそれ以外の境界は **using** と **shaping** です。
+
+<a id="running-on-a-specific-harness"></a>
+## 特定のハーネスで動かす
+
+各ガイドは harness 中立です。インストール手順と、ハーネスごとに異なるわずかな振る舞いは [他のハーネスでの実行](/guide/harnesses) にまとめています（Claude Code はユーザーガイド全体で扱っており、例もそれに基づいています）。
+
+<a id="building-and-contributing"></a>
+## ビルドとコントリビュート
+
+メンテナーは `core/` で著述し、`bun scripts/package.ts` で `dist/<harness>/` ツリーを再生成します。完全なビルドとテストの流れは [コントリビューションガイド](/reference/contributing)、新しい harness を追加する方法は [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) を参照してください。

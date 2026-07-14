@@ -12,12 +12,12 @@ import os from "node:os";
 import path from "node:path";
 
 import { afterEach, describe, expect, it } from "vitest";
-import { runSync } from "../../scripts/sync-upstream";
-import { validateContent } from "../../scripts/validate-content";
 import {
 	computeSourceHash,
 	type TranslationManifest,
-} from "../../src/lib/translation-manifest";
+} from "../../lib/translation-manifest";
+import { runSync } from "../../scripts/sync-upstream";
+import { validateContent } from "../../scripts/validate-content";
 
 const FIXTURE_DOCS_ROOT = path.resolve(
 	process.cwd(),
@@ -43,10 +43,10 @@ async function writeFileEnsuringDirectory(
 }
 
 async function createProjectRoot(): Promise<string> {
-	const projectRoot = await createTempDirectory("task7-project-");
+	const projectRoot = await createTempDirectory("sync-project-");
 
-	await mkdir(path.join(projectRoot, "src/content/docs"), { recursive: true });
-	await mkdir(path.join(projectRoot, "src/data"), { recursive: true });
+	await mkdir(path.join(projectRoot, "docs"), { recursive: true });
+	await mkdir(path.join(projectRoot, "data"), { recursive: true });
 
 	return projectRoot;
 }
@@ -55,20 +55,13 @@ async function writeManifest(
 	projectRoot: string,
 	manifest: TranslationManifest,
 ): Promise<string> {
-	const manifestPath = path.join(
-		projectRoot,
-		"src/data/translation-manifest.json",
-	);
-	await writeFile(
-		manifestPath,
-		JSON.stringify(manifest, null, "\t"),
-		"utf8",
-	);
+	const manifestPath = path.join(projectRoot, "data/translation-manifest.json");
+	await writeFile(manifestPath, JSON.stringify(manifest, null, "\t"), "utf8");
 	return manifestPath;
 }
 
 async function createUpstreamRoot(): Promise<string> {
-	const upstreamRoot = await createTempDirectory("task7-upstream-");
+	const upstreamRoot = await createTempDirectory("sync-upstream-");
 	await mkdir(path.join(upstreamRoot, "docs"), { recursive: true });
 	return upstreamRoot;
 }
@@ -82,9 +75,9 @@ function initializeGitRepository(upstreamRoot: string): string {
 		"git",
 		[
 			"-c",
-			"user.name=Task Seven",
+			"user.name=Sync Test",
 			"-c",
-			"user.email=task7@example.com",
+			"user.email=sync@example.com",
 			"commit",
 			"-m",
 			"Initial upstream snapshot",
@@ -97,22 +90,11 @@ function initializeGitRepository(upstreamRoot: string): string {
 	}).trim();
 }
 
-function createTranslation(
-	title: string,
-	sourcePath: string,
-	sourceCommit: string,
-	sourceHash: string,
-	translationStatus = "current",
-): string {
+function createTranslation(title: string): string {
 	return [
 		"---",
 		`title: ${title}`,
 		`description: ${title} translation`,
-		"sidebarOrder: 0",
-		`sourcePath: ${sourcePath}`,
-		`sourceCommit: ${sourceCommit}`,
-		`sourceHash: ${sourceHash}`,
-		`translationStatus: ${translationStatus}`,
 		"---",
 		"",
 		`# ${title} translation`,
@@ -130,7 +112,7 @@ async function writeRequiredJsonExamples(projectRoot: string): Promise<void> {
 	]) {
 		await writeFileEnsuringDirectory(
 			path.join(projectRoot, "public/examples/test-pro", exampleName),
-			"{\"ok\":true}\n",
+			'{"ok":true}\n',
 		);
 	}
 }
@@ -154,9 +136,11 @@ const temporaryDirectories: string[] = [];
 
 afterEach(async () => {
 	await Promise.all(
-		temporaryDirectories.splice(0).map((directoryPath) =>
-			rm(directoryPath, { recursive: true, force: true }),
-		),
+		temporaryDirectories
+			.splice(0)
+			.map((directoryPath) =>
+				rm(directoryPath, { recursive: true, force: true }),
+			),
 	);
 });
 
@@ -172,16 +156,12 @@ describe("runSync", () => {
 		const addedSource = await readFixture("added.md");
 
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/current.md"),
-			"# Current translation\n",
+			path.join(projectRoot, "docs/current.mdx"),
+			createTranslation("Current"),
 		);
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/changed.md"),
-			"# Changed translation\n",
-		);
-		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/deleted.md"),
-			"# Deleted translation\n",
+			path.join(projectRoot, "docs/changed.mdx"),
+			createTranslation("Changed"),
 		);
 
 		await writeFileEnsuringDirectory(
@@ -205,13 +185,13 @@ describe("runSync", () => {
 			records: [
 				{
 					sourcePath: "docs/current.md",
-					translationPath: "src/content/docs/current.md",
+					translationPath: "docs/current.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: await computeSourceHash(currentSource),
 				},
 				{
 					sourcePath: "docs/changed.md",
-					translationPath: "src/content/docs/changed.md",
+					translationPath: "docs/changed.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: await computeSourceHash(
 						"# Changed\n\nThis fixture used to match before upstream drift.\n",
@@ -219,13 +199,13 @@ describe("runSync", () => {
 				},
 				{
 					sourcePath: "docs/deleted.md",
-					translationPath: "src/content/docs/deleted.md",
+					translationPath: "docs/deleted.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: await computeSourceHash("# Deleted\n\nRemoved upstream.\n"),
 				},
 				{
 					sourcePath: "docs/added.md",
-					translationPath: "src/content/docs/added.md",
+					translationPath: "docs/added.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: await computeSourceHash(addedSource),
 				},
@@ -253,9 +233,7 @@ describe("runSync", () => {
 			{ sourcePath: "docs/deleted.md", status: "deleted" },
 			{ sourcePath: "docs/untranslated.md", status: "untranslated" },
 		]);
-		expect(
-			existsSync(path.join(projectRoot, "src/content/docs/added.md")),
-		).toBe(false);
+		expect(existsSync(path.join(projectRoot, "docs/added.mdx"))).toBe(false);
 	});
 
 	it("rejects record mode when the upstream docs tree is dirty", async () => {
@@ -267,20 +245,8 @@ describe("runSync", () => {
 		const currentSource = await readFixture("current.md");
 
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/current.md"),
-			[
-				"---",
-				"title: Current",
-				"description: Current translation",
-				"sidebarOrder: 0",
-				"sourcePath: docs/current.md",
-				`sourceCommit: ${SOURCE_COMMIT}`,
-				`sourceHash: ${await computeSourceHash(currentSource)}`,
-				"translationStatus: current",
-				"---",
-				"",
-				"# Current translation",
-			].join("\n"),
+			path.join(projectRoot, "docs/current.mdx"),
+			createTranslation("Current"),
 		);
 		await writeFileEnsuringDirectory(
 			path.join(upstreamRoot, "docs/current.md"),
@@ -297,7 +263,7 @@ describe("runSync", () => {
 			records: [
 				{
 					sourcePath: "docs/current.md",
-					translationPath: "src/content/docs/current.md",
+					translationPath: "docs/current.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: await computeSourceHash(currentSource),
 				},
@@ -315,72 +281,51 @@ describe("runSync", () => {
 		).rejects.toThrow(/upstream docs tree must be clean/i);
 	});
 
-	it("atomically records verified translation metadata without changing translation bytes", async () => {
+	it("records new translations at HEAD, keeps matching records, and never rewrites translation bytes", async () => {
 		const projectRoot = await createProjectRoot();
 		const upstreamRoot = await createUpstreamRoot();
 		temporaryDirectories.push(projectRoot, upstreamRoot);
 
 		const currentSource = await readFixture("current.md");
-		const changedSource = await readFixture("changed.md");
+		const addedSource = await readFixture("added.md");
 		const currentHash = await computeSourceHash(currentSource);
-		const changedHash = await computeSourceHash(changedSource);
-		const previousChangedHash = await computeSourceHash(
-			"# Changed\n\nPrevious source contents.\n",
-		);
+		const addedHash = await computeSourceHash(addedSource);
 
 		await writeFileEnsuringDirectory(
 			path.join(upstreamRoot, "docs/current.md"),
 			currentSource,
 		);
 		await writeFileEnsuringDirectory(
-			path.join(upstreamRoot, "docs/changed.md"),
-			changedSource,
+			path.join(upstreamRoot, "docs/added.md"),
+			addedSource,
 		);
 		const upstreamHead = initializeGitRepository(upstreamRoot);
 
-		const currentTranslation = createTranslation(
-			"Current",
-			"docs/current.md",
-			SOURCE_COMMIT,
-			currentHash,
+		const currentTranslationPath = path.join(projectRoot, "docs/current.mdx");
+		const addedTranslationPath = path.join(projectRoot, "docs/added.mdx");
+		await writeFileEnsuringDirectory(
+			currentTranslationPath,
+			createTranslation("Current"),
 		);
-		const changedTranslation = createTranslation(
-			"Changed",
-			"docs/changed.md",
-			upstreamHead,
-			changedHash,
+		await writeFileEnsuringDirectory(
+			addedTranslationPath,
+			createTranslation("Added"),
 		);
-		const currentTranslationPath = path.join(
-			projectRoot,
-			"src/content/docs/current.md",
-		);
-		const changedTranslationPath = path.join(
-			projectRoot,
-			"src/content/docs/changed.md",
-		);
-		await writeFileEnsuringDirectory(currentTranslationPath, currentTranslation);
-		await writeFileEnsuringDirectory(changedTranslationPath, changedTranslation);
 		await writeRequiredJsonExamples(projectRoot);
 
 		const manifestPath = await writeManifest(projectRoot, {
 			records: [
 				{
 					sourcePath: "docs/current.md",
-					translationPath: "src/content/docs/current.md",
+					translationPath: "docs/current.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: currentHash,
-				},
-				{
-					sourcePath: "docs/changed.md",
-					translationPath: "src/content/docs/changed.md",
-					sourceCommit: SOURCE_COMMIT,
-					sourceHash: previousChangedHash,
 				},
 			],
 		});
 		const bytesBefore = await Promise.all([
 			readFile(currentTranslationPath),
-			readFile(changedTranslationPath),
+			readFile(addedTranslationPath),
 		]);
 
 		await runSync({
@@ -396,21 +341,21 @@ describe("runSync", () => {
 		) as TranslationManifest;
 		expect(recordedManifest.records).toEqual([
 			{
-				sourcePath: "docs/changed.md",
-				translationPath: "src/content/docs/changed.md",
+				sourcePath: "docs/added.md",
+				translationPath: "docs/added.mdx",
 				sourceCommit: upstreamHead,
-				sourceHash: changedHash,
+				sourceHash: addedHash,
 			},
 			{
 				sourcePath: "docs/current.md",
-				translationPath: "src/content/docs/current.md",
+				translationPath: "docs/current.mdx",
 				sourceCommit: SOURCE_COMMIT,
 				sourceHash: currentHash,
 			},
 		]);
 		expect(await findManifestTemporaryFiles(manifestPath)).toEqual([]);
 		expect(await readFile(currentTranslationPath)).toEqual(bytesBefore[0]);
-		expect(await readFile(changedTranslationPath)).toEqual(bytesBefore[1]);
+		expect(await readFile(addedTranslationPath)).toEqual(bytesBefore[1]);
 
 		const validation = await validateContent({
 			projectRoot,
@@ -420,7 +365,7 @@ describe("runSync", () => {
 		expect(validation).toEqual({ ok: true, errors: [] });
 	});
 
-	it("rejects record mode when changed translation metadata does not match upstream", async () => {
+	it("rejects record mode when an existing record lags upstream and was not requested", async () => {
 		const projectRoot = await createProjectRoot();
 		const upstreamRoot = await createUpstreamRoot();
 		temporaryDirectories.push(projectRoot, upstreamRoot);
@@ -433,21 +378,16 @@ describe("runSync", () => {
 			path.join(upstreamRoot, "docs/changed.md"),
 			changedSource,
 		);
-		const upstreamHead = initializeGitRepository(upstreamRoot);
+		initializeGitRepository(upstreamRoot);
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/changed.md"),
-			createTranslation(
-				"Changed",
-				"docs/changed.md",
-				upstreamHead,
-				staleHash,
-			),
+			path.join(projectRoot, "docs/changed.mdx"),
+			createTranslation("Changed"),
 		);
 		const manifestPath = await writeManifest(projectRoot, {
 			records: [
 				{
 					sourcePath: "docs/changed.md",
-					translationPath: "src/content/docs/changed.md",
+					translationPath: "docs/changed.mdx",
 					sourceCommit: SOURCE_COMMIT,
 					sourceHash: staleHash,
 				},
@@ -462,92 +402,62 @@ describe("runSync", () => {
 				manifestPath,
 				record: true,
 			}),
-		).rejects.toThrow(/source hash does not match current upstream/i);
+		).rejects.toThrow(/stale record for docs\/changed\.mdx/i);
 		expect(await readFile(manifestPath, "utf8")).toBe(manifestBefore);
 	});
 
-	it("rejects record mode when a verified translation is marked stale", async () => {
+	it("re-blesses an explicitly requested translation at upstream HEAD", async () => {
 		const projectRoot = await createProjectRoot();
 		const upstreamRoot = await createUpstreamRoot();
 		temporaryDirectories.push(projectRoot, upstreamRoot);
 
-		const currentSource = await readFixture("current.md");
-		const currentHash = await computeSourceHash(currentSource);
+		const changedSource = await readFixture("changed.md");
+		const changedHash = await computeSourceHash(changedSource);
+		const staleHash = await computeSourceHash(
+			"# Changed\n\nPrevious source contents.\n",
+		);
 		await writeFileEnsuringDirectory(
-			path.join(upstreamRoot, "docs/current.md"),
-			currentSource,
+			path.join(upstreamRoot, "docs/changed.md"),
+			changedSource,
 		);
 		const upstreamHead = initializeGitRepository(upstreamRoot);
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/current.md"),
-			createTranslation(
-				"Current",
-				"docs/current.md",
-				upstreamHead,
-				currentHash,
-				"stale",
-			),
-		);
-		const manifestPath = await writeManifest(projectRoot, { records: [] });
-		const manifestBefore = await readFile(manifestPath, "utf8");
-
-		await expect(
-			runSync({
-				upstreamRoot,
-				projectRoot,
-				manifestPath,
-				record: true,
-			}),
-		).rejects.toThrow(/translationStatus must be current/i);
-		expect(await readFile(manifestPath, "utf8")).toBe(manifestBefore);
-	});
-
-	it("requires upstream HEAD when historical manifest metadata differs", async () => {
-		const projectRoot = await createProjectRoot();
-		const upstreamRoot = await createUpstreamRoot();
-		temporaryDirectories.push(projectRoot, upstreamRoot);
-
-		const currentSource = await readFixture("current.md");
-		const currentHash = await computeSourceHash(currentSource);
-		await writeFileEnsuringDirectory(
-			path.join(upstreamRoot, "docs/current.md"),
-			currentSource,
-		);
-		const upstreamHead = initializeGitRepository(upstreamRoot);
-		expect(upstreamHead).not.toBe(SOURCE_COMMIT);
-		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/current.md"),
-			createTranslation(
-				"Current",
-				"docs/current.md",
-				SOURCE_COMMIT,
-				currentHash,
-			),
+			path.join(projectRoot, "docs/changed.mdx"),
+			createTranslation("Changed"),
 		);
 		const manifestPath = await writeManifest(projectRoot, {
 			records: [
 				{
-					sourcePath: "docs/current.md",
-					translationPath: "src/content/docs/current.md",
-					sourceCommit: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-					sourceHash: currentHash,
+					sourcePath: "docs/changed.md",
+					translationPath: "docs/changed.mdx",
+					sourceCommit: SOURCE_COMMIT,
+					sourceHash: staleHash,
 				},
 			],
 		});
-		const manifestBefore = await readFile(manifestPath, "utf8");
 
-		await expect(
-			runSync({
-				upstreamRoot,
-				projectRoot,
-				manifestPath,
-				record: true,
-			}),
-		).rejects.toThrow(/must record upstream HEAD/i);
-		expect(await readFile(manifestPath, "utf8")).toBe(manifestBefore);
+		await runSync({
+			upstreamRoot,
+			projectRoot,
+			manifestPath,
+			record: true,
+			recordPaths: ["docs/changed.mdx"],
+		});
+
+		const recordedManifest = JSON.parse(
+			await readFile(manifestPath, "utf8"),
+		) as TranslationManifest;
+		expect(recordedManifest.records).toEqual([
+			{
+				sourcePath: "docs/changed.md",
+				translationPath: "docs/changed.mdx",
+				sourceCommit: upstreamHead,
+				sourceHash: changedHash,
+			},
+		]);
 	});
 
-	it("rejects record mode when a translated source is missing", async () => {
+	it("rejects record mode for an unknown requested translation path", async () => {
 		const projectRoot = await createProjectRoot();
 		const upstreamRoot = await createUpstreamRoot();
 		temporaryDirectories.push(projectRoot, upstreamRoot);
@@ -556,16 +466,7 @@ describe("runSync", () => {
 			path.join(upstreamRoot, "docs/tracked.md"),
 			"# Tracked\n",
 		);
-		const upstreamHead = initializeGitRepository(upstreamRoot);
-		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/missing.md"),
-			createTranslation(
-				"Missing",
-				"docs/missing.md",
-				upstreamHead,
-				await computeSourceHash("# Missing\n"),
-			),
-		);
+		initializeGitRepository(upstreamRoot);
 		const manifestPath = await writeManifest(projectRoot, { records: [] });
 
 		await expect(
@@ -574,33 +475,24 @@ describe("runSync", () => {
 				projectRoot,
 				manifestPath,
 				record: true,
+				recordPaths: ["docs/nope.mdx"],
 			}),
-		).rejects.toThrow(/missing upstream source for translated file/i);
+		).rejects.toThrow(/no such translation file: docs\/nope\.mdx/i);
 	});
 
-	it("rejects record mode when sourcePath escapes upstream docs", async () => {
+	it("rejects record mode when a translated source is missing upstream", async () => {
 		const projectRoot = await createProjectRoot();
 		const upstreamRoot = await createUpstreamRoot();
 		temporaryDirectories.push(projectRoot, upstreamRoot);
 
-		const outsideSource = "# Outside docs\n";
-		await writeFileEnsuringDirectory(
-			path.join(upstreamRoot, "outside.md"),
-			outsideSource,
-		);
 		await writeFileEnsuringDirectory(
 			path.join(upstreamRoot, "docs/tracked.md"),
 			"# Tracked\n",
 		);
-		const upstreamHead = initializeGitRepository(upstreamRoot);
+		initializeGitRepository(upstreamRoot);
 		await writeFileEnsuringDirectory(
-			path.join(projectRoot, "src/content/docs/outside.md"),
-			createTranslation(
-				"Outside",
-				"docs/../outside.md",
-				upstreamHead,
-				await computeSourceHash(outsideSource),
-			),
+			path.join(projectRoot, "docs/missing.mdx"),
+			createTranslation("Missing"),
 		);
 		const manifestPath = await writeManifest(projectRoot, { records: [] });
 

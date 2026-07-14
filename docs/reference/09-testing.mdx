@@ -1,0 +1,338 @@
+---
+title: テスト
+description: AI-DLC の TypeScript ベースのテストスイート、各ティア、レジストリ、実行プロファイルを説明します。
+---
+<a id="overview"></a>
+## 概要
+
+AI-DLC のテストスイートは**完全に TypeScript 製**です。すべてのテストは `bun` で実行される `t*.test.ts` ファイルであり、シェル（`.sh`）のテストファイルは 0 です。これが、同じファイル群がマック OS、リナックス、ネイティブ Windows で同一に動くという、構造によるプラットフォーム不変性の保証です。
+
+スイートは `tests/` 配下の 1 ディレクトリずつ、**4 つのレベル** `smoke`, `unit`, `integration`, `e2e` で構成されます。この 4 レベルは、速度と網羅性の釣り合いを取る古典的な 3 層テストピラミッドへ対応付けられます。
+
+```
+            /\
+           /  \    ACCEPTANCE — full workflows, artifact + experience verification
+          / L3 \   Level: e2e  ·  When: before releases (--release / --all)
+         /------\
+        /        \
+       /   L2     \  STAGE — individual stages with stub input, verify artifacts
+      /------------\ Level: integration  ·  When: CI push (--ci, every PR)
+     /              \
+    /      L1        \  PROTOCOL — contracts, structure, cross-references
+   /------------------\ Levels: smoke + unit  ·  When: every local change
+```
+
+`--ci` プロファイルと、フラグなしの既定実行はどちらも **スモーク + ユニット + 統合** を走らせます。つまり統合テストは毎回のローカル `bun tests/run-tests.ts` に含まれます。`--release` / `--all` はそこへ `e2e` を加えます。上のピラミッドは概念上の位置付けであり、実際の選択方法は下のプロファイルフラグです。
+
+**ファイル名規約。** テスト名は `t<NN>[-description].test.ts` です。含まれるのはレベルディレクトリと任意の人向け説明だけで、**方式を表す区分は存在しません**。テストの方式、つまり CLI を起動するのか、SDK を駆動するのか、ライブ TUI を描画するのかは、ファイル名ではなく、そのテスト本文が実際に呼ぶドライバーから**導出される集合**です。各テストが何をカバーするかの機械検証済み索引は、`tests/.coverage-registry.json` にあります。これは `tests/gen-coverage-registry.ts` が、ディスク上の `covers:` ヘッダから生成します。手書き表ではありません。詳しくは後述の [テストレジストリ](#test-registry) を参照してください。
+
+<a id="layer-1-protocol-every-change-no-llm-seconds"></a>
+## レイヤー 1: プロトコル（すべての変更、LLM なし、秒単位）
+
+LLM を呼ばずに、オーケストレーターの構造的正しさを検証します。これが通れば、プロトコルは内部整合しています。たとえば、ステージが有効なファイルを参照しているか、入力 / 出力の連鎖が成立しているか、ルーティング表がステージファイルと一致しているか、などです。
+
+**レベル:** スモーク、ユニット、統合
+
+**何をテストするか:**
+- ファイル存在、権限、命名規則（スモーク）
+- フックスクリプト（`bun` で走る TypeScript 11 本）、ステージのフロントマター、ナレッジ棚卸し（ユニット）
+- スコープとステージの対応付け、グラフの一貫性、ステージ I/O 契約の連鎖、プロトコル準拠（統合）
+- ステージ出力から手順への検証。宣言済み出力が指示手順で参照されているかを、`aidlc-validate.ts` CLI ツールにより決定論的に検証（統合）
+
+**実行:** `bun tests/run-tests.ts`（既定。フラグ不要）。`bash tests/run-tests.sh` は既存 POSIX コマンド向け互換ラッパーです。
+
+<a id="layer-2-stage-ci-push-llm-minutes"></a>
+## レイヤー 2: ステージ（CI へのプッシュ、LLM あり、分単位）
+
+既知のワークスペースと状態フィクスチャを使い、個別ステージを分離実行します。決定論的な入力を与えたときに、各ステージが正しい成果物を生成することを検証します。
+
+**レベル:** 統合
+
+**何をテストするか:**
+- 事前検証の健全性ゲート: Claude CLI が PATH 上にあるか、AWS 認証情報が有効か、Claude が応答するか（終了コード 0）、応答が空でないか（事前検証）
+- CLI ツールのユーティリティハンドラー: 意図の開始、`--doctor`、`--status`、`--stage`、`--phase`（統合）
+- グリーンフィールド / ブラウンフィールドのスタブを使った個別ステージと成果物検証（統合）
+
+**実行:** `bun tests/run-tests.ts --ci`
+
+<a id="layer-3-acceptance-release-llm-hours"></a>
+## レイヤー 3: 受け入れテスト（リリース時、LLM あり、時間単位）
+
+完全なワークフローを実行し、体験まで含めて検証します。単なる状態遷移だけでなく、成果物の内容、ステージ間の整合性、ドメインの正しさを確認します。
+
+**レベル:** エンドツーエンド
+
+**何をテストするか:**
+- ブラウンフィールドのスタブと成果物アサーションを伴う完全なバグ修正ライフサイクル
+- グリーンフィールドのスタブと成果物アサーションを伴う完全な POC ライフサイクル
+- 状態の進行、スコープのルーティング、監査の完全性、ジャンプ機構
+- ステージ指示の品質に対する LLM の意味論レビュー（明確さ、論理の流れ、曖昧性検出）
+
+**実行:** `bun tests/run-tests.ts --release`
+
+<a id="cross-platform-coverage"></a>
+## クロスプラットフォーム対応
+
+テストスイートはネイティブ Bun ランナーを通じてマック OS、リナックス、Windows で実行されます。
+
+```bash
+bun tests/run-tests.ts [--ci | --all --debug -P 8]
+```
+
+`bash tests/run-tests.sh ...` は POSIX 互換ラッパーとして残りますが、同じ TypeScript ランナーへ委譲します。実行時には、フック、CLI ツール、テストランナーのいずれも `bun` を必要とし、`Bash` は主要な実行基盤ではありません。
+
+**スイートへ織り込まれている可搬性制約:**
+
+- **パス**: `tests/harness/fixtures.ts` の `createTestProject` が一時プロジェクトパスを正規化し、JSON とネイティブ `bun` を安全に往復できるようにします。
+- **インプレース編集**: テスト内のファイル更新は TypeScript 書き込みを優先します。シェルヘルパーが避けられない場合でも BSD/GNU 固有の `sed -i` は避けます。
+- **`grep -qiF`**: Git のシェルには `-i` と `-F` の組み合わせに既知不具合があります。パターンに正規表現メタ文字がなければ `-i` 単独を使います。テスト 16 はこの問題に当たり、修正済みです。
+- **`tar` アーカイブ**: マック OS の `tar` は既定で `._*` AppleDouble サイドカーを注入します。クロスプラットフォームテスト用にソースを束ねるときは `COPYFILE_DISABLE=1 tar …` か `git archive` を使います。
+- **Windows での LLM タイミング**: Windows EC2 からの Bedrock 呼び出しはマック OS よりかなり遅い場合があります（初回コールドスタート、MSYS のプロセス分岐オーバーヘッドなど）。SDK / TUI テストはドライバーの結果サーフェスに対してのみアサートし、ランナーの事前検証 / ファイル単位の Claude ゲートによって実行基盤の不在と真の失敗を切り分けます。
+
+**Windows で手動実行する場合:**
+
+1. `bun`、ノード JS、Claude Code CLI をインストールする。
+2. フルスイートまたは POSIX ラッパー互換のスモークテストを動かすなら Windows 向け Git を入れる。ネイティブランナー自体にはシェルは不要。
+3. エンドツーエンド TUI テスト向けに、`node-pty` と `@xterm/headless` を解決できるようエヌピーエムで開発依存関係を入れる。
+4. `AIDLC_NODE_BIN` に具体的な `node.exe` パスを設定し、完全な受け入れテスト実行では `AIDLC_TUI_LIVE=1` を設定する。
+5. `bun tests/run-tests.ts --all --debug -P 8` を実行する。
+
+WSL も Docker も不要です。サポートされる検証実行基盤はネイティブ Windows です。
+
+**再現可能な MR10 Windows EC2 実行手順:**
+
+1. SSM アクセス付きの使い捨て Windows サーバー 2022 ホストを立てる。
+
+   ```bash
+   aws cloudformation deploy \
+     --stack-name aidlc-windows-test \
+     --template-file tests/harness/windows/windows-test.cfn.yaml \
+     --capabilities CAPABILITY_NAMED_IAM \
+     --parameter-overrides VpcId=vpc-... SubnetId=subnet-...
+   ```
+
+2. 対象の Git ツリーを同期する。
+
+   ```bash
+   bun tests/harness/windows/sync.ts --stack-name aidlc-windows-test HEAD
+   ```
+
+3. ホスト上でリポジトリの開発依存関係を入れる。
+
+   ```bash
+   bun tests/harness/windows/ssm-run.ts --stack-name aidlc-windows-test -- \
+     powershell -ExecutionPolicy Bypass -File C:\aidlc\tests\harness\windows\setup.ps1 -ProjectDir C:\aidlc
+   ```
+
+4. ライブ TUI を有効にした Windows `--all` ゲートを走らせる。
+
+   ```bash
+   bun tests/harness/windows/ssm-run.ts --stack-name aidlc-windows-test -- \
+     powershell -ExecutionPolicy Bypass -File C:\aidlc\tests\harness\windows\run-all.ps1 -ProjectDir C:\aidlc -Parallel 8
+   ```
+
+5. ホストを破棄する。
+
+   ```bash
+   aws cloudformation delete-stack --stack-name aidlc-windows-test
+   ```
+
+`run-all.ps1` は `bun tests/run-tests.ts --all --debug -P <N>` を呼ぶ前に `AIDLC_NODE_BIN` と `AIDLC_TUI_LIVE=1` をエクスポートします。そのため、成功結果がライブ TUI ジャーニーのサイレントスキップで得られることはありません。また、クラウドフォーメーションのユーザーデータブートストラップを実行したユーザーに応じて `claude.exe` の配置先が変わるため、`C:\Users\Administrator\.local\bin` とシステムプロファイルのホームディレクトリの両方を確認します。
+
+スタックの既定は **`c5.4xlarge`** です。これはフル `--all -P 8` ライブ実行の実証済みサイズです。エンドツーエンド層にはテストごとの `bun:test` タイムアウトがあり、ボルトワークツリーのライフサイクルテストは `c5.4xlarge` でも 5 秒予算中約 5.5 秒に達するため、より小さいホスト（例: `t3.large`）では並列負荷下で決定論的テストまで疑似タイムアウトします。`InstanceType` を下げるのは、より軽い層の選択に限ってください。
+
+<a id="preflight-validation"></a>
+## 事前検証
+
+未フィルタのライブ実行可能レベル（統合またはエンドツーエンド）を走らせる前に、ランナーは `tests/integration/t19.test.ts` をゲートとして実行します。これは **Claude のエージェント SDK** を使い、統合層が使うものと同じライブパスへ小さな実ターンを流し、決定論的サーフェスだけに対してアサートします。事前検証が失敗した場合でも、決定論的ファイルは走り続け、Claude 依存ファイルはファイル単位の `SKIP` で落ちます。
+
+| アサーション | サーフェス | 失敗時 |
+|-----------|---------|---------|
+| AWS 認証情報が有効 | `aws sts get-caller-identity` が終了コード 0（`aws` CLI 不在ならスキップとして成功） | 中止。Bedrock は IAM 認証を要する |
+| ライブターンが終端結果へ到達 | SDK 実行が非 `undefined` の `resultEvent` を返す | 中止。実行基盤 / API 到達不能 |
+| ターンがエラーなしで完了 | `resultEvent.is_error === false`（`claude -p` の終了コード 0 に相当。124/137 のハングは未定義のまま） | 中止。API 応答不能 |
+| 応答が空でない | `tool_result` またはアシスタント本文のいずれかが存在する | 中止。API が何も返していない |
+
+ここで赤になるのは、常に実環境の発見事項です。`claude` がない、認証情報が切れている、といった類であり、不安定さをならす場所ではありません。これは下流の LLM 層を素早く打ち切るための、本来のゲートの役目です。
+
+<a id="test-registry"></a>
+## テストレジストリ
+
+このスイートは**登録制ではなく発見制**です。`bun tests/run-tests.ts` は `tests/{smoke,unit,integration,e2e}/` の 4 ディレクトリを走査し、見つかったすべての `t*.test.ts` を実行します。テストごとに手で維持する表はありません。新しいテストファイルを追加するだけでランナーが拾います。
+
+各テストが*何をカバーするか*は、**`tests/.coverage-registry.json`** で機械的に追跡されます。これは `bun tests/gen-coverage-registry.ts` が、テストファイル先頭のコメントブロックにある `covers:` ヘッダから生成します（通常は 1 行目。正当に未宣言のファイルも少数あり、その場合はカバレッジ宣言を持ちません）。ジェネレーターは、`function`、`audit`、`scope`、`stage`、`hook`、`subcommand`、`render-surface` の 7 クラスでフレームワーク単位を列挙し、`covers:` 宣言を対応単位へ写像してカバレッジ数とラチェット下限を出力します。再生成と差分確認は次のとおりです。
+
+```bash
+bun tests/gen-coverage-registry.ts          # rewrite the registry from disk
+bun tests/gen-coverage-registry.ts --check  # fail if the committed registry is stale
+```
+
+`tests/.coverage-registry.json` が正本となる機械検証済み索引です。ある関数、監査イベント、スコープ、ステージ、フック、サブコマンド、描画サーフェスをどのテストが触るか調べるときは、これを見るか、`covers:` ヘッダを直接検索してください。`--check` モードはスイートに配線されており、レジストリがディスク内容からずれればゲートが赤になります。
+
+> **注記:** テスト 19 はユニット（`tests/unit/t19.test.ts`、ジャンプ CLI ツール）と統合（`tests/integration/t19.test.ts`、ライブ事前検証ゲート）の両方に存在します。区別は ID 単体ではなく、レベルとファイルパスで行います。
+
+<a id="trigger-points"></a>
+## トリガーポイント
+
+| トリガー | レイヤー | コマンド | 実行場所 |
+|---------|-------|---------|-------|
+| `git commit` \| L1 \| `bun tests/run-tests.ts` | ローカル（コミット前フック） |
+| CI パイプライン | L2 | `bun tests/run-tests.ts --ci` | CI/CD パイプライン |
+| リリース / 主ブランチへのマージ | L3 | `bun tests/run-tests.ts --release` | CI/CD パイプライン |
+
+L1 は Git のコミット前フックで強制できます。`bun tests/run-tests.ts || exit 1`
+
+<a id="stubs"></a>
+## スタブ
+
+<a id="greenfield-stub-testsfixturesgreenfield-todo"></a>
+### グリーンフィールドスタブ: `tests/fixtures/greenfield-todo/`
+
+ソースコードを持たないプロジェクト説明だけのスタブです。ワークスペース検出はこれをグリーンフィールドと分類します。アイデア策定ステージに対して、LLM へ決定論的な意図コンテキストを与えます。
+
+内容: TypeScript とバイトによるリアクトのタスク管理アプリを説明する `README.md` だけ。
+
+<a id="brownfield-stub-testsfixturesbrownfield-todo"></a>
+### ブラウンフィールドスタブ: `tests/fixtures/brownfield-todo/`
+
+最小のリアクト+TypeScript+バイトのソース（約 10 ファイル、約 200 LOC）です。ワークスペース検出はこれをブラウンフィールドと分類します。RE、要件、設計ステージは具体コードを解析できます。
+
+内容:
+- `package.json` — リアクト、リアクト DOM、TypeScript、バイト、バイテスト
+- `tsconfig.json`, `vite.config.ts`, `index.html`
+- `src/main.tsx`, `src/App.tsx`
+- `src/types/todo.ts` — タスクのインターフェース（識別子、タイトル、完了状態）
+- `src/components/TodoList.tsx` — 一覧と追加フォーム（約 40 行）
+- `src/components/TodoItem.tsx` — チェックボックス、タイトル、削除ボタン
+- `src/hooks/useTodos.ts` — 追加、切り替え、削除
+
+<a id="re-artifacts-fixture-testsfixturesre-artifacts"></a>
+### RE 成果物フィクスチャ: `tests/fixtures/re-artifacts/`
+
+下流ステージテスト向けに事前投入されたリバースエンジニアリング出力です。セットアップ時にテストプロジェクトの意図レコードディレクトリ、`$PROJ/aidlc/spaces/default/intents/<record>/inception/reverse-engineering/` へコピーされます。
+
+内容: ブラウンフィールドのタスク管理アプリを説明する最小 4 個の `.md` ファイル（アーキテクチャ概要、技術スタック、コードベース分析、統合ポイント）。
+
+<a id="inception-artifacts-fixture-testsfixturesinception-artifacts"></a>
+### インセプション成果物フィクスチャ: `tests/fixtures/inception-artifacts/`
+
+コンストラクションへジャンプするテスト向けに事前投入されたインセプションフェーズの出力です。セットアップ時に `$PROJ/aidlc/spaces/default/intents/<record>/inception/{requirements-analysis,application-design,units-generation}/` へコピーされます。
+
+内容: タスク管理アプリを説明する最小 7 個の `.md` ファイル（要件、コンポーネント、コンポーネントメソッド、サービス、コンポーネント依存関係、作業単位、作業単位ストーリーマップ）。ユニット名はタスクコアです。
+
+<a id="construction-artifacts-fixture-testsfixturesconstruction-artifacts"></a>
+### コンストラクション成果物フィクスチャ: `tests/fixtures/construction-artifacts/`
+
+中盤のコンストラクションステージ（例: `code-generation`）へ飛ぶテスト向けに事前投入されたコンストラクションフェーズの出力です。セットアップ時に `$PROJ/aidlc/spaces/default/intents/<record>/construction/todo-core/functional-design/` へコピーされます。
+
+内容: タスクコアユニットのコンポーネント仕様と状態管理を記述した最小 1 個の `.md` ファイル（機能設計）。
+
+<a id="state-fixtures"></a>
+## 状態フィクスチャ
+
+| フィクスチャ | プロジェクト種別 | スコープ | 状態 | 使用テスト |
+|---------|-------------|-------|-------|---------|
+| `state-pre-workspace-detection.md` | -- | 機能追加 | 歓迎画面とスキャフォールド完了、ワークスペース検出が次 | テスト 70、テスト 71 |
+| `state-initialization-done.md` | グリーンフィールド | 機能追加 | 初期化完了、意図取得が次 | テスト 73 |
+| `state-brownfield-init-done.md` | ブラウンフィールド | バグ修正 | 初期化完了、RE が次 | テスト 72 |
+| `state-mid-inception.md` | ブラウンフィールド | バグ修正 | RE 完了、要件分析が次 | テスト 74 |
+| `state-mid-ideation.md` | グリーンフィールド | 機能追加 | 意図と市場調査完了、実現可能性分析が次 | テスト 08、テスト 10、テスト 11、テスト 12、テスト 20、テスト 22、テスト 24、テスト 25、テスト 37 |
+| `state-construction.md` | -- | -- | コンストラクションフェーズ | テスト 07、テスト 10、テスト 11、テスト 26、テスト 57 |
+| `state-operation.md` | -- | -- | 運用フェーズ | テスト 07、テスト 10、テスト 11 |
+| `state-completed.md` | -- | -- | 全ステージ完了 | テスト 08、テスト 11 |
+| `state-jumped.md` | ブラウンフィールド | バグ修正 | ジャンプ履歴を持つワークフロー途中 | テスト 11、テスト 37、テスト 42 |
+| `state-corrupted.md` | -- | -- | 無効または破損した状態 | テスト 08、テスト 10 |
+
+<a id="how-to-add-a-stage-test"></a>
+## ステージテストの追加方法
+
+1. テストしたいステージを選び、そのステージが現在または次として現れる状態フィクスチャを特定する。
+2. `tests/fixtures/` に新規作成するか既存のフィクスチャを再利用する。
+3. `tests/integration/tNN-stage-SLUG.test.ts` を作成し、シェルの TAP ヘルパーではなく共有 TypeScript ハーネスヘルパー（`tests/harness/fixtures.ts`, `tests/harness/sdk-drive.ts`, `tests/harness/tui-drive.ts`）を使う。
+4. `bun tests/run-tests.ts --integration`、または `bun test tests/integration/tNN-stage-SLUG.test.ts` で実行する。
+
+<a id="how-to-add-acceptance-assertions"></a>
+## 受け入れテストのアサーション追加方法
+
+既存の `tests/e2e/` 配下のワークフローテストに成果物アサーションを足す場合:
+
+1. 既存テストを読み、すでに何を確認しているか理解する。
+2. 既存 `test(...)` ブロック内へ `expect(...)` アサーションを追加する。`bun:test` は呼び出し自体をアサーションと数えるため、同期すべき `plan` 行はありません。
+3. 厳密文字列ではなく柔軟なパターンを使う。たとえば `readFileSync` の内容に対して `/[Tt]odo/` を当てる。
+4. 非決定的な LLM 出力形状に依存するアサーションは `test.skipIf(...)` か早期リターンを使う。
+5. サイズ下限チェックには `expect(statSync(path).size).toBeGreaterThan(minBytes)` を使う。
+
+<a id="assertion-design-principles"></a>
+## アサーション設計原則
+
+- **キーワード分類** — 大文字小文字非依存の正規表現を使う: `[Tt]odo`、`[Rr]eact`、`[Bb]rownfield`
+- **柔軟な検出** — 正確なファイル名確認よりも `find` + `wc -l` による件数確認を使う
+- **サイズ下限** — `statSync(path).size` と `toBeGreaterThan()` で最小内容量を確認する
+- **段階的な劣化** — 非決定的な LLM 出力に依存するアサーションは `skip` を使う
+- **内容より構造** — まず Markdown 見出し（`^#`）、ファイル存在、ディレクトリ生成を確認し、その後で内容を見る
+
+<a id="environment-variables"></a>
+## 環境変数
+
+| 変数 | 既定値 | 説明 |
+|----------|---------|-------------|
+| `AIDLC_TEST_TIMEOUT` \| `1800` \| `claude -p` 1 回あたりのタイムアウト（秒）。`0` で無効化。 |
+| `AIDLC_TUI_SETTING_SOURCES` \| `project` \| ライブ `claude` TUI 起動に注入する設定ソース。通常は `project`。開発者ローカル設定を含めたい限定的な較正時だけ `default` または空値を使う。 |
+| `AIDLC_TUI_TRACE_POLL_MS` \| `10000` \| 長いジャーニーが次のメニューまたはディスク終端子を待っている間に、TUI NDJSON トレースで `answer_gate_poll` スナップショットを撮る最小間隔。 |
+
+<a id="cli-reference"></a>
+## CLI リファレンス
+
+```bash
+# Entrypoints
+bun tests/run-tests.ts        # Native cross-platform runner
+bash tests/run-tests.sh       # POSIX compatibility wrapper
+
+# Level flags (combinable)
+--smoke         # Structural validation
+--unit          # Single-component isolation
+--integration   # Cross-component contracts and stage/CLI utilities
+--e2e           # Full lifecycle, worktree, and rendered terminal journeys
+
+# Profile flags (shortcuts)
+(default)       # smoke + unit + integration
+--ci            # smoke + unit + integration
+--release       # smoke + unit + integration + e2e
+--all           # Same as --release
+
+# Output modifiers
+--verbose       # Write per-test logs to tests/logs/
+--debug         # Implies --verbose; streams per-test output and writes SDK/TUI
+                # driver traces to tests/logs/
+--filter PAT    # Only run tests whose filename matches extended regex PAT
+--parallel N    # Run up to N test files concurrently within a tier (alias: -P N).
+                # Default: 1 (serial). Smoke and unit tiers are always serial.
+```
+
+ライブ SDK / TUI ハーネスドライバーは既定でプロジェクト専用の Claude 設定ソースを使います。つまり、コピーされたテスト用 `.claude/` プロジェクト設定とフックは読む一方、開発者のユーザーレベルのフック / 設定は除外されます。これにより、インストール済みフレームワーク表面を再現しつつ、ローカル対話設定がテスト挙動へ影響するのを防ぎます。ドライバーオプションまたは `AIDLC_TUI_SETTING_SOURCES` は、その較正用の逃げ道です。
+
+`--all --debug`（および `--release --debug`）は、環境側で未設定なら `AIDLC_TUI_LIVE=1` を既定注入します。これにより、「全部をトレース付きで」のプロファイルは、トークン消費を伴うライブ TUI ジャーニーを既定で実行します。これらを意図的にスキップ側へ戻したいなら、`AIDLC_TUI_LIVE=0` を明示してください。
+
+<a id="parallel-execution"></a>
+## 並列実行
+
+`--parallel N`（または `-P N`）は、層内で最大 N 個のテストファイルを同時実行します。既定は直列（`1`）です。
+
+**効く場面。** 統合とエンドツーエンドは、その大半の実時間を `claude -p` サブプロセスの起動と LLM ターンで消費します。これらのテストはすでにファイルシステム分離されており、`setup_integration_project` が各テストごとに新しい `$PROJ` を作るので、互いに干渉せず並行実行できます。
+
+**スパイク結果（2026-05-06、Bedrock 経由のオーパス 4.7）:**
+
+| シナリオ | 直列 | `--parallel 4` \| `--parallel 8` |
+|---|---|---|---|
+| 4 × `/aidlc --help` | 56s | 16s (3.5x) | — |
+| 8 × `/aidlc --help` | — | — | 31s |
+
+8 並列の全呼び出しで `cache_read=73789` が観測されており、Bedrock のプロンプトキャッシュは並列ワーカー間でもウォームのままでした。8 並列時点ではスロットリングも破損も観測されていません。
+
+**直列のままのもの。** スモークとユニットは `--parallel` を無視し、常に直列で走ります。数秒で終わるうえ、出力の交錯はデバッグ性だけを悪化させるからです。事前検証ゲート（`tests/integration/t19.test.ts`）も、LLM 層がその終了ステータスに依存するため直列です。
+
+**並列時の出力。** `START` マーカーはライブで流れます。そのため、最初の `DONE` より前に複数の `START` が並ぶことがあります。これがワーカー並行性の可視サインです。通常 / 詳細モードでは、各ワーカーの TAP 本文はバッファされ、ディレクトリミューテックス（`mkdir $LOG_DIR/.stdout.lock`。POSIX でアトミック。マック OS のシェル 3.2 でも `flock` 不要）配下で 1 つの塊として標準出力へフラッシュされます。したがって、別ファイルの `ok` / `not ok` 行は相互に交錯しません。見た目は直列実行と同じく上から下へ読めますが、完了順はディスパッチ順ではなく各テスト所要時間で決まります。`--debug` では Bun の標準出力 / 標準エラーがライブで流れつつ、同時に各テストログにも書かれます。並列デバッグ出力にはファイルベース名の接頭辞が付き、重なっても帰属が分かります。SDK / TUI / Kiro-ACP ドライバートレースは、`$LOG_DIR/sdk-drive-*.ndjson`、`$LOG_DIR/tui-drive-*.ndjson`、`$LOG_DIR/kiro-acp-drive-*.ndjson` としてログ横へ保存されます。正確なファイル名はプロセス ID や TUI セッション名に依存するため、ランナーは起動時と各テスト開始時にグロブを表示します。Kiro-ACP トレースはライブ `kiro-cli acp` ターンをイベント単位で記録し、起動、プロンプト開始、各 `tool_call` / `tool_call_update` とその出力プレビュー、権限回答、起動済みプロセスの標準エラー、終端の `result` / `timeout` / `end` を残します。これにより `session/prompt` のタイムアウトが発生しても、実際には進行していたのか、それとも停止していたのかを事後診断できます。
+
+**ワーカー協調。** 親プロセスは `run_bun_test_file` を `&` でバックグラウンド化し、`jobs -rp | wc -l` によるスロットゲートを持ちます。各ワーカーはアトミックな `.meta` サイドカーを `$LOG_DIR/_results/` に書き、親は `wait` 後にそれを読み集計表を作ります。マック OS 付属のシェルは 3.2.57 で `wait -n` を持たないため、ゲートは 200 ミリ秒ごとにポーリングしますが、分単位の LLM 呼び出しに比べれば無視できるコストです。
+
+**指針。** まず `--parallel 4` から始めてください。Bedrock の容量とコストに余裕があるなら `8` へ上げられます。単一の失敗テストをデバッグする時は直列へ戻すか、`--filter` で絞ってください。

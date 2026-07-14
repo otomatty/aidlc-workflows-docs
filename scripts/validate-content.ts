@@ -1,18 +1,24 @@
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { validateSourceAnchors } from "../src/lib/markdown/source-anchors";
-import { contentIdToRoute, sourcePathToContentId } from "../src/lib/routes";
+
+import {
+	routeForRecord,
+	routeForTranslationPath,
+	sourcePathForTranslation,
+} from "../lib/routes";
+import { validateSourceAnchors } from "../lib/source-anchors";
 import {
 	collectTranslatedDocs,
 	EXPECTED_JSON_EXAMPLES,
-} from "../src/lib/translated-docs";
-import { collectTranslationInvariantErrors } from "../src/lib/translation-invariants";
+} from "../lib/translated-docs";
+import { collectTranslationInvariantErrors } from "../lib/translation-invariants";
 import {
 	computeSourceHash,
+	MANIFEST_RELATIVE_PATH,
 	readTranslationManifest,
 	type TranslationManifest,
-} from "../src/lib/translation-manifest";
+} from "../lib/translation-manifest";
 
 export interface ValidationResult {
 	ok: boolean;
@@ -26,17 +32,13 @@ export interface ValidateContentOptions {
 }
 
 function getManifestPath(projectRoot: string, manifestPath?: string): string {
-	return manifestPath ?? path.join(projectRoot, "src/data/translation-manifest.json");
+	return manifestPath ?? path.join(projectRoot, MANIFEST_RELATIVE_PATH);
 }
 
 function pushUnique(errors: string[], error: string): void {
 	if (!errors.includes(error)) {
 		errors.push(error);
 	}
-}
-
-function getPublicRoute(sourcePath: string): string {
-	return contentIdToRoute(sourcePathToContentId(sourcePath));
 }
 
 function collectManifestCoverageErrors(
@@ -62,51 +64,11 @@ function collectJsonExampleErrors(projectRoot: string, errors: string[]): void {
 		);
 
 		if (!existsSync(examplePath)) {
-			errors.push(`missing JSON example: public/examples/test-pro/${exampleName}`);
-		}
-	}
-}
-
-async function collectUpstreamReality(
-	upstreamRoot: string,
-	manifest: TranslationManifest,
-	errors: string[],
-): Promise<Map<string, "current" | "stale">> {
-	const statusByTranslationPath = new Map<string, "current" | "stale">();
-	const upstreamDocsRoot = path.resolve(upstreamRoot, "docs");
-
-	for (const record of manifest.records) {
-		const sourceAbsolutePath = path.resolve(upstreamRoot, record.sourcePath);
-		const relativeToDocs = path.relative(upstreamDocsRoot, sourceAbsolutePath);
-
-		if (
-			relativeToDocs.startsWith("..") ||
-			path.isAbsolute(relativeToDocs) ||
-			!existsSync(sourceAbsolutePath)
-		) {
 			errors.push(
-				`missing upstream source for recorded translation: ${record.sourcePath} (${record.translationPath})`,
-			);
-			continue;
-		}
-
-		try {
-			const currentHash = await computeSourceHash(
-				await readFile(sourceAbsolutePath, "utf8"),
-			);
-			statusByTranslationPath.set(
-				record.translationPath,
-				currentHash === record.sourceHash ? "current" : "stale",
-			);
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error);
-			errors.push(
-				`unable to read upstream source for recorded translation: ${record.sourcePath} (${record.translationPath}): ${message}`,
+				`missing JSON example: public/examples/test-pro/${exampleName}`,
 			);
 		}
 	}
-
-	return statusByTranslationPath;
 }
 
 export async function validateContent(
@@ -124,9 +86,6 @@ export async function validateContent(
 	const routesByPublicPath = new Map<string, string>();
 
 	collectManifestCoverageErrors(manifest, translationRelativePaths, errors);
-	const upstreamReality = options.upstreamRoot
-		? await collectUpstreamReality(options.upstreamRoot, manifest, errors)
-		: undefined;
 
 	for (const doc of docs) {
 		if (doc.frontmatterError) {
@@ -134,40 +93,24 @@ export async function validateContent(
 			continue;
 		}
 
-		const frontmatter = doc.frontmatter;
-		if (!frontmatter) {
-			continue;
-		}
-
 		const record = manifestByTranslationPath.get(doc.relativePath);
 
 		if (!record) {
 			errors.push(
-				`translation without manifest record: ${doc.relativePath} (${frontmatter.sourcePath})`,
+				`translation without manifest record: ${doc.relativePath} (${sourcePathForTranslation(doc.relativePath)})`,
 			);
-		} else {
-			if (
-				record.sourcePath !== frontmatter.sourcePath ||
-				record.sourceCommit !== frontmatter.sourceCommit ||
-				record.sourceHash !== frontmatter.sourceHash
-			) {
-				errors.push(
-					`source metadata differs from manifest: ${doc.relativePath} (${record.sourcePath})`,
-				);
-			}
-
-			const actualStatus = upstreamReality?.get(record.translationPath);
-			if (
-				actualStatus &&
-				frontmatter.translationStatus !== actualStatus
-			) {
-				errors.push(
-					`translationStatus mismatch: ${doc.relativePath} declares ${frontmatter.translationStatus} but upstream is ${actualStatus}`,
-				);
-			}
 		}
 
-		const publicRoute = getPublicRoute(frontmatter.sourcePath);
+		// A frontmatter slug replaces the file-derived route; the manifest must
+		// carry the same route so SourceStatus can find the record at render time.
+		const publicRoute = doc.frontmatter?.slug
+			? routeForTranslationPath(`docs/${doc.frontmatter.slug}.mdx`)
+			: routeForTranslationPath(doc.relativePath);
+		if (record && routeForRecord(record) !== publicRoute) {
+			errors.push(
+				`manifest route mismatch: ${doc.relativePath} renders at ${publicRoute} but the manifest resolves ${routeForRecord(record)}`,
+			);
+		}
 		const existingDocPath = routesByPublicPath.get(publicRoute);
 
 		if (existingDocPath) {
@@ -186,34 +129,40 @@ export async function validateContent(
 			);
 		}
 
-		// Fence/URL invariants compare against the live upstream tip; only current
-		// translations are required to match. Stale pages intentionally lag.
-		if (
-			options.upstreamRoot &&
-			record &&
-			frontmatter.translationStatus === "current"
-		) {
+		// Upstream checks: the recorded source must exist, and a translation whose
+		// record matches the live upstream tip must satisfy the fence/URL
+		// invariants. Records lagging upstream (stale) intentionally skip them.
+		if (options.upstreamRoot && record) {
 			const sourceAbsolutePath = path.resolve(
 				options.upstreamRoot,
 				record.sourcePath,
 			);
-			if (existsSync(sourceAbsolutePath)) {
-				try {
-					const sourceMarkdown = await readFile(sourceAbsolutePath, "utf8");
-					for (const error of collectTranslationInvariantErrors(
-						record.sourcePath,
-						sourceMarkdown,
-						doc.relativePath,
-						doc.raw,
-					)) {
-						pushUnique(errors, error);
-					}
-				} catch (error) {
-					const message = error instanceof Error ? error.message : String(error);
-					errors.push(
-						`unable to compare translation invariants for ${doc.relativePath}: ${message}`,
-					);
+			if (!existsSync(sourceAbsolutePath)) {
+				errors.push(
+					`missing upstream source for recorded translation: ${record.sourcePath} (${record.translationPath})`,
+				);
+				continue;
+			}
+
+			try {
+				const sourceMarkdown = await readFile(sourceAbsolutePath, "utf8");
+				const currentHash = await computeSourceHash(sourceMarkdown);
+				if (currentHash !== record.sourceHash) {
+					continue;
 				}
+				for (const error of collectTranslationInvariantErrors(
+					record.sourcePath,
+					sourceMarkdown,
+					doc.relativePath,
+					doc.raw,
+				)) {
+					pushUnique(errors, error);
+				}
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				errors.push(
+					`unable to compare translation invariants for ${doc.relativePath}: ${message}`,
+				);
 			}
 		}
 	}
