@@ -443,9 +443,9 @@ flowchart TD
 
 | サブコマンド | 機能 |
 |------------|--------------|
-| `list` \| フレームワークに含まれる全センサー（`id`、`kind`、`description`）をアルファベット順に表示する |
-| `describe <id>` \| 1 つのセンサーの完全なマニフェスト（コマンド、既定の重大度、`matches` グロブ、タイムアウト）を表示する |
-| `fire <id> --stage <slug> --output-path <path>` \| ファイルに対してセンサーを実行し、`SENSOR_FIRED` 行と対応する結果行を出す |
+| `list` | フレームワークに含まれる全センサー（`id`、`kind`、`description`）をアルファベット順に表示する |
+| `describe <id>` | 1 つのセンサーの完全なマニフェスト（コマンド、既定の重大度、`matches` グロブ、タイムアウト）を表示する |
+| `fire <id> --stage <slug> --output-path <path>` | ファイルに対してセンサーを実行し、`SENSOR_FIRED` 行と対応する結果行を出す |
 
 手動発火では、まず `SENSOR_FIRED` 監査行を出し、その後ちょうど 1 行の端末出力として `SENSOR_PASSED`、`SENSOR_FAILED`、`SENSOR_BUDGET_OVERRIDE` のいずれかを出します。失敗した場合、詳細ファイルはインテントの記録ディレクトリ内にある `<record>/.aidlc-sensors/<stage>/` へ書きます。センサーは助言用なので、失敗してもツールの失敗にはならず、コマンドは終了コード 0 を返します。フレームワークに同梱される 4 つのセンサーは `required-sections`、`upstream-coverage`、`linter`、`type-check` です。
 
@@ -464,8 +464,8 @@ bun .claude/tools/aidlc-sensor.ts fire required-sections \
 
 | サブコマンド | 機能 |
 |------------|--------------|
-| `surface --slug <stage-slug>` \| 直前に承認されたステージの `memory.md` を読み、構造化した候補（解釈、逸脱、トレードオフ）と保留中の未解決質問を表示する。読み取り専用 |
-| `persist --slug <stage-slug> --selections-json <path>` \| 確認済みの学び（確定した学びは実践事項）を、スペースメモリ層の `aidlc/spaces/<space>/memory/project.md` / `memory/team.md` に書き込む（センサーと結び付く学びなら、プロジェクト階層のセンサー雛形を作り、関連付ける）。`RULE_LEARNED` / `SENSOR_PROPOSED` を出す |
+| `surface --slug <stage-slug>` | 直前に承認されたステージの `memory.md` を読み、構造化した候補（解釈、逸脱、トレードオフ）と保留中の未解決質問を表示する。読み取り専用 |
+| `persist --slug <stage-slug> --selections-json <path>` | 確認済みの学び（確定した学びは実践事項）を、スペースメモリ層の `aidlc/spaces/<space>/memory/project.md` / `memory/team.md` に書き込む（センサーと結び付く学びなら、プロジェクト階層のセンサー雛形を作り、関連付ける）。`RULE_LEARNED` / `SENSOR_PROPOSED` を出す |
 
 確認済みの学びは、現在のワークフローではなく次のワークフローから適用されます。
 
@@ -476,8 +476,8 @@ bun .claude/tools/aidlc-sensor.ts fire required-sections \
 
 | サブコマンド | 機能 |
 |------------|--------------|
-| `compile` \| `audit/` シャードと各ステージの `memory.md` を走査して `runtime-graph.json` を書き直す。各遷移でフックが自動発火する |
-| `read <stage-slug>` \| `runtime-graph.json` から 1 ステージ分の行（時刻、エージェント、メモリ内訳、センサー発火、結果）を表示する |
+| `compile` | `audit/` シャードと各ステージの `memory.md` を走査して `runtime-graph.json` を書き直す。各遷移でフックが自動発火する |
+| `read <stage-slug>` | `runtime-graph.json` から 1 ステージ分の行（時刻、エージェント、メモリ内訳、センサー発火、結果）を表示する |
 | `summary [--json]` | グラフ全体の決定論的集計を表示する。ステージ / フェーズの結果集計、メモリ項目数、センサーの 4 状態集計、取り込んだ学び、ワークフロー所要時間を含む。読み取り専用のセッションスキルが参照するデータ源 |
 
 ```
@@ -495,7 +495,7 @@ bun .claude/tools/aidlc-runtime.ts read requirements-analysis
 |-------|--------------|
 | `/aidlc-session-cost` | 決定論的なコスト表示（所要時間、ステージ結果、メモリ、センサー、学び）。端末のみ |
 | `/aidlc-replay` | 非同期レビュー向けの読みやすいセッション記録。端末のみ |
-| `/aidlc-outcomes-pack` \| チーム向けの引き継ぎ文書。`OUTCOMES.md` に書き込む |
+| `/aidlc-outcomes-pack` | チーム向けの引き継ぎ文書。`OUTCOMES.md` に書き込む |
 
 3 つとも読み取り専用で、ステージ進行も監査出力も行いません。また、すべての数値は `aidlc-runtime summary --json` を唯一の情報源として読み取ります。完全な流れは [セッション管理 § セッションスキル](/guide/session-management#session-skills) を参照してください。
 

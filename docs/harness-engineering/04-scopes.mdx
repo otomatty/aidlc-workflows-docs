@@ -34,11 +34,11 @@ Prose intent: why these stages, why skip those.
 
 | フィールド | 必須 | 役割 |
 |-------|----------|--------------|
-| `name` \| はい \| スコープ名。ファイル名の拡張子を除いた部分と一致する必要があります（`aidlc-feature.md` → `feature`）。 |
-| `depth` \| はい \| 既定の詳細度。`Minimal`、`Standard`、`Comprehensive` のいずれかです。 |
-| `testStrategy` \| いいえ \| 深度と独立にテスト量を上書きします。既定では `depth` に一致します。 |
-| `keywords` \| いいえ \| `/aidlc <freeform text>` の自動検出に使う自然言語の引き金。空の一覧なら対象外です。 |
-| `description` \| いいえ \| `/aidlc --help` に表示される 1 行の説明です。（`SKILL.md` のコンパイル済みスコープ表には `Scope` / `Depth` / `TestStrategy` / `EXECUTE` / `Total` だけが出て、説明は出ません。） |
+| `name` | はい | スコープ名。ファイル名の拡張子を除いた部分と一致する必要があります（`aidlc-feature.md` → `feature`）。 |
+| `depth` | はい | 既定の詳細度。`Minimal`、`Standard`、`Comprehensive` のいずれかです。 |
+| `testStrategy` | いいえ | 深度と独立にテスト量を上書きします。既定では `depth` に一致します。 |
+| `keywords` | いいえ | `/aidlc <freeform text>` の自動検出に使う自然言語の引き金。空の一覧なら対象外です。 |
+| `description` | いいえ | `/aidlc --help` に表示される 1 行の説明です。（`SKILL.md` のコンパイル済みスコープ表には `Scope` / `Depth` / `TestStrategy` / `EXECUTE` / `Total` だけが出て、説明は出ません。） |
 
 **2. 所属タグ — 各ステージの `scopes:` フロントマター。** ステージは、自分がどのスコープで走るかを `core/aidlc-common/stages/<phase>/<slug>.md` のフロントマターに書きます。
 

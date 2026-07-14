@@ -32,10 +32,10 @@ aidlc/spaces/<space>/memory/
 
 | ファイル名パターン | スコープ |
 |---|---|
-| `org.md` \| `org` |
-| `team.md` \| `team` |
-| `project.md` \| `project` |
-| `phases/<phase>.md` \| `phase`（フェーズ値 = ファイル名） |
+| `org.md` | `org` |
+| `team.md` | `team` |
+| `project.md` | `project` |
+| `phases/<phase>.md` | `phase`（フェーズ値 = ファイル名） |
 
 組織・チーム・プロジェクト・フェーズのルールは、パススコープ用メタデータを持ちません。関係はステージ側からの取り込みを著述することで置かれます。組織・チーム・プロジェクトの各ルールは、ファイル名由来の共通既定値としてすべてのステージへ適用されます。対応するフェーズルールは、ステージメタデータの `phase: <name>` フィールドが `phases/<name>.md` を取り込むため、自動で付与されます。
 

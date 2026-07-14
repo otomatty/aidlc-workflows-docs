@@ -48,11 +48,11 @@ core/aidlc-common/stages/
 | フィールド | 役割 |
 |-------|--------------|
 | `requires_stage` | 依存関係の辺。どのステージがこのステージに先行しなければならないか |
-| `consumes` \| このステージが読む成果物。各項目に `required` 真偽値がある |
+| `consumes` | このステージが読む成果物。各項目に `required` 真偽値がある |
 | `produces` | このステージが書く成果物（そのまま順方向の辺になる） |
 | `lead_agent` | このステージに責任を持つペルソナ |
 | `support_agents` | 主担当の後にコンダクターが読み込む任意の観点 |
-| `mode` \| `inline`、`subagent`、または予約済みの `agent-team` |
+| `mode` | `inline`、`subagent`、または予約済みの `agent-team` |
 | `for_each` | 任意。実体ごとの反復を駆動する成果物名 |
 
 本文は `## Steps` から始まります。主担当エージェントが従う命令形の文章です。その後ろに `## Sensors` と `## Learn` の区画が続きます。フィールド一覧の完全版、型、制約については [フィールドリファレンス — 使用条件](/reference/stage-definition#field-reference--when-to-use) を参照してください。

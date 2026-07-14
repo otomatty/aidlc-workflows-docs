@@ -148,11 +148,11 @@ fragments:                    # PROSE — spliced into the stage body
 
 | アンカー | フラグメントの挿入位置 |
 |--------|------------------------|
-| `after-step:<n>` \| `### Step <n>` のコンテンツ直後（次の見出しの前） |
-| `before-step:<n>` \| `### Step <n>` の直前 |
+| `after-step:<n>` | `### Step <n>` のコンテンツ直後（次の見出しの前） |
+| `before-step:<n>` | `### Step <n>` の直前 |
 | `after-questions` | 質問生成ステップの後 |
-| `end-of-steps` \| `## Steps` ブロックの末尾 |
-| `in:<Compartment>` \| 指定された `## <Compartment>` ブロックの末尾 |
+| `end-of-steps` | `## Steps` ブロックの末尾 |
+| `in:<Compartment>` | 指定された `## <Compartment>` ブロックの末尾 |
 
 **サーフェス別** — アップストリーム変更の種類ごとにプラグインが使う方法です。「ステータス」は、合成フックが現在マージするものと、設計済みながら延期されているものを示します。
 
@@ -163,7 +163,7 @@ fragments:                    # PROSE — spliced into the stage body
 | ステージに新しいセクションを要求させる | `adds.required_sections` | ✅ マージ済み（⚠️ 宣言的 — まだ機械的には強制されない、§8） |
 | ステージに検証を追加する | `adds.sensors`（マニフェストと `tools/` スクリプトを提供） | ✅ 実装済み |
 | 消費エッジを追加する | `adds.consumes` | ✅ 実装済み |
-| `requires_stage` エッジを追加する \| `adds.requires_stage` | ⏳ 延期（宣言 → ログ、未マージ） |
+| `requires_stage` エッジを追加する | `adds.requires_stage` | ⏳ 延期（宣言 → ログ、未マージ） |
 | 既存ステージをプラグインスコープに含める | `adds.scopes`（またはスコープ自身の `includes_*` — §7） | ⏳ 延期（宣言 → ログ、未マージ） |
 | フェーズポリシー / ガードレールを注入する | `memory/phases/<p>.md` をデフォルトスペースのシードへ提供（§6） | ⏳ 延期（未投影） |
 

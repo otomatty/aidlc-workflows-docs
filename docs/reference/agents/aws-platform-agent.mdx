@@ -8,9 +8,9 @@ description: aidlc-aws-platform-agent の識別情報、ステージ担当、連
 | 項目 | 値 |
 |------|----|
 | 名前 | aidlc-aws-platform-agent |
-| 階層 | **judgment** |
-| 許可される Claude Code ツール | Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion |
-| 許可されない Claude Code ツール | Task |
+| ティア | **judgment** |
+| 許可された Claude Code ツール | Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion |
+| 許可されていない Claude Code ツール | Task |
 
 ---
 
@@ -41,17 +41,17 @@ description: aidlc-aws-platform-agent の識別情報、ステージ担当、連
 ## 連携パターン
 
 <a id="receives-from"></a>
-### 受け取る相手
+### 受け取り元
 
-| ソース | 成果物 |
+| 提供元 | 成果物 |
 |--------|--------|
 | aidlc-architect-agent | アプリケーショントポロジー、コンポーネント一覧、インフラ要件 |
 | aidlc-devsecops-agent | セキュリティ要件、コンプライアンス統制、暗号化仕様 |
 
 <a id="hands-off-to"></a>
-### 引き渡す相手
+### 引き継ぎ先
 
-| ターゲット | 成果物 |
+| 引き継ぎ先 | 成果物 |
 |----------|--------|
 | aidlc-pipeline-deploy-agent | デプロイ先向けの環境エンドポイント、インフラ出力 |
 | aidlc-operations-agent | オブザーバビリティ設定と監視のためにプロビジョニング済みのインフラ |
@@ -62,7 +62,7 @@ description: aidlc-aws-platform-agent の識別情報、ステージ担当、連
 ## ナレッジソース
 
 <a id="methodology-tier-1"></a>
-### 手法論（第1層）
+### 方法論（ティア 1）
 
 パス: `.claude/knowledge/aidlc-aws-platform-agent/`
 
@@ -74,7 +74,7 @@ description: aidlc-aws-platform-agent の識別情報、ステージ担当、連
 | well-architected-framework.md | AWS Well-Architected Framework の 6 つの柱のリファレンス |
 
 <a id="team-tier-2"></a>
-### チーム（第2層）
+### チーム（ティア 2）
 
 パス: `aidlc/knowledge/aidlc-aws-platform-agent/`（スペースレベルのナレッジディレクトリ。ユーザー管理）
 
@@ -90,4 +90,4 @@ description: aidlc-aws-platform-agent の識別情報、ステージ担当、連
 - [エージェントリファレンス概要](/reference/agents)
 - [エージェントガイド: aidlc-aws-platform-agent](/guide/agents/aws-platform-agent)
 - [ステージドキュメント](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/04-stages/)
-- 出典: [`dist/claude/.claude/agents/aidlc-aws-platform-agent.md`](https://github.com/awslabs/aidlc-workflows/blob/main/dist/claude/.claude/agents/aidlc-aws-platform-agent.md)
+- ソース: [`dist/claude/.claude/agents/aidlc-aws-platform-agent.md`](https://github.com/awslabs/aidlc-workflows/blob/main/dist/claude/.claude/agents/aidlc-aws-platform-agent.md)

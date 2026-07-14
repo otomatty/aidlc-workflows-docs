@@ -118,7 +118,7 @@ flowchart LR
 
 | ステージ | 成果物 | 補足 |
 |-------|-----------|-------|
-| 0.1 ワークスペース足場作成 | `scaffold-report.md` \| 決定論的（`aidlc-utility init` 内で実行） |
+| 0.1 ワークスペース足場作成 | `scaffold-report.md` | 決定論的（`aidlc-utility init` 内で実行） |
 | 0.2 ワークスペース検出 | `workspace-findings.md`、`aidlc-state.md` の更新 | 決定論的なルールベース走査 |
 | 0.3 状態初期化 | `state-init-summary.md` | 決定論的 |
 
@@ -207,12 +207,12 @@ flowchart LR
 
 | コミットする | Gitignore に入れる |
 |--------|-----------|
-| `aidlc-state.md` \| `aidlc/active-space`、`intents/active-intent`（利用者ごとの現在位置） |
-| `audit/*.md`（クローンごとのシャード） \| `.aidlc-recovery.md` とその他の `intents/*/.aidlc-*`（一時的な復旧用目印） |
+| `aidlc-state.md` | `aidlc/active-space`、`intents/active-intent`（利用者ごとの現在位置） |
+| `audit/*.md`（クローンごとのシャード） | `.aidlc-recovery.md` とその他の `intents/*/.aidlc-*`（一時的な復旧用目印） |
 | すべてのステージ成果物 | `runtime-graph.json`（監査シャードから再生成できる） |
-| `verification/` のフェーズ検査結果 \| `aidlc/.aidlc-clone-id`（このクローンのシャード名を決めるため、端末固有である必要がある） |
-| スペース単位の `aidlc/knowledge/` チームナレッジファイル \| `aidlc/.aidlc-sessions/`（会話とインテントの対応表） |
-| ステージごとの `memory.md` 日誌、スペースの `memory/` 層 \| `.aidlc-hooks-health/`、`.aidlc-sensors/`（生存確認、助言用の指摘） |
+| `verification/` のフェーズ検査結果 | `aidlc/.aidlc-clone-id`（このクローンのシャード名を決めるため、端末固有である必要がある） |
+| スペース単位の `aidlc/knowledge/` チームナレッジファイル | `aidlc/.aidlc-sessions/`（会話とインテントの対応表） |
+| ステージごとの `memory.md` 日誌、スペースの `memory/` 層 | `.aidlc-hooks-health/`、`.aidlc-sensors/`（生存確認、助言用の指摘） |
 
 ---
 

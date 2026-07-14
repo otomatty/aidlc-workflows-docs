@@ -21,12 +21,12 @@ Kiro IDE の `runCommand` フックは、標準入力ではなく **`USER_PROMPT
 <a id="per-event-captures"></a>
 ## イベント別のキャプチャ結果
 
-| イベント | `toolName` \| `toolArgs` \| `toolResult` | 復元可能か |
+| イベント | `toolName` | `toolArgs` | `toolResult` | 復元可能か |
 |-------|-----------|-----------|-------------|--------------|
-| ツール使用後（書き込み） — 作成 | `fs_write` \| `{}`（空） \| `Created the <ABS_PATH> file.` \| パス: `toolResult` の文面からのみ |
-| ツール使用後（書き込み） — 編集 | `str_replace` \| `{}`（空） \| `Replaced text in <ABS_PATH>` \| パス: `toolResult` の文面からのみ |
-| ツール使用後（書き込み） — 追記 | `fs_append` \| `{}`（空） \| `Appended the text to the <ABS_PATH> file.` \| パス: `toolResult` の文面からのみ |
-| ツール使用後（シェル） | `execute_bash` \| `{}`（空） \| `Output:\n<stdout>\n\nExit Code: 0` | コマンド: **復元不可**（標準出力のみ） |
+| ツール使用後（書き込み） — 作成 | `fs_write` | `{}`（空） | `Created the <ABS_PATH> file.` | パス: `toolResult` の文面からのみ |
+| ツール使用後（書き込み） — 編集 | `str_replace` | `{}`（空） | `Replaced text in <ABS_PATH>` | パス: `toolResult` の文面からのみ |
+| ツール使用後（書き込み） — 追記 | `fs_append` | `{}`（空） | `Appended the text to the <ABS_PATH> file.` | パス: `toolResult` の文面からのみ |
+| ツール使用後（シェル） | `execute_bash` | `{}`（空） | `Output:\n<stdout>\n\nExit Code: 0` | コマンド: **復元不可**（標準出力のみ） |
 
 <a id="critical-limitations"></a>
 ### 重大な制約
@@ -48,8 +48,8 @@ Kiro IDE の `runCommand` フックは、標準入力ではなく **`USER_PROMPT
 
 | `toolName` | 文面 | 正規ツール |
 |----------|---------|----------------|
-| `fs_write` \| `Created the <PATH> file.` \| `Write` |
-| `str_replace` \| `Replaced text in <PATH>`（末尾に ` (N occurrences)` が付く場合あり） \| `Edit` |
-| `fs_append` \| `Appended the text to the <PATH> file.` \| `Edit` |
+| `fs_write` | `Created the <PATH> file.` | `Write` |
+| `str_replace` | `Replaced text in <PATH>`（末尾に ` (N occurrences)` が付く場合あり） | `Edit` |
+| `fs_append` | `Appended the text to the <PATH> file.` | `Edit` |
 
 抽出器は一致判定前に末尾の空白と改行を除去し、`str_replace` 形式では末尾の括弧書きを取り除きます。`fs_write` は `Write` に対応します。`str_replace`/`fs_append` は `Edit` に対応します（どちらも既存ファイルを対象とするため、コア監査ロガーは `ARTIFACT_UPDATED` を記録します）。

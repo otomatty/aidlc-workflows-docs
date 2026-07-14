@@ -35,9 +35,9 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 |-------|----------|-------------|
 | `name` | はい | エージェント識別子。ファイル名と一致しなければなりません |
 | `description` | はい | 役割の短い要約 |
-| `tools` \| いいえ \| 任意の許可一覧です。省略すると完全なセッションツールセットを継承します。列挙するとエージェントは絞り込まれ、`mcp__<server>__<tool>` 識別子も明示しない限り継承済み MCP ツールは落ちます |
-| `disallowedTools` \| はい \| `Task` を含めなければなりません。委譲を行うのはコンダクターだけです |
-| `tier` \| はい \| `judgment`、`balanced`、`templated` のいずれかです。これは作成元側のダイヤルであり、パッケージャーが各ハーネスのネイティブなモデル／推論量キーへ射影します（後述のエージェントティアを参照）。生の `model:` / `effort:` は作成元のメタデータ部には決して現れません。これらは `dist/<harness>/` における射影結果です |
+| `tools` | いいえ | 任意の許可一覧です。省略すると完全なセッションツールセットを継承します。列挙するとエージェントは絞り込まれ、`mcp__<server>__<tool>` 識別子も明示しない限り継承済み MCP ツールは落ちます |
+| `disallowedTools` | はい | `Task` を含めなければなりません。委譲を行うのはコンダクターだけです |
+| `tier` | はい | `judgment`、`balanced`、`templated` のいずれかです。これは作成元側のダイヤルであり、パッケージャーが各ハーネスのネイティブなモデル／推論量キーへ射影します（後述のエージェントティアを参照）。生の `model:` / `effort:` は作成元のメタデータ部には決して現れません。これらは `dist/<harness>/` における射影結果です |
 
 <a id="markdown-body-sections"></a>
 ### Markdown 本文セクション
@@ -103,11 +103,11 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 
 ハーネスごとの射影は次のとおりです（`core/tools/aidlc-tiers.ts` が唯一の正本です）。
 
-| ティア | Claude Code（`.md` のメタデータ部） \| Codex CLI（TOML） \| Kiro CLI/IDE（エージェント JSON の `"model"`） \| Kiro の CLI 設定にある `chat.modelDefaults` |
+| ティア | Claude Code（`.md` のメタデータ部） | Codex CLI（TOML） | Kiro CLI/IDE（エージェント JSON の `"model"`） | Kiro の CLI 設定にある `chat.modelDefaults` |
 |------|-------------------------------|-------------------|--------------------------------------|-------------------------------------|
-| `judgment` \| `model: inherit`、`effort:` 行なし \| `model`／`model_reasoning_effort` キーなし（設定のセッション既定値が適用される） | フィールドを省略（スキーマのフォールバック: ユーザーの既定モデル） | 項目なし（既定モデル固有の既定推論量） |
-| `balanced` \| `model: sonnet`、`effort:` 行なし \| `model = "openai.gpt-5.4"`、推論量キーなし \| ソネット 4.5 \| ソネット 4.5 → `high` |
-| `templated` \| `model: sonnet`、`effort: medium` \| `model = "openai.gpt-5.4"`、`model_reasoning_effort = "medium"` \| ソネット 4.5（`balanced` と統合） \| （ソネット 4.5 の項目を共有し、`balanced` の `high` が統合時に優先する） |
+| `judgment` | `model: inherit`、`effort:` 行なし | `model`／`model_reasoning_effort` キーなし（設定のセッション既定値が適用される） | フィールドを省略（スキーマのフォールバック: ユーザーの既定モデル） | 項目なし（既定モデル固有の既定推論量） |
+| `balanced` | `model: sonnet`、`effort:` 行なし | `model = "openai.gpt-5.4"`、推論量キーなし | `claude-sonnet-4.5` | sonnet-4.5 → `high` |
+| `templated` | `model: sonnet`、`effort: medium` | `model = "openai.gpt-5.4"`、`model_reasoning_effort = "medium"` | `claude-sonnet-4.5`（`balanced` と統合） | （sonnet-4.5 の項目を共有し、`balanced` の `high` が統合時に優先する） |
 
 この表を支える重要事実:
 

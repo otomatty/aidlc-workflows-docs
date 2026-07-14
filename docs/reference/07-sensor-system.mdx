@@ -27,8 +27,8 @@ dist/claude/.claude/sensors/aidlc-<id>.md
 
 | ファイル名 | 必須の `id:` |
 |---|---|
-| `aidlc-required-sections.md` \| `required-sections` |
-| `aidlc-linter.md` \| `linter` |
+| `aidlc-required-sections.md` | `required-sections` |
+| `aidlc-linter.md` | `linter` |
 
 このファイル名と識別子の規則は `tests/unit/t86-sensor-manifest-schema.sh` で強制されています。`aidlc-` 接頭辞は、**ユーザー定義のカスタムセンサーでも必須**です。コンパイル解決器は `SENSOR_FILE_REGEX = /^aidlc-([a-z][a-z0-9-]*)\.md$/`（`aidlc-graph.ts` の `loadSensors`）でマニフェストを発見するため、接頭辞のないファイルは黙って無視され、どのステージにも束縛されません。カスタムセンサーは `aidlc-<id>.md` と命名し、`id: <id>` を設定してください。
 
@@ -64,13 +64,13 @@ timeout_seconds: 5                           # optional
 
 | 項目 | 必須 | 型 | 注記 |
 |---|---|---|---|
-| `id` \| ✓ \| ケバブケース文字列 \| `aidlc-` 接頭辞を除いたファイル名の語幹と一致します。ルールファイルの `pairing:` フィールドから相互参照されます（[ルールシステム](/reference/rule-system) を参照）。 |
-| `kind` \| ✓ \| 列挙値 \| 現在受け入れられるのは `deterministic` だけです。`llm` はバージョン 0.11.0 の LLM ディスパッチ章向け予約値です。下の [`kind` 列挙値](#kind-enum) を参照してください。 |
-| `command` \| ✓ \| 文字列 \| 正準な呼び出し接頭辞です。各出荷済みセンサーは自分専用のスクリプトを指します（例: `bun .claude/tools/aidlc-sensor-required-sections.ts`）。ディスパッチャー（`aidlc-sensor.ts`）は、常に `--stage <slug>` を付け足し、その後に入力形状に応じたファイルフラグを追加します。文書センサーは `--output-path <path>`、コードセンサー（`linter`, `type-check`）は `--file-path <path>` です。 |
-| `default_severity` \| ✓ \| 列挙値 \| 現在受け入れられるのは `advisory` だけです。`blocking` は将来予約です。 |
+| `id` | ✓ | ケバブケース文字列 | `aidlc-` 接頭辞を除いたファイル名の語幹と一致します。ルールファイルの `pairing:` フィールドから相互参照されます（[ルールシステム](/reference/rule-system) を参照）。 |
+| `kind` | ✓ | 列挙値 | 現在受け入れられるのは `deterministic` だけです。`llm` はバージョン 0.11.0 の LLM ディスパッチ章向け予約値です。下の [`kind` 列挙値](#kind-enum) を参照してください。 |
+| `command` | ✓ | 文字列 | 正準な呼び出し接頭辞です。各出荷済みセンサーは自分専用のスクリプトを指します（例: `bun .claude/tools/aidlc-sensor-required-sections.ts`）。ディスパッチャー（`aidlc-sensor.ts`）は、常に `--stage <slug>` を付け足し、その後に入力形状に応じたファイルフラグを追加します。文書センサーは `--output-path <path>`、コードセンサー（`linter`, `type-check`）は `--file-path <path>` です。 |
+| `default_severity` | ✓ | 列挙値 | 現在受け入れられるのは `advisory` だけです。`blocking` は将来予約です。 |
 | `description` | ✓ | 文字列 | 1 行の人向け説明。 |
-| `category` \| 任意 \| 文字列 \| 自由形式の説明ラベル。出荷済み 4 マニフェストでは `document-shape` と `code-quality` を使っています。閉じた列挙値ではありません。 |
-| `matches` \| 任意 \| グロブ文字列 \| 発火時に `PostToolUse` フックが読む機能フィルターです。詳しくは [`matches` フィルター](#matches-filter) を参照してください。 |
+| `category` | 任意 | 文字列 | 自由形式の説明ラベル。出荷済み 4 マニフェストでは `document-shape` と `code-quality` を使っています。閉じた列挙値ではありません。 |
+| `matches` | 任意 | グロブ文字列 | 発火時に `PostToolUse` フックが読む機能フィルターです。詳しくは [`matches` フィルター](#matches-filter) を参照してください。 |
 | `input_schema` | 任意 | オブジェクト | 現在は助言用途ですが、将来の LLM ディスパッチではテンプレート契約として使われます。 |
 | `output_schema` | 任意 | オブジェクト | 現在は助言用途ですが、将来の LLM ディスパッチでは解析契約として使われます。 |
 | `timeout_seconds` | 任意 | 整数 | 1 回の発火に対する実時間上限。 |
@@ -126,8 +126,8 @@ outputs: ...
 | ステージ | `sensors:` |
 |---|---|
 | 3 つの初期化（ワークスペース足場作成、ワークスペース検出、状態初期化） | `[]`（決定論的セットアップであり、エージェント著述 Markdown がない） |
-| 構想 7、立ち上げ 8、運用 7 の Markdown ステージと `code-generation` \| Markdown ステージは `[required-sections, upstream-coverage]`、`code-generation` は `[linter, type-check]`（コードのみ） |
-| `build-and-test` \| `[required-sections, upstream-coverage, type-check]`（`linter` は意図的に除外。ビルドが正準のリントを走らせるため） |
+| 構想 7、立ち上げ 8、運用 7 の Markdown ステージと `code-generation` | Markdown ステージは `[required-sections, upstream-coverage]`、`code-generation` は `[linter, type-check]`（コードのみ） |
+| `build-and-test` | `[required-sections, upstream-coverage, type-check]`（`linter` は意図的に除外。ビルドが正準のリントを走らせるため） |
 | 5 つの構築設計（CI パイプライン、機能設計、インフラ設計、NFR 設計、NFR 要件） | `[required-sections, upstream-coverage, linter, type-check]`（コード断片を含む Markdown 設計） |
 
 フォーク側でのカスタマイズは、ステージの `sensors:` 一覧を直接編集して行います。束縛は、カスタマイズ対象のすぐ隣にあります。マニフェストは純粋な機能記述子であり、ステージ対象化フィールドは持ちません。`applies_to:` はありません。プル型の著述により除去されました。厳密加算の実行時モデルが適用されるので、フォークがあるセンサーをあるステージへ付けたいならインポートし、不要なら書かなければよいだけです。上書きレイヤーを考える必要はありません。
@@ -141,10 +141,10 @@ outputs: ...
 
 | マニフェスト | `matches` |
 |---|---|
-| `aidlc-required-sections.md` \| `**/{aidlc-docs,intents}/**` |
-| `aidlc-upstream-coverage.md` \| `**/{aidlc-docs,intents}/**` |
-| `aidlc-linter.md` \| `**/*.{ts,js}` |
-| `aidlc-type-check.md` \| `**/*.{ts,tsx}` |
+| `aidlc-required-sections.md` | `**/{aidlc-docs,intents}/**` |
+| `aidlc-upstream-coverage.md` | `**/{aidlc-docs,intents}/**` |
+| `aidlc-linter.md` | `**/*.{ts,js}` |
+| `aidlc-type-check.md` | `**/*.{ts,tsx}` |
 
 `matches` は実質的に発火フィルターそのものです。理論上は任意でも、実務上は必須です。フックは書き込まれたパスをこのグロブと比較し、一致した場合だけ発火します。`matches` を持たないエントリは一切発火しません（`aidlc-sensor-fire.ts`: `if (!entry.matches) continue`）。そのため、出荷済み 4 マニフェストはすべて `matches` を宣言しています。2 つの文書形状センサーは成果物ツリーに、2 つのコード品質センサーは言語グロブに限定されます。コンパイル解決器は `matches` をそのままステージ別 `sensors_applicable[]` へコピーし、フックはグラフノードからスナップショットされた値を読みます。
 
@@ -228,15 +228,15 @@ bun .claude/tools/aidlc-sensor-required-sections.ts \
 | 項目 | 既定値 | 注記 |
 |---|---|---|
 | `id` | ユーザー自由記述から導出（ケバブケース化） | |
-| `kind` \| `deterministic` | 現在唯一受理される値 |
-| `command` \| `bun .claude/tools/aidlc-sensor-<id>.ts` | 仮のセンサー別スクリプト。利用者が実装スクリプトへ更新する |
-| `default_severity` \| `advisory` | 現在唯一受理される値 |
+| `kind` | `deterministic` | 現在唯一受理される値 |
+| `command` | `bun .claude/tools/aidlc-sensor-<id>.ts` | 仮のセンサー別スクリプト。利用者が実装スクリプトへ更新する |
+| `default_severity` | `advisory` | 現在唯一受理される値 |
 | `description` | ユーザー自由記述由来 | |
-| `category` \| `""` | 必要なら利用者が埋める |
-| `matches` \| 発火にはグロブが必要 \| どの形のファイルへ適用するかを足場作成時に確認する。成果物ツリーのグロブでも `**/*.ts` のようなコードグロブでもよい。`matches` がないエントリは発火しない |
-| `input_schema` \| `{ output_path: string, stage_slug: string }` | ディスパッチャーが付加するフラグ形状に一致 |
-| `output_schema` \| `{ pass: boolean }` | ディスパッチャーが依存する最小構造 |
-| `timeout_seconds` \| `30` | 保守的な既定。遅いディスパッチャー向けに調整可能 |
+| `category` | `""` | 必要なら利用者が埋める |
+| `matches` | 発火にはグロブが必要 | どの形のファイルへ適用するかを足場作成時に確認する。成果物ツリーのグロブでも `**/*.ts` のようなコードグロブでもよい。`matches` がないエントリは発火しない |
+| `input_schema` | `{ output_path: string, stage_slug: string }` | ディスパッチャーが付加するフラグ形状に一致 |
+| `output_schema` | `{ pass: boolean }` | ディスパッチャーが依存する最小構造 |
+| `timeout_seconds` | `30` | 保守的な既定。遅いディスパッチャー向けに調整可能 |
 
 マニフェストを足場作成した後、ゲート儀式ツールは同じ `withAuditLock` トランザクション内で、新しい識別子を起点ステージの `sensors:` メタデータ部一覧へ追加します。これがプル型著述における 2 回書き込みの導入です。次のワークフローでコンパイルされれば、センサーは完全に配線されます。これは許可された唯一のステージメタデータ部編集です。増やすのはインポート一覧だけであり、`## Steps` / `## Sensors` / `## Learn` の本文形状は変えません。
 

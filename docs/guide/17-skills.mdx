@@ -104,9 +104,9 @@ description: "`/aidlc` と、スコープ・ステージ・セットアップ用
 | ファミリー | 例 | 機能 | オーケストレーターでの同等表現 |
 |---|---|---|---|
 | オーケストレーター | `/aidlc` | 完全ワークフロー。スコープは検出 | — |
-| スコープランナー | `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch` \| 完全ワークフロー。スコープ固定、検出なし \| `/aidlc --scope <name>` |
-| ステージランナー | `/aidlc-application-design`、`/aidlc-code-generation`、…（計 29 個） \| 1 ステージのみ独立実行。ワークフローは進めない \| `/aidlc --stage <slug> --single` |
-| 初期化ラッパー | `/aidlc-init` \| 最初のインテントを作成する（初期化を実行） \| 新しいワークスペースでの `/aidlc` |
+| スコープランナー | `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch` | 完全ワークフロー。スコープ固定、検出なし | `/aidlc --scope <name>` |
+| ステージランナー | `/aidlc-application-design`、`/aidlc-code-generation`、…（計 29 個） | 1 ステージのみ独立実行。ワークフローは進めない | `/aidlc --stage <slug> --single` |
+| 初期化ラッパー | `/aidlc-init` | 最初のインテントを作成する（初期化を実行） | 新しいワークスペースでの `/aidlc` |
 | セッション表示 | `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack` | 読み取り専用のワークフローレポート | [セッション管理](/guide/session-management) を参照 |
 
 ライフサイクル内の実行可能なすべてのステージには、対応するステージランナーが 1 つずつあります。完全な一覧を見るには、スキルディレクトリを列挙してください。

@@ -129,8 +129,8 @@ git push origin bolt-user-profile-api
 | 結果 | 意味 | すべきこと |
 |---------|--------------|------------|
 | `* [new branch]      bolt-user-profile-api -> bolt-user-profile-api` | 担当取得に成功。ブランチはリモート上で予約された | 手順 3 へ進む |
-| `! [rejected]        bolt-user-profile-api -> bolt-user-profile-api (non-fast-forward)` または `(fetch first)` \| 準備中に別の参加者が先に担当権を取得した \| ローカルワークツリーを破棄する（`aidlc-worktree discard --slug user-profile-api`）か、別の Bolt を選ぶ |
-| ネットワークエラー / 認証タイムアウト | プッシュが `origin` へ届かなかった \| `git fetch --all` の後で再試行する。ローカルワークツリーは安全に残っている |
+| `! [rejected]        bolt-user-profile-api -> bolt-user-profile-api (non-fast-forward)` または `(fetch first)` | 準備中に別の参加者が先に担当権を取得した | ローカルワークツリーを破棄する（`aidlc-worktree discard --slug user-profile-api`）か、別の Bolt を選ぶ |
+| ネットワークエラー / 認証タイムアウト | プッシュが `origin` へ届かなかった | `git fetch --all` の後で再試行する。ローカルワークツリーは安全に残っている |
 
 <a id="3-run-the-bolt-locally"></a>
 ### 3. Bolt をローカルで実行する

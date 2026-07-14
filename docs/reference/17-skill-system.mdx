@@ -19,8 +19,8 @@ description: AI-DLC の決定的な実行エンジン、コンダクター、デ
 
 | サブコマンド | 役割 | 状態を変更するか |
 |------------|------|----------------|
-| `next` \| ワークフロー状態（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` 下のアクティブなインテントの `aidlc-state.md`）とコンパイル済みステージグラフ（`tools/data/stage-graph.json`）を読み、スコープと位置を解決し、**ちょうど 1 つの**型付きディレクティブ（JSON）を標準出力へ出力します。 | いいえ（文書化された間接例外が 1 つあります。既存インテントがあるワークスペースで状態なしの生成を行う場合、重複を作らずインテント選択プロンプトを出します）。 |
-| `report` \| コンダクターがディレクティブに従った後の遷移を確定します。ステージ認識ディスパッチャーであり、`--stage <slug>` は処理済みディレクティブを固定するため、復元された `Current Stage` によって報告対象がずれることはありません。状態ツールの遷移をシェル実行し、明示的に報告したステージがまだ `[-]` の場合は承認前に不足しているゲートを開きます。 | はい。 |
+| `next` | ワークフロー状態（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` 下のアクティブなインテントの `aidlc-state.md`）とコンパイル済みステージグラフ（`tools/data/stage-graph.json`）を読み、スコープと位置を解決し、**ちょうど 1 つの**型付きディレクティブ（JSON）を標準出力へ出力します。 | いいえ（文書化された間接例外が 1 つあります。既存インテントがあるワークスペースで状態なしの生成を行う場合、重複を作らずインテント選択プロンプトを出します）。 |
+| `report` | コンダクターがディレクティブに従った後の遷移を確定します。ステージ認識ディスパッチャーであり、`--stage <slug>` は処理済みディレクティブを固定するため、復元された `Current Stage` によって報告対象がずれることはありません。状態ツールの遷移をシェル実行し、明示的に報告したステージがまだ `[-]` の場合は承認前に不足しているゲートを開きます。 | はい。 |
 
 エンジンは設計上、決定的なコードです。ルーティングは決定性の関心事であるため、LLM 散文ではなくツール内にあります（ルート文字列の構築を LLM に委ねると、ツール／エージェント／人間という原則を逆転させます）。既存の決定的ライブラリを**合成**します。コンパイル済みグラフには `loadGraph()`、順序付けには `nextInScopeStage()` / `firstInScopeStageOfPhase()`、スコープ名セットには `validScopes()`、状態読み取りには `getField` / `parseCheckboxes` を使います。正常系以外の分岐（ジャンプ、再開、インテント生成、スコープ／設定変更、環境スコープ検証）は兄弟 CLI ツールをシェル実行して標準エラー出力をそのまま中継するため、ユーザー向けエラー文言を再構築しません。エンジンが合成ではなく追加するのは、`(観測した状態 + グラフ) → ディレクティブ種別` の決定規則と、グラフノードの語彙名を正規のレコードディレクトリパス（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/<phase>/<stage>/...`）へ変換する成果物パスリゾルバーだけです。
 
@@ -35,15 +35,15 @@ description: AI-DLC の決定的な実行エンジン、コンダクター、デ
 
 | `kind` | 現時点で出力するか | コンダクターの動作 |
 |--------|----------------|--------------------------|
-| `print` \| はい \| `directive.message` の指示どおりに実行する — それが権威です。形は 2 つ。**終端**（`--status` / `--help` / `--doctor` / `--version` のような読み取り専用ユーティリティを名指し。実行し、標準出力をそのまま表示して停止）と**実行して継続**（スコープ変更、ジャンプの `execute`、または新しいワークスペースでユーザーがスコープを明示 — フラグまたは位置引数 — したときに出るワークフロー生成の `init --scope <scope>` のような変更ツールを名指し。実行してからループの手順 1 に戻る）。変更は名指しされたツール側にあり、`next` にはありません。 |
-| `error` \| はい \| `directive.message` をそのまま表示して停止。回復も丸め込みもしない — そのメッセージがユーザー向けエラーです。 |
+| `print` | はい | `directive.message` の指示どおりに実行する — それが権威です。形は 2 つ。**終端**（`--status` / `--help` / `--doctor` / `--version` のような読み取り専用ユーティリティを名指し。実行し、標準出力をそのまま表示して停止）と**実行して継続**（スコープ変更、ジャンプの `execute`、または新しいワークスペースでユーザーがスコープを明示 — フラグまたは位置引数 — したときに出るワークフロー生成の `init --scope <scope>` のような変更ツールを名指し。実行してからループの手順 1 に戻る）。変更は名指しされたツール側にあり、`next` にはありません。 |
+| `error` | はい | `directive.message` をそのまま表示して停止。回復も丸め込みもしない — そのメッセージがユーザー向けエラーです。 |
 | `done` | はい | ワークフロー（または単一ステージ実行）が完了。完了要約を示して停止。 |
-| `parked` \| はい \| ワークフローが後続セッションのため、きれいなステージ間境界（`directive.stage`）で途中停止された。ユーザーに停止中であることと再開方法（`/aidlc --resume`）を伝え、停止。`Parked` マーカーがある間の素の `next` で出力される（`aidlc-orchestrate park` が書き込む）。ステージは進まない。停止フックは `parked` を終端許可として扱うため、コンダクターは `done` 到達までステージを機械的に進めず停止する（#367）。 |
-| `run-stage` \| はい \| 主導エージェントのペルソナと任意の `support_agents` を読み、`directive.stage_file` を読み、ステージ本文を実行し、`produces` を書き、`directive.memory_path` に日誌を残し、`directive.gate` で分岐する（[オーケストレーター](/reference/orchestrator) を参照）。グラフノードから解決済みルーティングフィールドをそのまま運ぶ: `lead_agent`、`support_agents`、`mode`、`gate`、`consumes`、`produces`、`rules_in_context`、`sensors_applicable`、`stage_file`、加えて `next_stage`（この直後のスコープ内次ステージの表示名。出力時に解決。スコープ内最終ステージでは空）。コンダクターは承認ゲートの Approve 選択肢へこれをそのまま描画する。 |
-| `ask` \| はい \| `AskUserQuestion` 経由で `directive.question` を描画し、人間の回答を次の `report` で `--user-input` 経由で返す。エンジン自身は `AskUserQuestion` を呼ばない — 人間の手番をコンダクターに委ねる。 |
-| `invoke-swarm` \| はい \| エンジンが適格な構築フェーズのバッチをスウォームへ委譲した。コンダクターは `directive.units` のユニットを展開し、収束ループを回してスウォームのレフェリーに相談する（§6 参照）。`autonomous` 付与下の適格な構築バッチでのみ出力。 |
-| `dispatch-subagent` \| いいえ（エンジン将来のプレースホルダー） \| *本来は* 名指しステージをインラインではなく `Task` 呼び出しで実行する。現時点では出力しない。推測実装しないこと。 |
-| `present-gate` \| いいえ（エンジン将来のプレースホルダー） \| *本来は* ゲート儀式を独自ディレクティブとして実行する。現時点ではゲート判断は `run-stage` の `gate` フィールドに折り畳まれている。 |
+| `parked` | はい | ワークフローが後続セッションのため、きれいなステージ間境界（`directive.stage`）で途中停止された。ユーザーに停止中であることと再開方法（`/aidlc --resume`）を伝え、停止。`Parked` マーカーがある間の素の `next` で出力される（`aidlc-orchestrate park` が書き込む）。ステージは進まない。停止フックは `parked` を終端許可として扱うため、コンダクターは `done` 到達までステージを機械的に進めず停止する（#367）。 |
+| `run-stage` | はい | 主導エージェントのペルソナと任意の `support_agents` を読み、`directive.stage_file` を読み、ステージ本文を実行し、`produces` を書き、`directive.memory_path` に日誌を残し、`directive.gate` で分岐する（[オーケストレーター](/reference/orchestrator) を参照）。グラフノードから解決済みルーティングフィールドをそのまま運ぶ: `lead_agent`、`support_agents`、`mode`、`gate`、`consumes`、`produces`、`rules_in_context`、`sensors_applicable`、`stage_file`、加えて `next_stage`（この直後のスコープ内次ステージの表示名。出力時に解決。スコープ内最終ステージでは空）。コンダクターは承認ゲートの Approve 選択肢へこれをそのまま描画する。 |
+| `ask` | はい | `AskUserQuestion` 経由で `directive.question` を描画し、人間の回答を次の `report` で `--user-input` 経由で返す。エンジン自身は `AskUserQuestion` を呼ばない — 人間の手番をコンダクターに委ねる。 |
+| `invoke-swarm` | はい | エンジンが適格な構築フェーズのバッチをスウォームへ委譲した。コンダクターは `directive.units` のユニットを展開し、収束ループを回してスウォームのレフェリーに相談する（§6 参照）。`autonomous` 付与下の適格な構築バッチでのみ出力。 |
+| `dispatch-subagent` | いいえ（エンジン将来のプレースホルダー） | *本来は* 名指しステージをインラインではなく `Task` 呼び出しで実行する。現時点では出力しない。推測実装しないこと。 |
+| `present-gate` | いいえ（エンジン将来のプレースホルダー） | *本来は* ゲート儀式を独自ディレクティブとして実行する。現時点ではゲート判断は `run-stage` の `gate` フィールドに折り畳まれている。 |
 
 **ゲート番兵。** `run-stage` の `gate` は、決定的なすべての場合で真偽値です（自動進行するブートストラップ初期化ステージは `false`、それ以外の EXECUTE ステージは `true`）。決定的でない場合が 1 つあります。最初の構築ボルトのゲートは、チームの自由形式 `## Walking Skeleton` プラクティス散文に依存し、どのパーサーも導出できません。エンジンは文字列番兵 `GATE_UNRESOLVED`（`"unresolved"`）を出し、分類をコンダクターの知識作業に委ねます。コンダクターは `report --skeleton-stance <on|off|scope-dependent>` で姿勢を返し、次の `next` が同じステージを、今度は確定した真偽ゲート付きで再出力します。
 
@@ -119,9 +119,9 @@ flowchart LR
 
 | サブコマンド | 役割 | 出力 |
 |------------|------|-------|
-| `prepare --batch <n> --units <a,b,c> [--base <branch>] [--degraded-from <subagent\|ultracode>]` | ユニットごとに隔離された Git ワークツリーを分岐する（`aidlc-worktree create` + `aidlc-bolt start --worktree` を合成）。どのワーカーより前に走るため、`check` へ折り畳めない。 \| `SWARM_STARTED`（大きな降格が報告されると `SWARM_DEGRADED` も）。 |
-| `check <unit> --check-cmd <cmd> [--test-file <path>]` \| 状態なしの単一ユニット判定: プロジェクト自身のチェックコマンドを実行（終了コード 0 = 緑が権威信号 — ワーカーの自己申告は信用しない）し、保護ファイルを分岐 Git 基準と比較する改ざん防止も行う。`{converged, tampered, reason}` を表示し、真に収束した場合に限り終了コード 0。 | なし（助言。コンダクターの再試行判断に情報を渡す）。 |
-| `finalize --batch <n> --units <a,b,c> --claimed <a,b> --check-cmd <cmd> [--test-file <path>] [--reasons <unit>=<reason>,…]` \| 権威あるゲート: マージ前に**主張された全ユニットでチェックを再実行**（`--claimed` に名があるがディスク上は赤のユニットはマージを拒否され失敗封筒へ — 虚偽コンダクター防護）、その後真の通過分を直列の HOLD-MERGE でマージバック。終了コード 0（バッチ収束・マージ済み）または 2（失敗封筒）。収束したがマージバックに失敗したユニットは `merge_failures` に入り、そのユニット限定の確定再試行がマージするまで `SWARM_UNIT_CONVERGED` 行（エンジンのバッチ進行信号）は出ない。 \| `SWARM_UNIT_CONVERGED` / `SWARM_UNIT_FAILED` / `SWARM_BATON_RETURNED` / `SWARM_COMPLETED`。 |
+| `prepare --batch <n> --units <a,b,c> [--base <branch>] [--degraded-from <subagent\|ultracode>]` | ユニットごとに隔離された Git ワークツリーを分岐する（`aidlc-worktree create` + `aidlc-bolt start --worktree` を合成）。どのワーカーより前に走るため、`check` へ折り畳めない。 | `SWARM_STARTED`（大きな降格が報告されると `SWARM_DEGRADED` も）。 |
+| `check <unit> --check-cmd <cmd> [--test-file <path>]` | 状態なしの単一ユニット判定: プロジェクト自身のチェックコマンドを実行（終了コード 0 = 緑が権威信号 — ワーカーの自己申告は信用しない）し、保護ファイルを分岐 Git 基準と比較する改ざん防止も行う。`{converged, tampered, reason}` を表示し、真に収束した場合に限り終了コード 0。 | なし（助言。コンダクターの再試行判断に情報を渡す）。 |
+| `finalize --batch <n> --units <a,b,c> --claimed <a,b> --check-cmd <cmd> [--test-file <path>] [--reasons <unit>=<reason>,…]` | 権威あるゲート: マージ前に**主張された全ユニットでチェックを再実行**（`--claimed` に名があるがディスク上は赤のユニットはマージを拒否され失敗封筒へ — 虚偽コンダクター防護）、その後真の通過分を直列の HOLD-MERGE でマージバック。終了コード 0（バッチ収束・マージ済み）または 2（失敗封筒）。収束したがマージバックに失敗したユニットは `merge_failures` に入り、そのユニット限定の確定再試行がマージするまで `SWARM_UNIT_CONVERGED` 行（エンジンのバッチ進行信号）は出ない。 | `SWARM_UNIT_CONVERGED` / `SWARM_UNIT_FAILED` / `SWARM_BATON_RETURNED` / `SWARM_COMPLETED`。 |
 
 これら 6 つの `SWARM_*` イベントは 68 イベント監査分類体系の一部です（[状態機械](/reference/state-machine) を参照）。終了コード 2 の封筒ではコンダクターが指揮権を取り戻す — 失敗は自律モードにかかわらず常に停止し、人間を再関与させる。
 

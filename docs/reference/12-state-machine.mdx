@@ -72,8 +72,8 @@ stateDiagram-v2
 
 | 遷移 | トリガー | エミッター |
 |---|---|---|
-| `[*] → Running` \| `aidlc-utility init` \| `tools/aidlc-utility.ts` |
-| `Running → Completed` \| `aidlc-state complete-workflow` \| `tools/aidlc-state.ts` |
+| `[*] → Running` | `aidlc-utility init` | `tools/aidlc-utility.ts` |
+| `Running → Completed` | `aidlc-state complete-workflow` | `tools/aidlc-state.ts` |
 
 ---
 
@@ -105,10 +105,10 @@ stateDiagram-v2
 
 | 遷移 | トリガー | エミッター |
 |---|---|---|
-| `Pending → Active`（最初のフェーズ） \| `aidlc-utility intent-birth` \| `tools/aidlc-utility.ts` |
-| `Pending → Skipped` \| `aidlc-utility intent-birth`（スコープ除外ごと） \| `tools/aidlc-utility.ts` |
-| `Active → Verified` \| フェーズ境界での `aidlc-state advance` または `complete-workflow` \| `tools/aidlc-state.ts` |
-| `Pending → Active`（境界） \| フェーズ境界での `aidlc-state advance`、または `aidlc-jump execute` \| `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
+| `Pending → Active`（最初のフェーズ） | `aidlc-utility intent-birth` | `tools/aidlc-utility.ts` |
+| `Pending → Skipped` | `aidlc-utility intent-birth`（スコープ除外ごと） | `tools/aidlc-utility.ts` |
+| `Active → Verified` | フェーズ境界での `aidlc-state advance` または `complete-workflow` | `tools/aidlc-state.ts` |
+| `Pending → Active`（境界） | フェーズ境界での `aidlc-state advance`、または `aidlc-jump execute` | `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
 
 初期化後への引き継ぎ時には、最終初期化ステージの後で
 `aidlc-utility intent-birth` 自体が
@@ -148,12 +148,12 @@ stateDiagram-v2
 
 | チェックボックス | 状態 | 意味 |
 |---|---|---|
-| `[ ]` \| `Pending` | 未開始 |
-| `[-]` \| `Active` | 進行中 |
-| `[?]` \| `AwaitingApproval` | ステージ作業は完了、ゲートは開いたまま — ユーザーが阻害要因 |
-| `[R]` \| `Revising` | ユーザーがゲートを却下 — 再入場前にステージを改訂中 |
-| `[x]` \| `Completed` | 承認済みで完了 |
-| `[S]` \| `Skipped` | 対象範囲外、ジャンプによるスキップ、または途中で打ち切り |
+| `[ ]` | `Pending` | 未開始 |
+| `[-]` | `Active` | 進行中 |
+| `[?]` | `AwaitingApproval` | ステージ作業は完了、ゲートは開いたまま — ユーザーが阻害要因 |
+| `[R]` | `Revising` | ユーザーがゲートを却下 — 再入場前にステージを改訂中 |
+| `[x]` | `Completed` | 承認済みで完了 |
+| `[S]` | `Skipped` | 対象範囲外、ジャンプによるスキップ、または途中で打ち切り |
 
 `[?]` と `[R]` は、そうでなければどちらも `[-]` に見える 2 つの状況を区別します。
 再開時、`[R]` はステージを最初から再実行するのでなく、ゲートへ再入場する前に以前の
@@ -161,13 +161,13 @@ stateDiagram-v2
 
 | 遷移 | トリガー | エミッター |
 |---|---|---|
-| `Pending → Active` \| `aidlc-state advance <slug>` \| `tools/aidlc-state.ts` |
-| `Active → AwaitingApproval` \| `aidlc-state gate-start <slug>` \| `tools/aidlc-state.ts` |
-| `AwaitingApproval → Completed` \| `aidlc-state approve <slug>` \| `tools/aidlc-state.ts` |
-| `AwaitingApproval → Revising` \| `aidlc-state reject <slug> --feedback <text>` \| `tools/aidlc-state.ts` |
-| `Active → Revising` \| `gate-start` を飛ばした場合の `aidlc-state reject <slug>` — 却下の対の前に、不足している `STAGE_AWAITING_APPROVAL`（`Recovered=true` 付き）を補完する \| `tools/aidlc-state.ts` |
-| `Revising → AwaitingApproval` \| `aidlc-state revise <slug>`（ゲート再入場） \| `tools/aidlc-state.ts` |
-| `{Pending,Active,Revising} → Skipped` \| `aidlc-state skip <slug> --reason <text>`、または `aidlc-jump execute` \| `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
+| `Pending → Active` | `aidlc-state advance <slug>` | `tools/aidlc-state.ts` |
+| `Active → AwaitingApproval` | `aidlc-state gate-start <slug>` | `tools/aidlc-state.ts` |
+| `AwaitingApproval → Completed` | `aidlc-state approve <slug>` | `tools/aidlc-state.ts` |
+| `AwaitingApproval → Revising` | `aidlc-state reject <slug> --feedback <text>` | `tools/aidlc-state.ts` |
+| `Active → Revising` | `gate-start` を飛ばした場合の `aidlc-state reject <slug>` — 却下の対の前に、不足している `STAGE_AWAITING_APPROVAL`（`Recovered=true` 付き）を補完する | `tools/aidlc-state.ts` |
+| `Revising → AwaitingApproval` | `aidlc-state revise <slug>`（ゲート再入場） | `tools/aidlc-state.ts` |
+| `{Pending,Active,Revising} → Skipped` | `aidlc-state skip <slug> --reason <text>`、または `aidlc-jump execute` | `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
 
 `approve` コマンドは、ゲート後の遷移全体を所有します。`GATE_APPROVED + STAGE_COMPLETED`
 を出力した後、次の対象内ステージへ自動で進め（`handleAdvance` に委譲）、`STAGE_STARTED`
@@ -260,10 +260,10 @@ gate-start  →  [?] AwaitingApproval
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `SESSION_STARTED` \| `hooks/aidlc-session-start.ts` \| `source=startup` または `clear` の `SessionStart` |
-| `SESSION_RESUMED` \| `hooks/aidlc-session-start.ts` \| `source=resume` の `SessionStart` |
-| `SESSION_COMPACTED` \| `hooks/aidlc-validate-state.ts` \| `PreCompact` — コンパクション時点で発火し、確実に記録する |
-| `SESSION_ENDED` \| `hooks/aidlc-session-end.ts` \| `SessionEnd` |
+| `SESSION_STARTED` | `hooks/aidlc-session-start.ts` | `source=startup` または `clear` の `SessionStart` |
+| `SESSION_RESUMED` | `hooks/aidlc-session-start.ts` | `source=resume` の `SessionStart` |
+| `SESSION_COMPACTED` | `hooks/aidlc-validate-state.ts` | `PreCompact` — コンパクション時点で発火し、確実に記録する |
+| `SESSION_ENDED` | `hooks/aidlc-session-end.ts` | `SessionEnd` |
 
 セッションフックは出力前に、アクティブなインテントの `aidlc-state.md`
 （`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` 以下）を確認します。このファイルが
@@ -301,109 +301,109 @@ gate-start  →  [?] AwaitingApproval
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `WORKFLOW_STARTED` \| `tools/aidlc-utility.ts` | インテント生成ごとに必須の最初のイベント |
-| `WORKFLOW_COMPLETED` \| `tools/aidlc-state.ts` |  |
-| `WORKFLOW_PARKED` \| `tools/aidlc-state.ts` \| `park` — 後のセッションのためフロー途中でワークフローを停止。ステージは進めない |
-| `WORKFLOW_UNPARKED` \| `tools/aidlc-state.ts` \| `unpark` — 明示的な `--resume` 再入場時に駐車マーカーを消去 |
+| `WORKFLOW_STARTED` | `tools/aidlc-utility.ts` | インテント生成ごとに必須の最初のイベント |
+| `WORKFLOW_COMPLETED` | `tools/aidlc-state.ts` |  |
+| `WORKFLOW_PARKED` | `tools/aidlc-state.ts` | `park` — 後のセッションのためフロー途中でワークフローを停止。ステージは進めない |
+| `WORKFLOW_UNPARKED` | `tools/aidlc-state.ts` | `unpark` — 明示的な `--resume` 再入場時に駐車マーカーを消去 |
 
 <a id="phase-lifecycle"></a>
 ### フェーズのライフサイクル
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `PHASE_STARTED` \| `tools/aidlc-utility.ts`, `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` \| `init` で最初に出力し、以後はステージツールのフェーズ境界で出力 |
-| `PHASE_COMPLETED` \| `tools/aidlc-utility.ts`, `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` \| 各境界で `PHASE_VERIFIED` と対になる |
-| `PHASE_VERIFIED` \| `tools/aidlc-utility.ts`, `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` \| 常に `PHASE_COMPLETED` と対になる |
-| `PHASE_SKIPPED` \| `tools/aidlc-utility.ts` | スコープ外フェーズごとに 1 件、インテント生成時に出力 |
+| `PHASE_STARTED` | `tools/aidlc-utility.ts`, `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` | `init` で最初に出力し、以後はステージツールのフェーズ境界で出力 |
+| `PHASE_COMPLETED` | `tools/aidlc-utility.ts`, `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` | 各境界で `PHASE_VERIFIED` と対になる |
+| `PHASE_VERIFIED` | `tools/aidlc-utility.ts`, `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` | 常に `PHASE_COMPLETED` と対になる |
+| `PHASE_SKIPPED` | `tools/aidlc-utility.ts` | スコープ外フェーズごとに 1 件、インテント生成時に出力 |
 
 <a id="stage-lifecycle"></a>
 ### ステージのライフサイクル
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `STAGE_STARTED` \| `tools/aidlc-state.ts`, `tools/aidlc-utility.ts`, `tools/aidlc-jump.ts` \| `[ ]` → `[-]` を記録 |
-| `STAGE_AWAITING_APPROVAL` \| `tools/aidlc-state.ts` \| `gate-start`（初回）、`revise`（却下後の再入場）、`reject`（`gate-start` を飛ばした場合の補完）。`gate-start --recovered`（レポートの明示的ステージ復旧）と `reject` の自己修復による補完行には `Recovered=true` を付け、通常の `gate-start` と `revise` 再入場には付けない |
-| `STAGE_COMPLETED` \| `tools/aidlc-state.ts`, `tools/aidlc-utility.ts` \| `approve` が `GATE_APPROVED` と原子的に出力。`approve` が事前に `[x]` を付けなかった場合は `advance` も出力 |
-| `STAGE_REVISING` \| `tools/aidlc-state.ts` \| `GATE_REJECTED` と対になる |
-| `STAGE_SKIPPED` \| `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` \| `[S]` 遷移ごとに 1 件 |
-| `STAGE_JUMPED` \| `tools/aidlc-jump.ts` \| `--stage`/`--phase` ジャンプの到達先 `slug` を記録 |
+| `STAGE_STARTED` | `tools/aidlc-state.ts`, `tools/aidlc-utility.ts`, `tools/aidlc-jump.ts` | `[ ]` → `[-]` を記録 |
+| `STAGE_AWAITING_APPROVAL` | `tools/aidlc-state.ts` | `gate-start`（初回）、`revise`（却下後の再入場）、`reject`（`gate-start` を飛ばした場合の補完）。`gate-start --recovered`（レポートの明示的ステージ復旧）と `reject` の自己修復による補完行には `Recovered=true` を付け、通常の `gate-start` と `revise` 再入場には付けない |
+| `STAGE_COMPLETED` | `tools/aidlc-state.ts`, `tools/aidlc-utility.ts` | `approve` が `GATE_APPROVED` と原子的に出力。`approve` が事前に `[x]` を付けなかった場合は `advance` も出力 |
+| `STAGE_REVISING` | `tools/aidlc-state.ts` | `GATE_REJECTED` と対になる |
+| `STAGE_SKIPPED` | `tools/aidlc-state.ts`, `tools/aidlc-jump.ts` | `[S]` 遷移ごとに 1 件 |
+| `STAGE_JUMPED` | `tools/aidlc-jump.ts` | `--stage`/`--phase` ジャンプの到達先 `slug` を記録 |
 
 <a id="gate-decisions"></a>
 ### ゲートの決定
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `GATE_APPROVED` \| `tools/aidlc-state.ts` \| `--user-input` で選択内容をそのまま記録 |
-| `GATE_REJECTED` \| `tools/aidlc-state.ts` \| `--feedback` で却下理由を記録 |
+| `GATE_APPROVED` | `tools/aidlc-state.ts` | `--user-input` で選択内容をそのまま記録 |
+| `GATE_REJECTED` | `tools/aidlc-state.ts` | `--feedback` で却下理由を記録 |
 
 <a id="user-interaction"></a>
 ### ユーザー操作
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `DECISION_RECORDED` \| `tools/aidlc-log.ts` \| 選択肢を記録するため `AskUserQuestion` の前に出力 |
-| `QUESTION_ANSWERED` \| `tools/aidlc-log.ts` | ユーザーの応答後に出力 |
+| `DECISION_RECORDED` | `tools/aidlc-log.ts` | 選択肢を記録するため `AskUserQuestion` の前に出力 |
+| `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | ユーザーの応答後に出力 |
 
 <a id="scope-and-configuration"></a>
 ### スコープと構成
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `SCOPE_DETECTED` \| `tools/aidlc-utility.ts` \| `detect-scope` サブコマンド。`Source` フィールドに出所（自由記述 / キーワード / 環境変数 / コマンドライン）を記録 |
-| `SCOPE_CHANGED` \| `tools/aidlc-utility.ts` \| アクティブなワークフローの `scope-change` サブコマンド |
-| `DEPTH_CHANGED` \| `tools/aidlc-utility.ts` \| `config-change --depth` |
-| `TEST_STRATEGY_CHANGED` \| `tools/aidlc-utility.ts` \| `config-change --test-strategy` |
-| `RECOMPOSED` \| `tools/aidlc-utility.ts` \| `recompose` サブコマンド — 適応型コンポーザーが進行中の計画を再形成（監査ロック下で保留ステージ接尾辞を切り替え） |
+| `SCOPE_DETECTED` | `tools/aidlc-utility.ts` | `detect-scope` サブコマンド。`Source` フィールドに出所（自由記述 / キーワード / 環境変数 / コマンドライン）を記録 |
+| `SCOPE_CHANGED` | `tools/aidlc-utility.ts` | アクティブなワークフローの `scope-change` サブコマンド |
+| `DEPTH_CHANGED` | `tools/aidlc-utility.ts` | `config-change --depth` |
+| `TEST_STRATEGY_CHANGED` | `tools/aidlc-utility.ts` | `config-change --test-strategy` |
+| `RECOMPOSED` | `tools/aidlc-utility.ts` | `recompose` サブコマンド — 適応型コンポーザーが進行中の計画を再形成（監査ロック下で保留ステージ接尾辞を切り替え） |
 
 <a id="artifacts"></a>
 ### アーティファクト
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `ARTIFACT_CREATED` \| `hooks/aidlc-audit-logger.ts` \| 新規パスへの書き込み — `mtimeMs == birthtimeMs` の統計検査で `ARTIFACT_UPDATED` と区別 |
-| `ARTIFACT_UPDATED` \| `hooks/aidlc-audit-logger.ts` \| 既存ファイルを上書きする `Edit` ツールまたは `Write` |
-| `ARTIFACT_REUSED` \| `tools/aidlc-state.ts` \| `reuse-artifact` サブコマンド — 保持 / 変更 / やり直しの決定 |
+| `ARTIFACT_CREATED` | `hooks/aidlc-audit-logger.ts` | 新規パスへの書き込み — `mtimeMs == birthtimeMs` の統計検査で `ARTIFACT_UPDATED` と区別 |
+| `ARTIFACT_UPDATED` | `hooks/aidlc-audit-logger.ts` | 既存ファイルを上書きする `Edit` ツールまたは `Write` |
+| `ARTIFACT_REUSED` | `tools/aidlc-state.ts` | `reuse-artifact` サブコマンド — 保持 / 変更 / やり直しの決定 |
 
 <a id="construction-bolts"></a>
 ### 構築ボルト
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `BOLT_STARTED` \| `tools/aidlc-bolt.ts` | 並列バッチ用に CSV のボルト名を受け付ける |
-| `BOLT_COMPLETED` \| `tools/aidlc-bolt.ts` \| 先行する `BOLT_STARTED` と対になる |
-| `BOLT_FAILED` \| `tools/aidlc-bolt.ts`（`fail` + `abort`） \| `--succeeded-siblings` が並列バッチの生存者を記録。`abort` は下位分類用に `Reason: aborted` フィールドを追加 |
-| `AUTONOMY_MODE_SET` \| `tools/aidlc-bolt.ts` \| `Construction Autonomy Mode` フィールドを原子的に更新。先にフィールド存在を検証（監査先行） |
+| `BOLT_STARTED` | `tools/aidlc-bolt.ts` | 並列バッチ用に CSV のボルト名を受け付ける |
+| `BOLT_COMPLETED` | `tools/aidlc-bolt.ts` | 先行する `BOLT_STARTED` と対になる |
+| `BOLT_FAILED` | `tools/aidlc-bolt.ts`（`fail` + `abort`） | `--succeeded-siblings` が並列バッチの生存者を記録。`abort` は下位分類用に `Reason: aborted` フィールドを追加 |
+| `AUTONOMY_MODE_SET` | `tools/aidlc-bolt.ts` | `Construction Autonomy Mode` フィールドを原子的に更新。先にフィールド存在を検証（監査先行） |
 
 <a id="session"></a>
 ### セッション
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `SESSION_STARTED` \| `hooks/aidlc-session-start.ts` \| `source=startup` または `clear` |
-| `SESSION_RESUMED` \| `hooks/aidlc-session-start.ts` \| `source=resume` |
-| `SESSION_COMPACTED` \| `hooks/aidlc-validate-state.ts` \| 重複を避けるため `PreCompact` で出力（次の `SessionStart` ではない） |
-| `SESSION_ENDED` \| `hooks/aidlc-session-end.ts` \| Claude Code からの `Reason` フィールドを含む |
-| `HUMAN_TURN` \| `hooks/aidlc-mint-presence.ts`（＋ハーネスごとのプロンプト送信アダプター） | 実際の人間プロンプトまたは回答済み質問ウィジェットごとに 1 件。承認 / インタビューゲートは、直前のゲート解決以降に 1 件を要求する |
-| `SUBAGENT_COMPLETED` \| `hooks/aidlc-log-subagent.ts` | サブエージェント停止フック経由でサブエージェント完了を記録 |
-| `REVIEWER_SCOPE_BLOCKED` \| `hooks/aidlc-reviewer-scope.ts` \| ユニット単位レビュアーのツール呼び出しが、兄弟ユニットの `construction/` パスへ到達したため拒否された（§12a の読み取り範囲境界）。拒否ごとに 1 行 |
+| `SESSION_STARTED` | `hooks/aidlc-session-start.ts` | `source=startup` または `clear` |
+| `SESSION_RESUMED` | `hooks/aidlc-session-start.ts` | `source=resume` |
+| `SESSION_COMPACTED` | `hooks/aidlc-validate-state.ts` | 重複を避けるため `PreCompact` で出力（次の `SessionStart` ではない） |
+| `SESSION_ENDED` | `hooks/aidlc-session-end.ts` | Claude Code からの `Reason` フィールドを含む |
+| `HUMAN_TURN` | `hooks/aidlc-mint-presence.ts`（＋ハーネスごとのプロンプト送信アダプター） | 実際の人間プロンプトまたは回答済み質問ウィジェットごとに 1 件。承認 / インタビューゲートは、直前のゲート解決以降に 1 件を要求する |
+| `SUBAGENT_COMPLETED` | `hooks/aidlc-log-subagent.ts` | サブエージェント停止フック経由でサブエージェント完了を記録 |
+| `REVIEWER_SCOPE_BLOCKED` | `hooks/aidlc-reviewer-scope.ts` | ユニット単位レビュアーのツール呼び出しが、兄弟ユニットの `construction/` パスへ到達したため拒否された（§12a の読み取り範囲境界）。拒否ごとに 1 行 |
 
 <a id="diagnostics-and-workspace"></a>
 ### 診断とワークスペース
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `HEALTH_CHECKED` \| `tools/aidlc-utility.ts` \| `--doctor` の実行 |
-| `WORKSPACE_SCAFFOLDED` \| `tools/aidlc-utility.ts` \| `init` が新規ディレクトリツリーを作成 |
-| `WORKSPACE_SCANNED` \| `tools/aidlc-utility.ts` | ブラウンフィールドのワークスペース検出が完了 |
-| `WORKSPACE_INITIALISED` \| `tools/aidlc-utility.ts` | 状態ファイルが実体化 |
+| `HEALTH_CHECKED` | `tools/aidlc-utility.ts` | `--doctor` の実行 |
+| `WORKSPACE_SCAFFOLDED` | `tools/aidlc-utility.ts` | `init` が新規ディレクトリツリーを作成 |
+| `WORKSPACE_SCANNED` | `tools/aidlc-utility.ts` | ブラウンフィールドのワークスペース検出が完了 |
+| `WORKSPACE_INITIALISED` | `tools/aidlc-utility.ts` | 状態ファイルが実体化 |
 
 <a id="error-and-recovery"></a>
 ### エラーと復旧
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `ERROR_LOGGED` \| `tools/aidlc-lib.ts`（各ツールの `error()` からの `emitError` 経由） \| 非ゼロ終了のために `error(msg)` を呼ぶ任意のツール CLI。最善努力 — カレント作業ディレクトリにワークフローがなければ何もしない。再帰を防止 |
-| `RECOVERY_COMPLETED` \| `tools/aidlc-state.ts` \| ユーザーがコンパクション認識の `AskUserQuestion` に答えた後、コンダクターが呼ぶ `acknowledge-compaction --choice <continue\|review\|restart>` |
+| `ERROR_LOGGED` | `tools/aidlc-lib.ts`（各ツールの `error()` からの `emitError` 経由） | 非ゼロ終了のために `error(msg)` を呼ぶ任意のツール CLI。最善努力 — カレント作業ディレクトリにワークフローがなければ何もしない。再帰を防止 |
+| `RECOVERY_COMPLETED` | `tools/aidlc-state.ts` | ユーザーがコンパクション認識の `AskUserQuestion` に答えた後、コンダクターが呼ぶ `acknowledge-compaction --choice <continue\|review\|restart>` |
 
 <a id="worktree"></a>
 ### ワークツリー
@@ -416,13 +416,13 @@ gate-start  →  [?] AwaitingApproval
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `WORKTREE_CREATED` \| `tools/aidlc-worktree.ts` \| ボルト開始時に `main` からボルト単位の Git ワークツリーを作成（サブコマンド: `create`） |
-| `WORKTREE_MERGED` \| `tools/aidlc-worktree.ts` \| ゲート承認時にボルトのワークツリーを `main` へマージ（サブコマンド: `merge`） |
-| `WORKTREE_DISCARDED` \| `tools/aidlc-worktree.ts` \| 中止したボルトのワークツリーを明示的に削除（サブコマンド: `discard`） |
-| `STATE_FORKED` \| `tools/aidlc-state.ts` \| ボルト開始時に状態ファイルをワークツリーへフォーク（サブコマンド: `fork`） |
-| `STATE_MERGED` \| `tools/aidlc-state.ts` \| ゲート承認時にワークツリーの状態を `main` へマージ。防御のためのアルファベット順 `slug` タイブレーク（サブコマンド: `merge`） |
-| `AUDIT_FORKED` \| `tools/aidlc-audit.ts`（`audit-fork`） | ボルト開始時に監査ログをワークツリーへフォーク。意図の監査 — バイトコピーの前に出力 |
-| `AUDIT_MERGED` \| `tools/aidlc-audit.ts`（`audit-merge`） \| ゲート承認時にワークツリーの監査エントリを `main` 監査へ追記。ボルト内の順序は保持し、ボルト間の順序はマージ完了順を反映 |
+| `WORKTREE_CREATED` | `tools/aidlc-worktree.ts` | ボルト開始時に `main` からボルト単位の Git ワークツリーを作成（サブコマンド: `create`） |
+| `WORKTREE_MERGED` | `tools/aidlc-worktree.ts` | ゲート承認時にボルトのワークツリーを `main` へマージ（サブコマンド: `merge`） |
+| `WORKTREE_DISCARDED` | `tools/aidlc-worktree.ts` | 中止したボルトのワークツリーを明示的に削除（サブコマンド: `discard`） |
+| `STATE_FORKED` | `tools/aidlc-state.ts` | ボルト開始時に状態ファイルをワークツリーへフォーク（サブコマンド: `fork`） |
+| `STATE_MERGED` | `tools/aidlc-state.ts` | ゲート承認時にワークツリーの状態を `main` へマージ。防御のためのアルファベット順 `slug` タイブレーク（サブコマンド: `merge`） |
+| `AUDIT_FORKED` | `tools/aidlc-audit.ts`（`audit-fork`） | ボルト開始時に監査ログをワークツリーへフォーク。意図の監査 — バイトコピーの前に出力 |
+| `AUDIT_MERGED` | `tools/aidlc-audit.ts`（`audit-merge`） | ゲート承認時にワークツリーの監査エントリを `main` 監査へ追記。ボルト内の順序は保持し、ボルト間の順序はマージ完了順を反映 |
 
 <a id="practices"></a>
 ### プラクティス
@@ -432,10 +432,10 @@ gate-start  →  [?] AwaitingApproval
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `PRACTICES_DISCOVERED` \| `tools/aidlc-state.ts` `practices-event --type discovered` | ブラウンフィールド発見と下書き完了。チームプラクティス下書きがステージ 2.2 ゲートで確認待ち |
-| `PRACTICES_AFFIRMED` \| `tools/aidlc-state.ts` `practices-promote` \| チームがプラクティスを承認。内容をインテントの `inception/practices-discovery/` からスペース記憶層（`aidlc/spaces/<space>/memory/team.md` と `memory/project.md`）へ昇格 |
-| `PRACTICES_OVERRIDE` \| `tools/aidlc-state.ts` `practices-promote`（マイルストーン 8 の書き込み失敗経路）と `tools/aidlc-state.ts` `practices-event --type override`（マイルストーン 13 のボルト計画マーカー衝突経路 — `Reason` フィールドによる識別子フィールドの曖昧さ解消。別イベントはない） \| いずれか: ステージ 2.2 確認中の行横断昇格失敗（`Reason`: `write-failure-*`）。または `aidlc/spaces/<space>/memory/team.md` のウォーキングスケルトン方針が現在のボルトのボルト計画マーカーを上書き（`Reason`: `bolt-plan-marker-conflict`） |
-| `PRACTICES_SECTION_EMPTY` \| `tools/aidlc-state.ts` `practices-event --type empty` | コンダクターが空のプラクティス節を読んだ。助言のみで、組織既定へフォールバック |
+| `PRACTICES_DISCOVERED` | `tools/aidlc-state.ts` `practices-event --type discovered` | ブラウンフィールド発見と下書き完了。チームプラクティス下書きがステージ 2.2 ゲートで確認待ち |
+| `PRACTICES_AFFIRMED` | `tools/aidlc-state.ts` `practices-promote` | チームがプラクティスを承認。内容をインテントの `inception/practices-discovery/` からスペース記憶層（`aidlc/spaces/<space>/memory/team.md` と `memory/project.md`）へ昇格 |
+| `PRACTICES_OVERRIDE` | `tools/aidlc-state.ts` `practices-promote`（マイルストーン 8 の書き込み失敗経路）と `tools/aidlc-state.ts` `practices-event --type override`（マイルストーン 13 のボルト計画マーカー衝突経路 — `Reason` フィールドによる識別子フィールドの曖昧さ解消。別イベントはない） | いずれか: ステージ 2.2 確認中の行横断昇格失敗（`Reason`: `write-failure-*`）。または `aidlc/spaces/<space>/memory/team.md` のウォーキングスケルトン方針が現在のボルトのボルト計画マーカーを上書き（`Reason`: `bolt-plan-marker-conflict`） |
+| `PRACTICES_SECTION_EMPTY` | `tools/aidlc-state.ts` `practices-event --type empty` | コンダクターが空のプラクティス節を読んだ。助言のみで、組織既定へフォールバック |
 
 <a id="merge-dispatch"></a>
 ### マージディスパッチ
@@ -448,9 +448,9 @@ FALLBACK。
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `MERGE_DISPATCH_INVOKED` \| `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_INVOKED` \| コンダクターがチームプラクティス文面からマージ戦略を決めるため、`Task` 経由で `aidlc-pipeline-deploy-agent/` をディスパッチ |
-| `MERGE_DISPATCH_RETURNED` \| `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_RETURNED` | エージェントが戦略、対象ブランチ、信頼度、注記付きの解析済み YAML を返却 |
-| `MERGE_DISPATCH_FALLBACK` \| `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_FALLBACK` | エージェントがタイムアウトまたは不正 YAML を返却。コンダクターは組織既定へフォールバック — 重要な可観測性フック |
+| `MERGE_DISPATCH_INVOKED` | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_INVOKED` | コンダクターがチームプラクティス文面からマージ戦略を決めるため、`Task` 経由で `aidlc-pipeline-deploy-agent/` をディスパッチ |
+| `MERGE_DISPATCH_RETURNED` | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_RETURNED` | エージェントが戦略、対象ブランチ、信頼度、注記付きの解析済み YAML を返却 |
+| `MERGE_DISPATCH_FALLBACK` | `tools/aidlc-bolt.ts` `dispatch-event --event MERGE_DISPATCH_FALLBACK` | エージェントがタイムアウトまたは不正 YAML を返却。コンダクターは組織既定へフォールバック — 重要な可観測性フック |
 
 <a id="sensors"></a>
 ### センサー
@@ -464,11 +464,11 @@ FALLBACK。
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `SENSOR_FIRED` \| `tools/aidlc-sensor.ts` `fire` \| ディスパッチャーがステージ出力に対してセンサーを起動（センサーの `matches` フィルタに対するツール使用後の `Write`/`Edit` 一致ごと） |
-| `SENSOR_PASSED` \| `tools/aidlc-sensor.ts` `fire` \| センサーが完了し、指摘なしと報告（ツール利用不可とスクリプトエラーのフォールスルーも含む。`Note` フィールドで識別） |
-| `SENSOR_FAILED` \| `tools/aidlc-sensor.ts` `fire` \| センサーが完了し、指摘ありと報告。詳細ファイルを `<record>/.aidlc-sensors/<stage-slug>/<sensor-id>-<fire-id>.md`（インテントのレコードディレクトリ内）へ書き込み |
-| `SENSOR_BUDGET_OVERRIDE` \| `tools/aidlc-sensor.ts` `fire` | センサーが設定上限（レジストリ / バインディング / 深度由来の 3 層上限モデル）を超え、終了またはスキップされた |
-| `GUARDRAIL_LOADED` \| `tools/aidlc-utility.ts` \| ガードレールローダーがアクティブなワークフロー向けのスコープ階層ガードレール集合を解決（組織 → プロジェクト → フェーズ → ステージ）。`doctor` の対カバレッジ検査がこのイベントを読む |
+| `SENSOR_FIRED` | `tools/aidlc-sensor.ts` `fire` | ディスパッチャーがステージ出力に対してセンサーを起動（センサーの `matches` フィルタに対するツール使用後の `Write`/`Edit` 一致ごと） |
+| `SENSOR_PASSED` | `tools/aidlc-sensor.ts` `fire` | センサーが完了し、指摘なしと報告（ツール利用不可とスクリプトエラーのフォールスルーも含む。`Note` フィールドで識別） |
+| `SENSOR_FAILED` | `tools/aidlc-sensor.ts` `fire` | センサーが完了し、指摘ありと報告。詳細ファイルを `<record>/.aidlc-sensors/<stage-slug>/<sensor-id>-<fire-id>.md`（インテントのレコードディレクトリ内）へ書き込み |
+| `SENSOR_BUDGET_OVERRIDE` | `tools/aidlc-sensor.ts` `fire` | センサーが設定上限（レジストリ / バインディング / 深度由来の 3 層上限モデル）を超え、終了またはスキップされた |
+| `GUARDRAIL_LOADED` | `tools/aidlc-utility.ts` | ガードレールローダーがアクティブなワークフロー向けのスコープ階層ガードレール集合を解決（組織 → プロジェクト → フェーズ → ステージ）。`doctor` の対カバレッジ検査がこのイベントを読む |
 
 <a id="learning-loop"></a>
 ### 学習ループ
@@ -485,9 +485,9 @@ FALLBACK。
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `MEMORY_EMPTY` \| `tools/aidlc-runtime.ts` \| ステージ承認時のランタイムグラフコンパイルが、`memory.md` 欠落、または §13 の 4 見出し下に空白以外のエントリがゼロであることを検出 |
-| `RULE_LEARNED` \| `tools/aidlc-learnings.ts` \| 学習ゲートが保持した学習を `aidlc/spaces/<space>/memory/{project,team}.md` の日付付きプラクティスエントリとして永続化 |
-| `SENSOR_PROPOSED` \| `tools/aidlc-learnings.ts` \| 学習ゲートがプロジェクト層のセンサーマニフェストを足場にし、発生元ステージの `sensors:` フロントマターへバインド |
+| `MEMORY_EMPTY` | `tools/aidlc-runtime.ts` | ステージ承認時のランタイムグラフコンパイルが、`memory.md` 欠落、または §13 の 4 見出し下に空白以外のエントリがゼロであることを検出 |
+| `RULE_LEARNED` | `tools/aidlc-learnings.ts` | 学習ゲートが保持した学習を `aidlc/spaces/<space>/memory/{project,team}.md` の日付付きプラクティスエントリとして永続化 |
+| `SENSOR_PROPOSED` | `tools/aidlc-learnings.ts` | 学習ゲートがプロジェクト層のセンサーマニフェストを足場にし、発生元ステージの `sensors:` フロントマターへバインド |
 
 <a id="swarm"></a>
 ### スウォーム
@@ -509,12 +509,12 @@ FALLBACK。
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `SWARM_STARTED` \| `tools/aidlc-swarm.ts` \| スウォーム審判の `prepare` が依存関係で結ばれたユニットのバッチをフォーク |
-| `SWARM_UNIT_CONVERGED` \| `tools/aidlc-swarm.ts` \| スウォームユニットが `finalize` ゲートで再検証に合格（かつ改ざんなし）し、マージバックされた（マージバックに失敗した収束ユニットは、再試行の `finalize` がマージするまで行なし） |
-| `SWARM_UNIT_FAILED` \| `tools/aidlc-swarm.ts` \| スウォームユニットが `finalize` 再検証に失敗（未主張、主張したが不合格、または改ざん） |
-| `SWARM_BATON_RETURNED` \| `tools/aidlc-swarm.ts` | スウォームユニットがオーケストレーター仲介の調整のため、コンダクターへバトンを返却 |
-| `SWARM_COMPLETED` \| `tools/aidlc-swarm.ts` | バッチ内の全ユニットが終了（収束または失敗）。バッチ閉鎖 |
-| `SWARM_DEGRADED` \| `tools/aidlc-swarm.ts` \| `AIDLC_USE_SWARM=1` が要求されたが `Workflow` ツールが利用不可。コンダクターがサブエージェント下限で実行 |
+| `SWARM_STARTED` | `tools/aidlc-swarm.ts` | スウォーム審判の `prepare` が依存関係で結ばれたユニットのバッチをフォーク |
+| `SWARM_UNIT_CONVERGED` | `tools/aidlc-swarm.ts` | スウォームユニットが `finalize` ゲートで再検証に合格（かつ改ざんなし）し、マージバックされた（マージバックに失敗した収束ユニットは、再試行の `finalize` がマージするまで行なし） |
+| `SWARM_UNIT_FAILED` | `tools/aidlc-swarm.ts` | スウォームユニットが `finalize` 再検証に失敗（未主張、主張したが不合格、または改ざん） |
+| `SWARM_BATON_RETURNED` | `tools/aidlc-swarm.ts` | スウォームユニットがオーケストレーター仲介の調整のため、コンダクターへバトンを返却 |
+| `SWARM_COMPLETED` | `tools/aidlc-swarm.ts` | バッチ内の全ユニットが終了（収束または失敗）。バッチ閉鎖 |
+| `SWARM_DEGRADED` | `tools/aidlc-swarm.ts` | `AIDLC_USE_SWARM=1` が要求されたが `Workflow` ツールが利用不可。コンダクターがサブエージェント下限で実行 |
 
 分類内の各イベントは、実エミッターに裏付けられるか、事前登録の今後の消費側向けに
 `Reserved (v0.4.0 PR N)` / `Reserved (v0.5.0 PR N)` / `Reserved (v0.6.0 PR N)` と
@@ -568,9 +568,9 @@ FALLBACK。
 
 | イベント群 | エミッター | 出力に続く副作用 |
 |---|---|---|
-| `WORKTREE_CREATED`、`WORKTREE_MERGED`、`WORKTREE_DISCARDED` \| `tools/aidlc-worktree.ts` \| `git worktree add`、`git merge` + クリーンアップ、`git worktree remove` + ブランチ削除 |
-| `AUDIT_FORKED`、`AUDIT_MERGED` \| `tools/aidlc-audit.ts` \| `main` 監査の `mkdir -p` + `copyFileSync`。ワークツリー監査差分の `main` 監査への `appendFileSync` |
-| `MERGE_DISPATCH_INVOKED` \| `tools/aidlc-bolt.ts` `dispatch-event` \| `Task(aidlc-pipeline-deploy-agent, ...)` の LLM ディスパッチ — 副作用は LLM 呼び出し自体。成功は対応する `MERGE_DISPATCH_RETURNED` または `MERGE_DISPATCH_FALLBACK` の呼び出し後出力で観測 |
+| `WORKTREE_CREATED`、`WORKTREE_MERGED`、`WORKTREE_DISCARDED` | `tools/aidlc-worktree.ts` | `git worktree add`、`git merge` + クリーンアップ、`git worktree remove` + ブランチ削除 |
+| `AUDIT_FORKED`、`AUDIT_MERGED` | `tools/aidlc-audit.ts` | `main` 監査の `mkdir -p` + `copyFileSync`。ワークツリー監査差分の `main` 監査への `appendFileSync` |
+| `MERGE_DISPATCH_INVOKED` | `tools/aidlc-bolt.ts` `dispatch-event` | `Task(aidlc-pipeline-deploy-agent, ...)` の LLM ディスパッチ — 副作用は LLM 呼び出し自体。成功は対応する `MERGE_DISPATCH_RETURNED` または `MERGE_DISPATCH_FALLBACK` の呼び出し後出力で観測 |
 
 これはステージ遷移の厳密な監査先行不変条件からの意図的な逸脱であり、ロールバック出力も
 `ERROR_LOGGED` も保証できない強制終了 / OS クラッシュ窓が動機です。パターンは上記イベントに

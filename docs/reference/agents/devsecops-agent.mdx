@@ -8,9 +8,9 @@ description: aidlc-devsecops-agent の識別情報、ステージ担当、連携
 | 項目 | 値 |
 |------|----|
 | 名前 | aidlc-devsecops-agent |
-| 階層 | **judgment** |
-| 許可される Claude Code ツール | Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion |
-| 許可されない Claude Code ツール | Task |
+| ティア | **judgment** |
+| 許可された Claude Code ツール | Read, Edit, Write, Glob, Grep, Bash, AskUserQuestion |
+| 許可されていない Claude Code ツール | Task |
 
 ---
 
@@ -20,7 +20,7 @@ description: aidlc-devsecops-agent の識別情報、ステージ担当、連携
 <a id="lead-stages"></a>
 ### 主担当ステージ
 
-このエージェントに主担当ステージはありません。構想具体化、構築、
+このエージェントに主担当ステージはありません。インセプション、構築、
 運用の各フェーズにまたがる複数のステージで、支援役として専従します。
 
 <a id="support-stages"></a>
@@ -40,17 +40,17 @@ description: aidlc-devsecops-agent の識別情報、ステージ担当、連携
 ## 連携パターン
 
 <a id="receives-from"></a>
-### 受け取る相手
+### 受け取り元
 
-| ソース | 成果物 |
+| 提供元 | 成果物 |
 |--------|--------|
-| aidlc-compliance-agent | アイデア創出 からの規制要件（制約レジスター、RAID ログ） |
+| aidlc-compliance-agent | アイデア創出からの規制要件（制約レジスター、RAID ログ） |
 | aidlc-architect-agent | 脅威モデリング用のシステム設計、コンポーネント境界 |
 
 <a id="hands-off-to"></a>
-### 引き渡す相手
+### 引き継ぎ先
 
-| ターゲット | 成果物 |
+| 引き継ぎ先 | 成果物 |
 |----------|--------|
 | aidlc-developer-agent | セキュアコーディング要件、脆弱性修正仕様 |
 | aidlc-quality-agent | 実行用のセキュリティテストケース |
@@ -62,7 +62,7 @@ description: aidlc-devsecops-agent の識別情報、ステージ担当、連携
 ## ナレッジソース
 
 <a id="methodology-tier-1"></a>
-### 手法論（第1層）
+### 方法論（ティア 1）
 
 パス: `.claude/knowledge/aidlc-devsecops-agent/`
 
@@ -74,7 +74,7 @@ description: aidlc-devsecops-agent の識別情報、ステージ担当、連携
 | threat-modelling-stride.md | STRIDE 脅威モデリングの手法とテンプレート |
 
 <a id="team-tier-2"></a>
-### チーム（第2層）
+### チーム（ティア 2）
 
 パス: `aidlc/knowledge/aidlc-devsecops-agent/`（スペースレベルのナレッジディレクトリ。ユーザー管理）
 
@@ -90,4 +90,4 @@ description: aidlc-devsecops-agent の識別情報、ステージ担当、連携
 - [エージェントリファレンス概要](/reference/agents)
 - [エージェントガイド: aidlc-devsecops-agent](/guide/agents/devsecops-agent)
 - [ステージドキュメント](https://github.com/awslabs/aidlc-workflows/blob/main/docs/reference/04-stages/)
-- 出典: [`dist/claude/.claude/agents/aidlc-devsecops-agent.md`](https://github.com/awslabs/aidlc-workflows/blob/main/dist/claude/.claude/agents/aidlc-devsecops-agent.md)
+- ソース: [`dist/claude/.claude/agents/aidlc-devsecops-agent.md`](https://github.com/awslabs/aidlc-workflows/blob/main/dist/claude/.claude/agents/aidlc-devsecops-agent.md)

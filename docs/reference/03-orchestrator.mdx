@@ -392,8 +392,8 @@ sequenceDiagram
 
 | ステージ | Claude Code のサブエージェント種別 | エージェント | 理由 |
 |-------|---------------------------|-------|--------|
-| 2.1 逆工学 | `aidlc-developer-agent` の後に `aidlc-architect-agent`（2 段階） \| `aidlc-developer-agent` + `aidlc-architect-agent` | 深いコード分析は中間出力が大きくなる |
-| 3.5 コード生成 | `aidlc-developer-agent` \| `aidlc-developer-agent` | コード記述は単位仕様に集中した清潔なコンテキストの恩恵が大きい |
+| 2.1 逆工学 | `aidlc-developer-agent` の後に `aidlc-architect-agent`（2 段階） | `aidlc-developer-agent` + `aidlc-architect-agent` | 深いコード分析は中間出力が大きくなる |
+| 3.5 コード生成 | `aidlc-developer-agent` | `aidlc-developer-agent` | コード記述は単位仕様に集中した清潔なコンテキストの恩恵が大きい |
 
 ワークスペース検出（0.2）は以前はサブエージェントでした。現在は `aidlc-utility init` 内の決定論的な規則ベース走査器です。規則は `aidlc-common/stages/initialization/workspace-detection.md` に文書化されています。
 
@@ -570,13 +570,13 @@ stateDiagram-v2
 
 | フェーズ | パターン | 例 |
 |---|---|---|
-| 初期化 | `"Initialization - [Stage Name]"` \| `"Initialization - Workspace Scaffold"` |
-| アイデア化 | `"Ideation - [Stage Name]"` \| `"Ideation - Intent Capture"` |
-| 構想化 | `"Inception - [Stage Name]"` \| `"Inception - Requirements Analysis"` |
-| 構築（ボルトごと） | `"Construction — Bolt: [bolt-name]"`（最初のボルトには `" (walking skeleton)"` を付ける） \| `"Construction — Bolt: notification-core (walking skeleton)"` |
-| 構築（単位ごとのコード生成） | `"Construction — Code Generation (Unit: [unit-name])"` \| `"Construction — Code Generation (Unit: notification-email)"` |
-| 構築（ボルト横断） | `"Construction — [Stage Name]"` \| `"Construction — Build and Test"` |
-| 運用 | `"Operation - [Stage Name]"` \| `"Operation - Observability Setup"` |
+| 初期化 | `"Initialization - [Stage Name]"` | `"Initialization - Workspace Scaffold"` |
+| アイデア化 | `"Ideation - [Stage Name]"` | `"Ideation - Intent Capture"` |
+| 構想化 | `"Inception - [Stage Name]"` | `"Inception - Requirements Analysis"` |
+| 構築（ボルトごと） | `"Construction — Bolt: [bolt-name]"`（最初のボルトには `" (walking skeleton)"` を付ける） | `"Construction — Bolt: notification-core (walking skeleton)"` |
+| 構築（単位ごとのコード生成） | `"Construction — Code Generation (Unit: [unit-name])"` | `"Construction — Code Generation (Unit: notification-email)"` |
+| 構築（ボルト横断） | `"Construction — [Stage Name]"` | `"Construction — Build and Test"` |
+| 運用 | `"Operation - [Stage Name]"` | `"Operation - Observability Setup"` |
 
 <a id="skipped-stage-handling"></a>
 ### スキップ済みステージの扱い
@@ -609,17 +609,17 @@ stateDiagram-v2
 | 5 | アーキテクチャ決定記録 | なし | アプリケーション設計に `decisions.md` | アーキテクチャ上の追跡可能性 |
 | 6 | ウェルカムメッセージ | より長いユニコードベース | より短く ASCII 安全。`settings.json` の `companyAnnouncements` 経由で描画（ステージではない） | リファレンス自身の図版 ASCII 標準違反を修正 |
 | 7 | 逆工学の常再実行方針 | キャッシュ成果物を使用 | ブラウンフィールドでは常に再実行 | 現在のコードベース分析を保証 |
-| 8 | セッション再開 | ファイルベースの `[Answer]:` タグ \| `AskUserQuestion` を使用 | Claude Code でより自然 |
+| 8 | セッション再開 | ファイルベースの `[Answer]:` タグ | `AskUserQuestion` を使用 | Claude Code でより自然 |
 | 9 | 明確化の質問 | 別ファイル | インラインで処理 | 通常は 1–2 個の的を絞った問い合わせで足りる |
 | 10 | 監査ログ形式 | 単一形式 | 追加 3 種: エラー、回復、変更要求 | 事後分析 |
 | 11 | 三モード質問フロー | ファイルベースのみ | "Guide me" / "I'll edit the file" / "Chat" | 異なる嗜好に対応 |
 | 12 | デリバリー計画 | ワークフロー計画（ステージ選択器） | 改名し、作業分解分析を追加 | 構築計画をより実践的に |
-| 13 | 状態ファイル命名 | `state.md` \| `aidlc-state.md` | フックがパスをハードコードしており、変えるとスクリプトが壊れる |
+| 13 | 状態ファイル命名 | `state.md` | `aidlc-state.md` | フックがパスをハードコードしており、変えるとスクリプトが壊れる |
 | 14 | 最小ルール | 複数ルールファイル | ガードレールのみ（約 35 行） | AI-DLC 以外の会話でコンテキスト肥大を避ける |
-| 15 | スコープ→ステージ対応の場所 | ルール内 | ファイル著述: `.claude/scopes/aidlc-<name>.md`（身元）+ ステージごとの `scopes:` フロントマター（所属）。コンパイル時に転置して `scope-grid.json`（エンジンが読む実行時源）へ \| スコープはファイル著述プリミティブ。`scope-mapping.json` も `SKILL.md` 常駐ルーティングも不要 |
+| 15 | スコープ→ステージ対応の場所 | ルール内 | ファイル著述: `.claude/scopes/aidlc-<name>.md`（身元）+ ステージごとの `scopes:` フロントマター（所属）。コンパイル時に転置して `scope-grid.json`（エンジンが読む実行時源）へ | スコープはファイル著述プリミティブ。`scope-mapping.json` も `SKILL.md` 常駐ルーティングも不要 |
 | 16 | エージェントのツールアクセス | 範囲付き制限 | 二値: 完全な `Bash` かなし | Claude Code は範囲付きツール制限をサポートしない |
 | 17 | 入れ子委譲なし | エージェントが委譲できる | 全エージェントに `disallowedTools: Task` | 連鎖するサブエージェント列を防ぐ |
-| 18 | フラットなエージェント配置 | `.claude/agents/aidlc/*.md` \| `.claude/agents/*.md` | Claude Code の標準発見に合わせる |
+| 18 | フラットなエージェント配置 | `.claude/agents/aidlc/*.md` | `.claude/agents/*.md` | Claude Code の標準発見に合わせる |
 | 19 | エージェントメモリ | `memory: project` を定義 | 省略 | Claude Code のフロントマターで未サポート |
 | 20 | 設計エージェント支援の追加 | 1.6, 2.5 のみ | 2.4, 2.6 にも支援として追加 | UX に根ざした開発 |
 
@@ -693,28 +693,28 @@ Claude Code の `Task` ツール呼び出しが失敗したとき:
 | 0.3 | 状態初期化 | 初期化 | 常時 | （オーケストレーター） | -- | インライン |
 | 1.1 | 意図捕捉と枠組み | アイデア化 | 常時 | プロダクト | `aidlc-architect-agent` | インライン |
 | 1.2 | 市場調査 | アイデア化 | 条件付き | プロダクト | -- | インライン |
-| 1.3 | 実現可能性と制約 | アイデア化 | 条件付き | `aidlc-architect-agent` \| `aidlc-aws-platform-agent`, `aidlc-compliance-agent` | インライン |
+| 1.3 | 実現可能性と制約 | アイデア化 | 条件付き | `aidlc-architect-agent` | `aidlc-aws-platform-agent`, `aidlc-compliance-agent` | インライン |
 | 1.4 | スコープ定義 | アイデア化 | 常時 | プロダクト | デリバリー | インライン |
 | 1.5 | チーム編成 | アイデア化 | 条件付き | デリバリー | -- | インライン |
 | 1.6 | 粗いモックアップ | アイデア化 | 条件付き | 設計 | プロダクト | インライン |
 | 1.7 | 承認と引き渡し | アイデア化 | 常時 | デリバリー | プロダクト | インライン |
-| 2.1 | 逆工学 | 構想化 | 条件付き | `aidlc-developer-agent` \| `aidlc-architect-agent` \| サブエージェント（`aidlc-developer-agent` → `aidlc-architect-agent`） |
+| 2.1 | 逆工学 | 構想化 | 条件付き | `aidlc-developer-agent` | `aidlc-architect-agent` | サブエージェント（`aidlc-developer-agent` → `aidlc-architect-agent`） |
 | 2.2 | プラクティス発見 | 構想化 | 条件付き | パイプラインデプロイ | 品質, `aidlc-developer-agent`, 開発セキュリティ運用 | インライン |
 | 2.3 | 要件分析 | 構想化 | 常時 | プロダクト | -- | インライン |
 | 2.4 | ユーザーストーリー | 構想化 | 条件付き | プロダクト | 設計 | インライン |
 | 2.5 | 洗練モックアップ | 構想化 | 条件付き | 設計 | プロダクト | インライン |
-| 2.6 | アプリケーション設計 | 構想化 | 条件付き | `aidlc-architect-agent` \| `aidlc-aws-platform-agent`, 設計 | インライン |
+| 2.6 | アプリケーション設計 | 構想化 | 条件付き | `aidlc-architect-agent` | `aidlc-aws-platform-agent`, 設計 | インライン |
 | 2.7 | 単位生成 | 構想化 | 常時 | `aidlc-architect-agent` | デリバリー | インライン |
 | 2.8 | デリバリー計画 | 構想化 | 常時 | デリバリー | `aidlc-architect-agent` | インライン |
-| 3.1 | 機能設計 | 構築 | 条件付き | `aidlc-architect-agent` \| `aidlc-developer-agent` | インライン |
-| 3.2 | NFR 要件 | 構築 | 条件付き | `aidlc-architect-agent` \| 開発セキュリティ運用, `aidlc-compliance-agent`, 品質 | インライン |
-| 3.3 | NFR 設計 | 構築 | 条件付き | `aidlc-architect-agent` \| `aidlc-aws-platform-agent` | インライン |
-| 3.4 | インフラ設計 | 構築 | 条件付き | `aidlc-aws-platform-agent` \| 開発セキュリティ運用, `aidlc-compliance-agent` | インライン |
-| 3.5 | コード生成 | 構築 | 常時 | `aidlc-developer-agent` \| -- \| サブエージェント（`aidlc-developer-agent`） |
+| 3.1 | 機能設計 | 構築 | 条件付き | `aidlc-architect-agent` | `aidlc-developer-agent` | インライン |
+| 3.2 | NFR 要件 | 構築 | 条件付き | `aidlc-architect-agent` | 開発セキュリティ運用, `aidlc-compliance-agent`, 品質 | インライン |
+| 3.3 | NFR 設計 | 構築 | 条件付き | `aidlc-architect-agent` | `aidlc-aws-platform-agent` | インライン |
+| 3.4 | インフラ設計 | 構築 | 条件付き | `aidlc-aws-platform-agent` | 開発セキュリティ運用, `aidlc-compliance-agent` | インライン |
+| 3.5 | コード生成 | 構築 | 常時 | `aidlc-developer-agent` | -- | サブエージェント（`aidlc-developer-agent`） |
 | 3.6 | ビルドおよびテスト | 構築 | 常時 | 品質 | 開発セキュリティ運用 | インライン |
 | 3.7 | CI パイプライン | 構築 | 条件付き | パイプラインデプロイ | -- | インライン |
 | 4.1 | デプロイパイプライン | 運用 | 条件付き | パイプラインデプロイ | -- | インライン |
-| 4.2 | 環境プロビジョニング | 運用 | 条件付き | `aidlc-aws-platform-agent` \| 開発セキュリティ運用, `aidlc-compliance-agent` | インライン |
+| 4.2 | 環境プロビジョニング | 運用 | 条件付き | `aidlc-aws-platform-agent` | 開発セキュリティ運用, `aidlc-compliance-agent` | インライン |
 | 4.3 | デプロイ実行 | 運用 | 条件付き | パイプラインデプロイ | `aidlc-developer-agent` | インライン |
 | 4.4 | 可観測性セットアップ | 運用 | 条件付き | 運用 | -- | インライン |
 | 4.5 | インシデント対応 | 運用 | 条件付き | 運用 | -- | インライン |

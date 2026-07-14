@@ -176,7 +176,7 @@ bun tests/gen-coverage-registry.ts --check  # fail if the committed registry is 
 
 | トリガー | レイヤー | コマンド | 実行場所 |
 |---------|-------|---------|-------|
-| `git commit` \| L1 \| `bun tests/run-tests.ts` | ローカル（コミット前フック） |
+| `git commit` | L1 | `bun tests/run-tests.ts` | ローカル（コミット前フック） |
 | CI パイプライン | L2 | `bun tests/run-tests.ts --ci` | CI/CD パイプライン |
 | リリース / 主ブランチへのマージ | L3 | `bun tests/run-tests.ts --release` | CI/CD パイプライン |
 
@@ -276,9 +276,9 @@ L1 は Git のコミット前フックで強制できます。`bun tests/run-tes
 
 | 変数 | 既定値 | 説明 |
 |----------|---------|-------------|
-| `AIDLC_TEST_TIMEOUT` \| `1800` \| `claude -p` 1 回あたりのタイムアウト（秒）。`0` で無効化。 |
-| `AIDLC_TUI_SETTING_SOURCES` \| `project` \| ライブ `claude` TUI 起動に注入する設定ソース。通常は `project`。開発者ローカル設定を含めたい限定的な較正時だけ `default` または空値を使う。 |
-| `AIDLC_TUI_TRACE_POLL_MS` \| `10000` \| 長いジャーニーが次のメニューまたはディスク終端子を待っている間に、TUI NDJSON トレースで `answer_gate_poll` スナップショットを撮る最小間隔。 |
+| `AIDLC_TEST_TIMEOUT` | `1800` | `claude -p` 1 回あたりのタイムアウト（秒）。`0` で無効化。 |
+| `AIDLC_TUI_SETTING_SOURCES` | `project` | ライブ `claude` TUI 起動に注入する設定ソース。通常は `project`。開発者ローカル設定を含めたい限定的な較正時だけ `default` または空値を使う。 |
+| `AIDLC_TUI_TRACE_POLL_MS` | `10000` | 長いジャーニーが次のメニューまたはディスク終端子を待っている間に、TUI NDJSON トレースで `answer_gate_poll` スナップショットを撮る最小間隔。 |
 
 <a id="cli-reference"></a>
 ## CLI リファレンス
@@ -322,7 +322,7 @@ bash tests/run-tests.sh       # POSIX compatibility wrapper
 
 **スパイク結果（2026-05-06、Bedrock 経由のオーパス 4.7）:**
 
-| シナリオ | 直列 | `--parallel 4` \| `--parallel 8` |
+| シナリオ | 直列 | `--parallel 4` | `--parallel 8` |
 |---|---|---|---|
 | 4 × `/aidlc --help` | 56s | 16s (3.5x) | — |
 | 8 × `/aidlc --help` | — | — | 31s |
