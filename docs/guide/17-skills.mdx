@@ -15,7 +15,7 @@ description: "`/aidlc` と、スコープ・ステージ・セットアップ用
 
 - **`/aidlc`** — 完全なオーケストレーター。フラグは組み込まれていません。スコープの検出（または、作りたいものの説明）から始まり、そのスコープに含まれる全ステージを完了まで駆動します。最もよく使う入口です。
 - **スコープランナー** — `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch`。同じ完全ワークフローですが、スコープが固定され、スコープ検出を省略します。
-- **ステージランナー** — `/aidlc-application-design`、`/aidlc-code-generation` など計 29 個。1 つのステージだけを独立実行し、メインワークフローには一切触れません。
+- **ステージランナー** — `/aidlc-application-design`、`/aidlc-code-generation` など計 29 個。1 つのステージだけを独立実行し、メインワークフローには一切触れません。プラグインが所有するステージは、`/test-pro-integration` のように、プラグイン接頭辞付きのコマンド名をそのまま使います。
 - **`/aidlc-init`** — 最初のインテントを作成します（初期化フェーズ全体を 1 ステップで実行）。エンジンの自動作成機能を明示的に使うためのパッケージです。
 - **セッションスキル** — `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack`。ワークフローの読み取り専用表示であり、詳細は [セッション管理](/guide/session-management) で扱います。
 
@@ -49,7 +49,7 @@ description: "`/aidlc` と、スコープ・ステージ・セットアップ用
 /aidlc-feature --status
 ```
 
-**ランナーが用意されるスコープは 4 つだけです。** 利用頻度が高いものに限られます。フレームワークが定義するスコープは全部で 9 個あり（[スコープ、深さ、テスト戦略](/guide/scopes-and-depth) を参照）、その他の `enterprise`、`poc`、`infra`、`refactor`、`workshop` は、常にオーケストレーター経由で到達できます。
+**ランナーが用意されるコアスコープは 4 つだけです。** スコープファイルで `runner: true` が指定された、利用頻度が高いものに限られます。フレームワークが定義するスコープは全部で 9 個あり（[スコープ、深さ、テスト戦略](/guide/scopes-and-depth) を参照）、その他の `enterprise`、`poc`、`infra`、`refactor`、`workshop` は、常にオーケストレーター経由で到達できます。プラグインが所有するスコープも `runner: true` を設定でき、そのランナーは `/test-pro-validation` のように、プラグイン接頭辞付きのスコープ名をそのまま使います。
 
 ```
 /aidlc --scope enterprise
@@ -128,7 +128,7 @@ ls .claude/skills/
 bun .claude/tools/aidlc-runner-gen.ts write
 ```
 
-生成ツールはコンパイル済みステージ一覧（唯一の正本）を読み、実行可能な各ステージに対するランナー外殻を生成します。新しいステージの `/aidlc-<your-stage>` コマンドは自動で現れます。手書きするランナーファイルも、流用する定型コードもありません。スコープランナーも同じです。`.claude/scopes/` の下へスコープファイルを置いて再生成すれば、そのランナーが追随します。
+生成ツールはコンパイル済みステージ一覧（唯一の正本）を読み、実行可能な各ステージに対するランナー外殻を生成します。新しいステージの `/aidlc-<your-stage>` コマンドは自動で現れます。手書きするランナーファイルも、流用する定型コードもありません。スコープランナーも、フロントマターで `runner: true` を宣言しているスコープについては同じ仕組みで動きます。`scopes --all` を使うと、すべてのスコープファイルに対してランナーが生成されます。
 
 ```bash
 bun .claude/tools/aidlc-runner-gen.ts scopes      # generate scope-runners

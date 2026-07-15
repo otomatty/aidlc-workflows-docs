@@ -136,7 +136,7 @@ description: AI-DLC ワークフローにおける初期化フェーズのステ
 
 <a id="steps-2"></a>
 ### 手順
-1. 状態テンプレートを読み取る
+1. 状態契約を読み取る
 2. スコープマッピング、深さ、テスト戦略を適用する
 3. 新規プロジェクトでは `reverse-engineering` を SKIP としてマークする
 4. 初期化後の最初のステージを `[-]` に設定した完全な `<record>/aidlc-state.md` を書き込む
@@ -147,7 +147,8 @@ description: AI-DLC ワークフローにおける初期化フェーズのステ
 - ワークスペース検出からのワークスペース分類（同じツール呼び出し）
 - スコープ設定（`--scope` フラグまたは既定の `poc`）
 - 渡された場合の深さ／テスト戦略のオーバーライド
-- `.claude/knowledge/aidlc-shared/state-template.md` の状態テンプレート
+- `.claude/knowledge/aidlc-shared/state-template.md` の状態契約
+- コンパイル済みの `tools/data/stage-graph.json` と `tools/data/scope-grid.json`
 
 <a id="outputs-2"></a>
 ### 出力

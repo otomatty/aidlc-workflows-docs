@@ -1,0 +1,8 @@
+{
+  "branch": "v2",
+  "last_checked_commit_sha": "064c1e374222663eec2dd0d07b1803177efe0a97",
+  "last_checked_commit_date": "2026-07-15 06:15:09 +1000",
+  "last_checked_commit_message": "fix: pin the linter sensor's eslint version (2.3.10) (#572)",
+  "checked_at": "2026-07-15",
+  "site_version": "2.3.10"
+}

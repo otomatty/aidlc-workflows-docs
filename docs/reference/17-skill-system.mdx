@@ -85,12 +85,12 @@ flowchart LR
 <a id="4-plural-skills-runners-and-the-shared-spine"></a>
 ## 4. 複数スキル、ランナー、共有スパイン
 
-オーケストレーターは多数あるスキルの 1 つです。各ハーネスはスキルディレクトリ（`<harness-dir>/skills/`、例: `dist/claude/.claude/skills/`）に複数集合を配布します。基幹の `aidlc` オーケストレーター、実行可能なステージごとの**ステージランナー**（`aidlc-<slug>`）、第一群スコープごとの**スコープランナー**（`aidlc-<scope>`）、読み取り専用セッションスキル（`aidlc-session-cost`、`aidlc-replay`、`aidlc-outcomes-pack`）、および `aidlc-init`。ルーティングと実行の知識はすべて、`core/aidlc-common/` で著述される**共有スパイン**（配布先は `<harness-dir>/aidlc-common/`）に一度だけあります。`conductor.md` ペルソナ、`protocols/`、および `stages/{initialization,ideation,inception,construction,operation}/` 配下の 32 ステージファイルです。
+オーケストレーターは多数あるスキルの 1 つです。各ハーネスはスキルディレクトリ（`<harness-dir>/skills/`、例: `dist/claude/.claude/skills/`）に複数集合を配布します。基幹の `aidlc` オーケストレーター、実行可能なステージごとの**ステージランナー**（コアステージは `aidlc-<slug>`、プラグイン所有のステージはプラグインプレフィックス付きスラッグをそのまま使う）、`runner: true` のスコープごとの**スコープランナー**（コアスコープは `aidlc-<scope>`、プラグイン所有のスコープは名前をそのまま使う）、読み取り専用セッションスキル（`aidlc-session-cost`、`aidlc-replay`、`aidlc-outcomes-pack`）、および `aidlc-init`。ルーティングと実行の知識はすべて、`core/aidlc-common/` で著述される**共有スパイン**（配布先は `<harness-dir>/aidlc-common/`）に一度だけあります。`conductor.md` ペルソナ、`protocols/`、および `stages/{initialization,ideation,inception,construction,operation}/` 配下の 32 ステージファイルです。
 
 ランナースキルは `tools/aidlc-runner-gen.ts` が生成し、手書きしません。
 
-- **ステージランナー**は任意の糖衣です。各 `/aidlc-<slug>` は（無くても動く）`/aidlc --stage <slug> --single` を、エンジンの `--single` モードで 1 ステージだけを分離実行し、主ワークフローの `Current Stage` は進めない入力可能コマンドへ包みます。スラッグ一覧は `loadGraph()` — 唯一のコンパイル済み真実源 — から来るため、グラフに足したステージはここを編集せずランナーへ流れます。ブートストラップ初期化ステージは除外されます（単独 `--single` の意味がなく、`--single` は拒否する）。初期化フェーズ全体は、エンジンのインテント生成を包む 1 本の `/aidlc-init` ランナーとして配布されます。
-- **スコープランナー**は既に実行可能なコマンドを包みます。定義はスコープファイルが持ちます。各ランナーは短いシェルで、固定スコープ・検出なしで `aidlc-orchestrate next --scope <scope>` を `done` まで駆動します。スコープ集合全体は `/aidlc --scope <name>` で到達可能です。ランナーは高頻度のものへの入力可能な糖衣です。
+- **ステージランナー**は任意の糖衣です。コアの各 `/aidlc-<slug>`（プラグイン所有なら `/<plugin>-<slug>`）は（無くても動く）`/aidlc --stage <slug> --single` を、エンジンの `--single` モードで 1 ステージだけを分離実行し、主ワークフローの `Current Stage` は進めない入力可能コマンドへ包みます。スラッグ一覧は `loadGraph()` — 唯一のコンパイル済み真実源 — から来るため、グラフに足したステージはここを編集せずランナーへ流れます。ブートストラップ初期化ステージは除外されます（単独 `--single` の意味がなく、`--single` は拒否する）。初期化フェーズ全体は、エンジンのインテント生成を包む 1 本の `/aidlc-init` ランナーとして配布されます。
+- **スコープランナー**は既に実行可能なコマンドを包みます。定義はスコープファイルが持ち、`runner: true` で既定の生成集合へオプトインします。各ランナーは短いシェルで、固定スコープ・検出なしで `aidlc-orchestrate next --scope <scope>` を `done` まで駆動します。スコープ集合全体は `/aidlc --scope <name>` で到達可能です。ランナーは高頻度のものと、オプトインしたプラグインスコープへの入力可能な糖衣です。
 
 2 つのドリフトガードがディスク上のランナー集合を源へ固定します。ステージランナーは `aidlc-runner-gen.ts check`、スコープランナーは `scopes --check` で、いずれも CI で実行されます。ランナーは **`hooks:` ブロックを持ちません** — ワークフロースパインのフックはプロジェクト全体の `settings.json` にあるため、決定的スパインはコピーではなく継承です。どのランナーも `conductor.md` を手で読みません。エンジンが最初の `next` でペルソナを届けます。
 
@@ -101,7 +101,7 @@ flowchart LR
 
 スコープはファイル著述のプリミティブで、センサーやエージェントを著述するのと同じ手癖です。**`scope-mapping.json` はありません** — 配布ツリーから削除済みです。スコープ識別とステージ所属は、コンパイル済みグリッドへ転置される 2 つのファイル著述面に分かれます。
 
-1. **識別**はスコープごとに 1 ファイル、`dist/claude/.claude/scopes/aidlc-<name>.md` — フロントマター（`name`、`depth`、`keywords`、`description`）とスコープを説明する本文。配布セットは `bugfix`、`enterprise`、`feature`、`infra`、`mvp`、`poc`、`refactor`、`security-patch`、`workshop`。
+1. **識別**はスコープごとに 1 ファイル、`dist/claude/.claude/scopes/aidlc-<name>.md` — フロントマター（`name`、`depth`、`keywords`、`description`、任意の `runner`）とスコープを説明する本文。配布セットは `bugfix`、`enterprise`、`feature`、`infra`、`mvp`、`poc`、`refactor`、`security-patch`、`workshop`。
 2. **所属**は各ステージの `scopes:` フロントマター — そのステージが EXECUTE となるスコープの一覧。
 
 `bun .claude/tools/aidlc-graph.ts compile`（`stage-graph.json` を作るのと同じコンパイル経路）がこれらを `tools/data/scope-grid.json` のグリッドへ転置します — エンジンがスコープ水準のルーティングすべてに読む `scope → {stages: {slug: EXECUTE|SKIP}}` マップです。エンジンの `validScopes()` は、そのコンパイル済みグリッドから正規のスコープ名集合を導出します。

@@ -77,12 +77,11 @@ bun --version
 <a id="state-file-corrupted"></a>
 ### 状態ファイルが破損している
 
-`validate-state.ts` フックは、コンパクションのたびに 2 つの必須セクション `## Stage Progress` と `## Current Status` を検査します。手動で修復する場合は次のとおりです。
+`validate-state.ts` フックは、コンパクションのたびに 2 つの必須セクション `## Stage Progress` と `## Current Status` を検査します。修復する場合は次のとおりです。
 
-1. 現在のインテントの `aidlc-state.md` を開く（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` の下）
-2. 次のセクションが存在することを確認する: `Project Information`、`Scope Configuration`、`Workspace State`、`Stage Progress`、`Current Status`、`Session Resume Point`
-3. `.claude/knowledge/aidlc-shared/state-template.md` にある雛形と比較する
-4. 足りないセクションを雛形から復元し、`audit/` シャードの履歴を使って値を埋める
+1. `/aidlc --doctor` を実行し、報告された状態・グラフ・フックの問題に対処する
+2. 生成された Stage Progress の行が古くなっている場合は、状態の再同期を担うエンジン経路を再実行する。つまり `/aidlc` でワークフローを開始または再開するか、`/aidlc --scope <scope>` でスコープを変更して、コンパイル済みグラフとスコープグリッドを再適用する
+3. `.claude/knowledge/aidlc-shared/state-template.md` はセクションとフィールドの契約としてのみ使い、ステージの行を雛形から手作業で復元しない
 
 ---
 

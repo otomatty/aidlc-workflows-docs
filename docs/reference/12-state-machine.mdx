@@ -98,17 +98,24 @@ stateDiagram-v2
 **状態値：** `Pending`、`Active`、`Verified`、`Skipped`。
 
 フェーズ状態は `aidlc-state.md` の `## Phase Progress` 節で追跡します。インテント生成時に
-すべてのフェーズへ `Pending` を設定し、対象範囲外のフェーズごとに（ステージ開始前に）
-`PHASE_SKIPPED` を出力してから、現在のフェーズを `Active` に昇格させます。フェーズの
-完了時には境界で `PHASE_COMPLETED` と `PHASE_VERIFIED` の両方を出力し、次のフェーズの
-`PHASE_STARTED` を出力します。
+この節を初期設定します。`Initialization` は `Verified` になり（生成処理は引き継ぎ前に
+すべての初期化ステージを完了させるため）、初期化直後の最初のステージが属するフェーズは
+`Active` に、それ以降の各フェーズは、対象範囲が EXECUTE ステージを残さない場合は
+`Skipped`（フェーズごとに `PHASE_SKIPPED` 監査行を 1 件出力）、それ以外は `Pending` に
+なります。フェーズの完了時には境界で `PHASE_COMPLETED` と `PHASE_VERIFIED` の両方を
+出力し、次のフェーズの `PHASE_STARTED` を出力します。行の書き換えは同じ状態書き込みの
+中で行われます。この節は表示専用です。ルーティングは `Lifecycle Phase` と
+Stage Progress のチェックボックスを読み、`/aidlc --status` はフェーズブロックを
+その場で再計算します。
 
 | 遷移 | トリガー | エミッター |
 |---|---|---|
-| `Pending → Active`（最初のフェーズ） | `aidlc-utility intent-birth` | `tools/aidlc-utility.ts` |
-| `Pending → Skipped` | `aidlc-utility intent-birth`（スコープ除外ごと） | `tools/aidlc-utility.ts` |
-| `Active → Verified` | フェーズ境界での `aidlc-state advance` または `complete-workflow` | `tools/aidlc-state.ts` |
-| `Pending → Active`（境界） | フェーズ境界での `aidlc-state advance`、または `aidlc-jump execute` | `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
+| 初期設定（`Verified`/`Active`/`Pending`/`Skipped`） | `aidlc-utility intent-birth` | `tools/aidlc-utility.ts` |
+| `Active -> Verified` | フェーズ境界での `aidlc-state advance`、`finalize`、または `complete-workflow`。前方への `aidlc-jump execute` | `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
+| `Pending -> Active`（境界） | フェーズ境界での `aidlc-state advance` または `finalize`、あるいは `aidlc-jump execute` | `tools/aidlc-state.ts`、`tools/aidlc-jump.ts` |
+| `Pending -> Skipped`（飛び越え） | フェーズ全体を飛び越える前方への `aidlc-jump execute` | `tools/aidlc-jump.ts` |
+| `Verified/Active -> Pending` リセット | 後方への `aidlc-jump execute`（EXECUTE ステージを持つフェーズをリセット） | `tools/aidlc-jump.ts` |
+| `Pending <-> Skipped` 再導出 | `aidlc-utility scope-change` / `recompose`（未到達の行のみ） | `tools/aidlc-utility.ts` |
 
 初期化後への引き継ぎ時には、最終初期化ステージの後で
 `aidlc-utility intent-birth` 自体が
@@ -287,8 +294,8 @@ gate-start  →  [?] AwaitingApproval
 <a id="audit-event-taxonomy"></a>
 ## 監査イベント分類
 
-以下では **71 イベント**を 17 カテゴリに分類します（正規レジストリ
-`audit-format.md` では同じ 71 イベントを 19 カテゴリに分けます。分類は表現上のもので、
+以下では **72 イベント**を 17 カテゴリに分類します（正規レジストリ
+`audit-format.md` では同じ 72 イベントを 19 カテゴリに分けます。分類は表現上のもので、
 イベント集合が不変条件です）。今後のリリース向けに事前登録されたイベントを除き、
 各イベントにはツールまたはフックのエミッターがちょうど 1 つあります。エミッター欄が
 `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` の
@@ -351,6 +358,7 @@ gate-start  →  [?] AwaitingApproval
 |---|---|---|
 | `SCOPE_DETECTED` | `tools/aidlc-utility.ts` | `detect-scope` サブコマンド。`Source` フィールドに出所（自由記述 / キーワード / 環境変数 / コマンドライン）を記録 |
 | `SCOPE_CHANGED` | `tools/aidlc-utility.ts` | アクティブなワークフローの `scope-change` サブコマンド |
+| `PLUGIN_SELECTION_CHANGED` | `tools/aidlc-utility.ts` | `select-plugins` の設定モード。フィールド: `Previous Selection`、`New Selection` |
 | `DEPTH_CHANGED` | `tools/aidlc-utility.ts` | `config-change --depth` |
 | `TEST_STRATEGY_CHANGED` | `tools/aidlc-utility.ts` | `config-change --test-strategy` |
 | `RECOMPOSED` | `tools/aidlc-utility.ts` | `recompose` サブコマンド — 適応型コンポーザーが進行中の計画を再形成（監査ロック下で保留ステージ接尾辞を切り替え） |

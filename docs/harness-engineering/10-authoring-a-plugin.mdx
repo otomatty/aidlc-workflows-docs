@@ -34,13 +34,16 @@ test-pro/
   sensors/aidlc-requirement-coverage.md
   tools/aidlc-sensor-coverage-threshold.ts            # the sensor scripts
   tools/aidlc-sensor-requirement-coverage.ts
+  scopes/test-pro-validation.md                       # NEW plugin scope
+  agents/test-pro-metrics-agent.md                    # NEW support persona
+  knowledge/test-pro-metrics-agent/methodology.md     # plugin methodology knowledge
 ```
 
 `.aidlc-plugin/plugin.json` は **宣言的** なマニフェストです。最上位は共通のプラグインマニフェスト構造をなぞっており、マーケットプレイスやホストツール群が一覧化、版管理、信頼判定をできるようになっています。AIDLC 固有の設定は、ネストされた `aidlc` ブロックに入ります。
 
 ```jsonc
 {
-  "name": "test-pro",                 // == dir name; "core" is reserved
+  "name": "test-pro",                 // == dir name; "core", "aidlc", and "aidlc-*" are reserved
   "version": "0.1.0",                 // semver; checked by dependents
   "description": "Full-featured testing plugin — unit/branch coverage, functional, integration, regression, edge, and API positive+negative.",
   "author": { "name": "AWS AIDLC" },
@@ -49,6 +52,9 @@ test-pro/
     "contributes": {                  // which subtrees this plugin ships
       "stages": "stages/",            // NEW stage files
       "overlays": "contributions/",   // CONTRIBUTION files (§3 — modify existing)
+      "agents": "agents/",            // NEW personas
+      "scopes": "scopes/",            // NEW scope identities
+      "knowledge": "knowledge/",      // methodology knowledge for agents
       "sensors": "sensors/",          // sensor manifests
       "tools": "tools/"               // sensor scripts (so a sensor can run)
     }
@@ -58,7 +64,7 @@ test-pro/
 
 `contributes` のキーはコアサブツリー（`stages`、`agents`、`scopes`、`memory`、`sensors`、`knowledge`、`tools`）へ対応し、コンポーズ時にコアと並べてマージされます。`tools` は CLI スクリプトをハーネスの `tools/` ディレクトリに着地させるので、プラグインが **実行可能なセンサー**（`sensors/` のマニフェストと `tools/` のスクリプトの組）を出荷できます。`memory` は `rules/` ディレクトリではなくデフォルトスペースのメソッドシードへマージされます（そのディレクトリはもう読まれません。§4 を参照）。`overlays` は特別で、**コピーされません**。マージ（§3）が消費するステージごとのコントリビューションを置く場所です。
 
-プラグインが実際に使うキーだけを出荷してください。`test-pro` は `agents` / `scopes` / `memory` / `knowledge` を出しません。`aidlc-quality-agent` を再利用し、それらを追加しないからです。出すプラグインの場合は、それぞれについて §4 で 1 節ずつ説明します。
+プラグインが実際に使うキーだけを出荷してください。`test-pro` はサポートエージェント、プラグインスコープ、エージェント別の方法論ナレッジを出荷しますが、リードには引き続き `aidlc-quality-agent` を再利用します。
 
 > **番号範囲は取りません。** ステージ番号は表示専用なので、プラグインはマニフェストで番号範囲を確保しません。§2 を参照してください。
 
@@ -69,6 +75,8 @@ test-pro/
 
 - `plugin:` フィールドで、あなたのプラグイン名を指定すること。
 - `produces:` する成果物には、必ず `<plugin>-` 接頭辞を付けること（例: `test-pro-integration-test-results`）。
+
+`bundle:` は改名前の所有権キーであり、修正方法を示すエラーとともに拒否されます（`plugin:` と書いてください）。この語は、将来あり得る「プラグインの集合（collection of plugins）」概念のために予約されています。
 
 ステージの **識別子はスラッグ** です。重要な箇所、つまりエッジ、ジャンプ、解決のすべてでスラッグが使われます。`number:` は **表示ヒント** でしかありません。ステータス出力や `SKILL.md` のステージ表で並び順を決めるだけで、グラフ上の位置はスラッグベースの `requires_stage` エッジが決めます。したがって、見た目に自然な `number:`（`test-pro-integration` なら `build-and-test` の `3.6` の後として `3.85` など）を書きますが、それを挿入してもコアを振り直すことはなく、範囲を主張することもありません。
 
@@ -130,9 +138,9 @@ fragments:                    # PROSE — spliced into the stage body
 | `in:<Compartment>` | 指定した `## <Compartment>` ブロックの末尾（例: `in:Sensors`） | ✅ |
 | `after-questions`  | 質問生成ステップの後 | ⏳ 未実装 — `locateAnchor` に分岐がなく、「不明なアンカー」として棄却されます。`after-step:<n>` を使ってください。 |
 
-フラグメントは `(order, bundle)` で決定論的に整列されます。同じ `(bundle, anchor, order)` の衝突が起きた場合、同一ファイル内でも今回の実行で別ファイル間でも、**ログ付きで棄却** され、後勝ちにはなりません。2 つの *異なる* プラグインが同じステージへコントリビューションした場合は、構造的追加は和集合として統合され、フラグメントはこの同じ順序規則で交互に並びます。つまり本当にマージされます。
+フラグメントは `(order, plugin)` で決定論的に整列されます。同じ `(plugin, anchor, order)` の衝突が起きた場合、同一ファイル内でも今回の実行で別ファイル間でも、**ログ付きで棄却** され、後勝ちにはなりません。2 つの *異なる* プラグインが同じステージへコントリビューションした場合は、構造的追加は和集合として統合され、フラグメントはこの同じ順序規則で交互に並びます。つまり本当にマージされます。
 
-差し込まれた各フラグメントは、コンテンツハッシュを持つセンチネルコメントで包まれます（`{/* plugin:<bundle>:<anchor>:<order>:<hash> */} … {/* /plugin:… */}`）。再コンポーズが冪等であり、更新時に新しいフラグメントが古いブロックを置き換えられるのは、この仕組みのおかげです。ここから 2 つの作成ルールが導かれます。
+差し込まれた各フラグメントは、コンテンツハッシュを持つセンチネルコメントで包まれます（`{/* plugin:<plugin>:<anchor>:<order>:<hash> */} … {/* /plugin:… */}`）。再コンポーズが冪等であり、更新時に新しいフラグメントが古いブロックを置き換えられるのは、この仕組みのおかげです。ここから 2 つの作成ルールが導かれます。
 
 - **フラグメント本文の中にセンチネルに見える行を書かないこと。** `{/* /plugin:… */}` に一致する行が本文内にあると、ブロック終端と誤認され、更新時の差し込み処理を壊します。
 - **プレリリース版ビルドからの更新に注意すること。** このブランチの *レビュー用ビルド*（センチネルにハッシュが入る前）からコンポーズされたインストールには、古いハッシュなしマーカーが残っています。更新時にそれを認識できないため、同じブロックが 2 回差し込まれます。影響するのは PR ブランチのインストールだけです。クリーンな基底から再コンポーズするか、旧ブロックを 1 回だけ手で消してください。
@@ -140,19 +148,13 @@ fragments:                    # PROSE — spliced into the stage body
 <a id="4-packaging-the-other-primitives"></a>
 ## 4. ほかのプリミティブをパッケージ化する
 
-> **⏳ ステータス: 設計済みだが未接続。** 今日パッケージャーが投影するのはプラグインの `stages/`、`sensors/`、`tools/`、`contributions/` だけです。この下に説明する `agents/`、`scopes/`、`memory/`、`knowledge/` サブツリーは *意図された* 構成ではありますが、まだインストールへ出力されません。したがって、それらを作成しても投影処理が実装されるまでは効果がありません（18 章 §8 のステータスを参照）。そのため `test-pro` は、現時点で接続済みのプリミティブだけを出荷しています。
+`test-pro` はステージ、コントリビューション、センサー、サポートエージェント、スコープ、方法論ナレッジを出荷します。より豊かなプラグインは、後からメソッド / ルールも追加できます。メモリの投影は延期されたままです（18 章 §8 のステータスを参照）。
 
-`test-pro` はステージ、コントリビューション、センサーを出荷します。より豊かなプラグインは、エージェント、スコープ、メソッド / ルール、ナレッジも追加できます。それぞれ 1 つずつルールがあります（上の注記どおり、今はすべて延期中です）。
-
-- **エージェント。** `agents/<slug>-agent.md` を `plugin:` 付きで置きます。自動で検出され、プラグインのステージから `lead_agent` / `support_agents` として指名できます。エージェントのスラッグがコアまたは別プラグインと衝突した場合はコンポーズエラーです（黙って影に隠すことはありません）。[エージェントの追加](/harness-engineering/adding-an-agent) を参照してください。
+- **エージェント。** `agents/<plugin>-<role>-agent.md` を `plugin:` 付きで置きます。プラグイン接頭辞がコアのファイル名接頭辞 `aidlc-` を置き換え、ファイル名の語幹はフロントマターの `name` と一致しなければなりません（例: `agents/test-pro-metrics-agent.md` は `name: test-pro-metrics-agent` を持ちます）。コンポーズ後に自動で検出され、プラグインのステージから `lead_agent` / `support_agents` として指名できます。同じパスで内容が異なる衝突が起きても上書きされず、コンポーズがドロップログに記録します。[エージェントの追加](/harness-engineering/adding-an-agent) を参照してください。
 - **センサー。** `sensors/aidlc-<id>.md` のマニフェスト **と** `tools/` 配下のスクリプトを両方出荷します。両方必要です。マニフェストだけでも検出はされますが、実行するにはスクリプトが `tools/` に存在しなければなりません。自分のステージへは `sensors:` で結び付け、コアステージへはコントリビューションの `adds.sensors` で結び付けます。[センサー](/harness-engineering/sensors) を参照してください。
-- **メソッド / ルール。** `contributes.memory` で `memory/` サブツリー、すなわち `memory/phases/<phase>.md`（または `memory/{org,team,project}.md`）を出荷します。これは **デフォルトスペースのメソッドシード**（`aidlc/spaces/default/memory/`）へマージされ、フェーズファイルのガードレールはそのフェーズに属するすべてのステージに厳密な加算方式で読み込まれます。`rules/` ディレクトリを出荷してはいけません。そのパスはもう読まれません（ルール層はスペースごとのメモリへ移動しました）。[ルールとループ](/harness-engineering/rules-and-the-loop) を参照してください。
-- **ナレッジ。** エージェント別の **方法論** ナレッジを `knowledge/<agent-slug>/` に出荷します。これはフレームワーク出荷側の `<harness>/knowledge/` ツリーへ投影され、そのエージェントがステージを主導するときに読み込まれます。ただし **ドメイン / チームナレッジ**（`aidlc/spaces/<space>/knowledge/`）は初期化時に空の利用者ランタイム状態であり、プラグインからは出荷しません。[チームナレッジ](/harness-engineering/team-knowledge) を参照してください。
-- **スコープ。** スコープには 2 つの部分があります。**識別子** は、`scopes/aidlc-<name>.md` に出荷する 1 ファイルです。**メンバーシップ**、つまりどのステージがそのスコープで走るかは、2 通りの加算的な宣言があります。
-  - *スコープ側（粗い指定）:* スコープファイルが、自分に含めるフェーズ / ステージを `includes_phases`、`includes_stages` で列挙します。これによりプラグインスコープは、既存コアステージを触らずに自分へ引き込めます。
-  - *ステージ側（細かい指定）:* コントリビューションの `adds.scopes`（§3）が、特定のコアステージのメンバーシップへスコープ名を加算します。
-
-  メンバーシップは追加専用です。プラグインによってステージがスコープを得ることはあっても、失うことはありません。[スコープ](/harness-engineering/scopes) を参照してください。
+- **メソッド / ルール。** *（⏳ 延期中。）* `contributes.memory` で `memory/` サブツリー、すなわち `memory/phases/<phase>.md`（または `memory/{org,team,project}.md`）を出荷します。設計上は **デフォルトスペースのメソッドシード**（`aidlc/spaces/default/memory/`）へマージされますが、パッケージャー / コンポーズフックはまだ `memory/` を投影もマージもしません。`rules/` ディレクトリを出荷してはいけません。そのパスはもう読まれません（ルール層はスペースごとのメモリへ移動しました）。[ルールとループ](/harness-engineering/rules-and-the-loop) を参照してください。
+- **ナレッジ。** エージェント別の **方法論** ナレッジを `knowledge/<agent-slug>/` に出荷します。これはフレームワーク出荷側の `<harness>/knowledge/` ツリーへ投影され、そのエージェントがステージを主導またはサポートするときに読み込まれます。ただし **ドメイン / チームナレッジ**（`aidlc/spaces/<space>/knowledge/`）は初期化時に空の利用者ランタイム状態であり、プラグインからは出荷しません。[チームナレッジ](/harness-engineering/team-knowledge) を参照してください。
+- **スコープ。** スコープの **識別子** は、`scopes/<plugin>-<name>.md` に出荷する 1 ファイルです。プラグイン接頭辞がコアのファイル名接頭辞 `aidlc-` を置き換え、ファイル名の語幹はフロントマターの `name` と一致しなければなりません（例: `scopes/test-pro-validation.md` は `name: test-pro-validation` を持ちます）。プラグインが作成したステージのメンバーシップは、それらのステージの `scopes:` フロントマターのリストです。コントリビューションの `adds.scopes`（§3）はまだ延期中で、マージされずドロップログに記録されるため、既存のコアステージへ自分のスコープを加える手段としては当てにしないでください。[スコープ](/harness-engineering/scopes) を参照してください。
 
 <a id="5-distribution--install"></a>
 ## 5. 配布とインストール

@@ -23,6 +23,7 @@ name: feature
 depth: Standard
 keywords: []
 description: Default for new features, practical depth
+skeleton: on
 ---
 
 # feature scope
@@ -34,11 +35,19 @@ Prose intent: why these stages, why skip those.
 
 | フィールド | 必須 | 役割 |
 |-------|----------|--------------|
-| `name` | はい | スコープ名。ファイル名の拡張子を除いた部分と一致する必要があります（`aidlc-feature.md` → `feature`）。 |
+| `name` | はい | スコープ名。コアのファイルは `aidlc-<name>.md` を使い、プラグインのスコープファイルは `name` と等しいステムを使います。 |
 | `depth` | はい | 既定の詳細度。`Minimal`、`Standard`、`Comprehensive` のいずれかです。 |
 | `testStrategy` | いいえ | 深度と独立にテスト量を上書きします。既定では `depth` に一致します。 |
 | `keywords` | いいえ | `/aidlc <freeform text>` の自動検出に使う自然言語の引き金。空の一覧なら対象外です。 |
 | `description` | いいえ | `/aidlc --help` に表示される 1 行の説明です。（`SKILL.md` のコンパイル済みスコープ表には `Scope` / `Depth` / `TestStrategy` / `EXECUTE` / `Total` だけが出て、説明は出ません。） |
+| `skeleton` | いいえ | `on` を指定すると、プラクティスがスコープ依存の場合にワーキングスケルトンのセレモニーへオプトインします。`off` または未指定はオプトアウトです。 |
+
+ローダーはファイル間で重複するスコープ `name` の値を拒否し、エラーで両方のファイル名を示します。
+
+<a id="walking-skeleton-default"></a>
+### ワーキングスケルトンの既定値
+
+任意の `skeleton:` フィールドは、スコープ依存のワーキングスケルトンの扱いを制御します。`skeleton: on` は、チームの `## Walking Skeleton` プラクティスが `scope-dependent` に解決される場合に、このスコープでは構築フェーズがワーキングスケルトンのセレモニーで始まることを意味します。`skeleton: off` は、最初の Bolt が通常の Bolt として走ることを意味します。未指定の既定値は off です。そのため、コンポーズされたスコープや実行時に承認されたスコープ、プラグインのスコープは、明示的にオプトインしない限りスケルトンの Bolt を生み出しません。
 
 **2. 所属タグ — 各ステージの `scopes:` フロントマター。** ステージは、自分がどのスコープで走るかを `core/aidlc-common/stages/<phase>/<slug>.md` のフロントマターに書きます。
 
@@ -76,11 +85,11 @@ scopes:
 <a id="steps"></a>
 ### 手順
 
-1. **`core/scopes/aidlc-hotfix.md` を置く。** もっとも近い既存スコープである `aidlc-bugfix.md` をコピーし、フロントマターを編集します。`name: hotfix` を設定し、`depth` を選び、自由形式の自動検出に使いたい `keywords`（`[hotfix, urgent]` など）があれば加え、ヘルプ文用の `description` を書き、`depth` と異なるときだけ `testStrategy` を追加します。本文には意図を短い文章で書きます。
+1. **`core/scopes/aidlc-hotfix.md` を置く。** もっとも近い既存スコープである `aidlc-bugfix.md` をコピーし、フロントマターを編集します。`name: hotfix` を設定し、`depth` を選び、自由形式の自動検出に使いたい `keywords`（`[hotfix, urgent]` など）があれば加え、ヘルプ文用の `description` を書き、スコープ依存の構築フェーズのセレモニーの既定値として `skeleton: on|off` を設定し、`depth` と異なるときだけ `testStrategy` を追加します。本文には意図を短い文章で書きます。
 
 2. **`hotfix` で走らせたいステージにタグを付ける。** `EXECUTE` にしたい各ステージ（`core/aidlc-common/stages/<phase>/` の下）で、そのフロントマターの `scopes:` 一覧に `hotfix` を加えます。タグを付けなければそのスコープでは `SKIP` です。3 つの初期化ステージは必ず含めてください（常に走るため）。
 
-3. **再コンパイルする。** `bun .claude/tools/aidlc-graph.ts compile` を実行し、タグを `scope-grid.json` に転置します。その後、`SKILL.md` のコンパイル済みスコープ表を再生成します（`bun .claude/tools/aidlc-utility.ts scope-table` を実行し、`{/* BEGIN: compiled ... */}` / `{/* END: compiled ... */}` マーカーの間に貼り付けます）。続けて `bun .claude/tools/aidlc-graph.ts compile --check` と `bun .claude/tools/aidlc-utility.ts scope-table --check` を走らせ、差分がないことを確認します（終了コード 0）。
+3. **再コンパイルする。** `bun .claude/tools/aidlc-graph.ts compile` を実行し、タグを `scope-grid.json` に転置します。その後、`bun .claude/tools/aidlc-utility.ts scope-table` の出力から `SKILL.md` のコンパイル済みスコープ表を更新します。続けて `bun .claude/tools/aidlc-graph.ts compile --check` と `bun .claude/tools/aidlc-utility.ts scope-table --check` を走らせ、差分がないことを確認します（終了コード 0）。
 
 4. **スコープが解決され、受け入れられることを確認する。** `/aidlc --doctor` を実行します。次に、新しいスコープで初期化したときに状態ファイルの `Scope:` 行が正しいか、環境変数による既定値とワークフロー途中の `--scope` 変更の両方で受け入れられるかを確認します。
 
@@ -88,7 +97,7 @@ scopes:
 
 6. **スコープ対応のドキュメントを更新し、経路選択テストを追加する。** ドキュメントの中にはスコープを手で列挙している箇所が複数あります。ユーザーガイドのスコープリファレンスと経路選択表、カスタマイズ章の有効値一覧、オーケストレーターリファレンスのスコープとステージの対応です。これらを同じ変更で更新してください。もし新しいスコープが既存スコープにない SKIP パターンを持つなら、既存のスコープ別テストを手本にワークフローテストも追加します。
 
-7. **（任意）入力できるランナーを生成する。** スコープファイルが配置された瞬間から、そのスコープは `/aidlc --scope <name>` で完全に使えます。ランナーは必須ではありません。もし 1 語のコマンド（`/aidlc-hotfix`）が欲しければ、ランナースキルを生成します。`bun .claude/tools/aidlc-runner-gen.ts scopes --all` は、すべてのスコープファイルに対する `skills/aidlc-<scope>/SKILL.md` を出力します（あるいは生成器の `FIRST_BATCH` を編集して、厳選した一部だけを出荷しても構いません）。各ランナーは、およそ 6 行のシェルで `aidlc-orchestrate next --scope <name>` を `done` まで駆動するだけです。ランナーは、すでに実行可能なスコープをパッケージ化したものであり、スコープファイル自体が定義です。`hooks:` ブロックは持ちません。決定論的な中核処理（監査、センサー、実行時コンパイル、状態検証）はプロジェクト全体に対して `settings.json` へ登録されているため、すべてのランナーが自動継承します。スコープファイルを追加または改名したら、そのたびに生成器（または `scopes --check`）を再実行してください。
+7. **（任意）入力できるランナーを生成する。** スコープファイルが配置された瞬間から、そのスコープは `/aidlc --scope <name>` で完全に使えます。ランナーは必須ではありません。もし 1 語のコマンド（`/aidlc-hotfix`）が欲しければ、スコープのフロントマターに `runner: true` を追加して `bun .claude/tools/aidlc-runner-gen.ts scopes` を実行します。`bun .claude/tools/aidlc-runner-gen.ts scopes --all` は、そのフラグに関係なく、すべてのスコープファイルに対する `skills/aidlc-<scope>/SKILL.md` を出力します。各ランナーは、およそ 6 行のシェルで `aidlc-orchestrate next --scope <name>` を `done` まで駆動するだけです。ランナーは、すでに実行可能なスコープをパッケージ化したものであり、スコープファイル自体が定義です。`hooks:` ブロックは持ちません。決定論的な中核処理（監査、センサー、実行時コンパイル、状態検証）はプロジェクト全体に対して `settings.json` へ登録されているため、すべてのランナーが自動継承します。スコープファイルを追加または改名したら、そのたびに生成器（または `scopes --check`）を再実行してください。
 
 <a id="what-validates-automatically"></a>
 ### 自動で検証されること
