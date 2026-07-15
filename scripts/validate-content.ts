@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
@@ -8,9 +9,11 @@ import {
 	sourcePathForTranslation,
 } from "../lib/routes";
 import { validateSourceAnchors } from "../lib/source-anchors";
+import { collectTerminologyErrors } from "../lib/terminology-lint";
 import {
 	collectTranslatedDocs,
 	EXPECTED_JSON_EXAMPLES,
+	NON_TRANSLATION_PATHS,
 } from "../lib/translated-docs";
 import { collectTranslationInvariantErrors } from "../lib/translation-invariants";
 import {
@@ -18,6 +21,7 @@ import {
 	MANIFEST_RELATIVE_PATH,
 	readTranslationManifest,
 	type TranslationManifest,
+	type TranslationRecord,
 } from "../lib/translation-manifest";
 
 export interface ValidationResult {
@@ -29,6 +33,25 @@ export interface ValidateContentOptions {
 	projectRoot?: string;
 	upstreamRoot?: string;
 	manifestPath?: string;
+	/**
+	 * 上流の作業ツリーではなく、各レコードの sourceCommit 時点の原文
+	 * (`git show <sourceCommit>:<sourcePath>`)と照合する。上流 HEAD が
+	 * 記録より進んでいても全レコードの不変条件を検証できるため、CI 向け。
+	 * upstreamRoot と併用必須。
+	 */
+	atRecordedCommit?: boolean;
+}
+
+/** 記録された sourceCommit 時点の原文を上流 clone から取り出す(バイト保全のため trim しない)。 */
+function readSourceAtRecordedCommit(
+	upstreamRoot: string,
+	record: TranslationRecord,
+): string {
+	return execFileSync(
+		"git",
+		["show", `${record.sourceCommit}:${record.sourcePath}`],
+		{ cwd: upstreamRoot, encoding: "utf8", maxBuffer: 32 * 1024 * 1024 },
+	);
 }
 
 function getManifestPath(projectRoot: string, manifestPath?: string): string {
@@ -101,8 +124,8 @@ export async function validateContent(
 			);
 		}
 
-		// A frontmatter slug replaces the file-derived route; the manifest must
-		// carry the same route so SourceStatus can find the record at render time.
+		// frontmatter の slug はファイル名由来のルートを置き換える。SourceStatus が
+		// レンダリング時にレコードを引けるよう、マニフェスト側も同じルートを持つ必要がある。
 		const publicRoute = doc.frontmatter?.slug
 			? routeForTranslationPath(`docs/${doc.frontmatter.slug}.mdx`)
 			: routeForTranslationPath(doc.relativePath);
@@ -129,27 +152,49 @@ export async function validateContent(
 			);
 		}
 
-		// Upstream checks: the recorded source must exist, and a translation whose
-		// record matches the live upstream tip must satisfy the fence/URL
-		// invariants. Records lagging upstream (stale) intentionally skip them.
-		if (options.upstreamRoot && record) {
-			const sourceAbsolutePath = path.resolve(
-				options.upstreamRoot,
-				record.sourcePath,
-			);
-			if (!existsSync(sourceAbsolutePath)) {
-				errors.push(
-					`missing upstream source for recorded translation: ${record.sourcePath} (${record.translationPath})`,
-				);
-				continue;
-			}
+		// 行番号を実ファイルに一致させるため raw(frontmatter 込み)を渡す。
+		for (const error of collectTerminologyErrors(doc.relativePath, doc.raw)) {
+			pushUnique(errors, error);
+		}
 
+		// 上流照合: 既定モードは作業ツリーと比較し、レコードが上流の最新に一致する
+		// 翻訳のみフェンス/URL の不変条件を検査する(記録より進んだ上流は意図的にスキップ)。
+		// atRecordedCommit モードは記録時点の原文を git show で取り出し、
+		// 上流 HEAD の位置に関係なく全レコードを検査する。
+		if (options.upstreamRoot && record) {
 			try {
-				const sourceMarkdown = await readFile(sourceAbsolutePath, "utf8");
-				const currentHash = await computeSourceHash(sourceMarkdown);
-				if (currentHash !== record.sourceHash) {
-					continue;
+				let sourceMarkdown: string;
+
+				if (options.atRecordedCommit) {
+					sourceMarkdown = readSourceAtRecordedCommit(
+						options.upstreamRoot,
+						record,
+					);
+					const recordedHash = await computeSourceHash(sourceMarkdown);
+					if (recordedHash !== record.sourceHash) {
+						errors.push(
+							`manifest hash mismatch at recorded commit: ${record.sourcePath}@${record.sourceCommit.slice(0, 12)} does not hash to the recorded sourceHash (${record.translationPath})`,
+						);
+						continue;
+					}
+				} else {
+					const sourceAbsolutePath = path.resolve(
+						options.upstreamRoot,
+						record.sourcePath,
+					);
+					if (!existsSync(sourceAbsolutePath)) {
+						errors.push(
+							`missing upstream source for recorded translation: ${record.sourcePath} (${record.translationPath})`,
+						);
+						continue;
+					}
+					sourceMarkdown = await readFile(sourceAbsolutePath, "utf8");
+					const currentHash = await computeSourceHash(sourceMarkdown);
+					if (currentHash !== record.sourceHash) {
+						continue;
+					}
 				}
+
 				for (const error of collectTranslationInvariantErrors(
 					record.sourcePath,
 					sourceMarkdown,
@@ -164,6 +209,18 @@ export async function validateContent(
 					`unable to compare translation invariants for ${doc.relativePath}: ${message}`,
 				);
 			}
+		}
+	}
+
+	// changelog / watch-prompt などの翻訳対象外ページも表記揺れの検査だけは行う。
+	for (const relativePath of NON_TRANSLATION_PATHS) {
+		const absolutePath = path.join(projectRoot, relativePath);
+		if (!existsSync(absolutePath)) {
+			continue;
+		}
+		const raw = await readFile(absolutePath, "utf8");
+		for (const error of collectTerminologyErrors(relativePath, raw)) {
+			pushUnique(errors, error);
 		}
 	}
 
@@ -191,9 +248,16 @@ function parseCliArgs(argv: string[]): ValidateContentOptions {
 				index += 1;
 				break;
 			}
+			case "--at-recorded":
+				cliOptions.atRecordedCommit = true;
+				break;
 			default:
 				throw new Error(`Unknown argument: ${argument}`);
 		}
+	}
+
+	if (cliOptions.atRecordedCommit && !cliOptions.upstreamRoot) {
+		throw new Error("--at-recorded requires --upstream.");
 	}
 
 	return cliOptions;

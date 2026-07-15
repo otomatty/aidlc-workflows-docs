@@ -16,11 +16,11 @@ description: Use when the upstream English docs (aidlc-workflows/docs) have chan
    原文リポジトリの既定は `c:\Users\saedg\aidlc-workflows`(ユーザー指定があればそちら)。全ファイル `current` なら「更新なし」と報告して終了。
 
 2. **changed — 更新モードの判定(ファイルごと)**
-   `data/translation-manifest.json` の該当レコードから `sourceCommit` を取り、原文リポジトリで変更規模を測る:
+   手順 1 のレポートで `changed` エントリには `diffStat`(変更規模)が自動で付く。`diffStat.recommendedMode` が **`patch` → 差分パッチモード**、**`retranslate` → 全文再翻訳モード**(判定基準: churn 率 = (追加行+削除行) ÷ 原文総行数 が 50% 未満なら patch)。
+   `diffStat` が付かない場合(上流が git リポジトリでない、`sourceCommit` が clone に無い等)のみ手動で測る:
    ```
    git -C <原文リポジトリ> diff <sourceCommit> HEAD --numstat -- <sourcePath>
    ```
-   (追加行+削除行) ÷ 現在の原文総行数 が **50% 未満 → 差分パッチモード**、**50% 以上 → 全文再翻訳モード**。
 
 3. **翻訳の実行**
    - **差分パッチモード**: `git -C <原文リポジトリ> diff <sourceCommit> HEAD -- <sourcePath>` の各 hunk に対応する訳文箇所だけを更新する。hunk に対応しない箇所は 1 文字も変えない(言い回しの「ついで改善」禁止 — git diff が汚れ、レビュー不能になる)。

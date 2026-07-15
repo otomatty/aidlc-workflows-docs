@@ -35,6 +35,15 @@ jobs:
       - name: Validate content
         run: bun run validate:content
 
+      # 翻訳の不変条件(フェンス本文のバイト一致・URL 集合・日本語散文)を、
+      # マニフェストに記録された sourceCommit 時点の原文と照合して検証する。
+      # 上流 HEAD が記録より進んでいても全レコードが検査対象になる。
+      - name: Clone upstream (awslabs/aidlc-workflows v2)
+        run: git clone --branch v2 --single-branch https://github.com/awslabs/aidlc-workflows.git "$RUNNER_TEMP/aidlc-upstream"
+
+      - name: Validate translation invariants against recorded upstream
+        run: bun scripts/validate-content.ts --upstream "$RUNNER_TEMP/aidlc-upstream" --at-recorded
+
       - name: Build
         run: bun run build
 

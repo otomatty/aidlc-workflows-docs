@@ -1,4 +1,5 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { execFileSync } from "node:child_process";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
@@ -123,6 +124,44 @@ async function createValidProject(): Promise<{
 	}
 
 	return { projectRoot, upstreamRoot, manifestPath };
+}
+
+function initializeGitRepository(repositoryRoot: string): string {
+	execFileSync("git", ["init"], { cwd: repositoryRoot });
+	execFileSync("git", ["-c", "core.autocrlf=false", "add", "."], {
+		cwd: repositoryRoot,
+	});
+	execFileSync(
+		"git",
+		[
+			"-c",
+			"user.name=Validate Test",
+			"-c",
+			"user.email=validate@example.com",
+			"commit",
+			"-m",
+			"Initial upstream snapshot",
+		],
+		{ cwd: repositoryRoot },
+	);
+	return execFileSync("git", ["rev-parse", "HEAD"], {
+		cwd: repositoryRoot,
+		encoding: "utf8",
+	}).trim();
+}
+
+// マニフェストの全レコードの sourceCommit を実在するコミットへ書き換える。
+async function rewriteManifestSourceCommit(
+	manifestPath: string,
+	sourceCommit: string,
+): Promise<void> {
+	const manifest = JSON.parse(
+		await readFile(manifestPath, "utf8"),
+	) as TranslationManifest;
+	for (const record of manifest.records) {
+		record.sourceCommit = sourceCommit;
+	}
+	await writeFile(manifestPath, JSON.stringify(manifest, null, "\t"), "utf8");
 }
 
 afterEach(async () => {
@@ -256,6 +295,93 @@ describe("validateContent", () => {
 		expect(current.errors.join("\n")).toContain(
 			"raw URL set mismatch: docs/index.mdx",
 		);
+	});
+
+	it("at-recorded モードは上流 HEAD が進んでいても記録時点の原文で不変条件を検査する", async () => {
+		const { projectRoot, upstreamRoot, manifestPath } =
+			await createValidProject();
+		const recordedCommit = initializeGitRepository(upstreamRoot);
+		await rewriteManifestSourceCommit(manifestPath, recordedCommit);
+
+		// 上流が翻訳後に進んだ状態を作る(作業ツリーのみ変更。既定モードでは stale 扱い)。
+		await writeFile(
+			path.join(upstreamRoot, "docs/README.md"),
+			"# README\n\nUpstream changed after translation.\n",
+			"utf8",
+		);
+		// 記録時点の原文にあった URL を翻訳から落とす → 既定モードでは検出されない違反。
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/index.mdx"),
+			createTranslation("Index", ["# Index", "", "URL を落とした翻訳です。"]),
+		);
+
+		const workingTreeMode = await validateContent({
+			projectRoot,
+			upstreamRoot,
+			manifestPath,
+		});
+		expect(workingTreeMode).toEqual({ ok: true, errors: [] });
+
+		const atRecordedMode = await validateContent({
+			projectRoot,
+			upstreamRoot,
+			manifestPath,
+			atRecordedCommit: true,
+		});
+		expect(atRecordedMode.ok).toBe(false);
+		expect(atRecordedMode.errors.join("\n")).toContain(
+			"raw URL set mismatch: docs/index.mdx",
+		);
+	});
+
+	it("at-recorded モードは記録ハッシュと一致しない原文をマニフェスト破損として報告する", async () => {
+		const { projectRoot, upstreamRoot, manifestPath } =
+			await createValidProject();
+		const recordedCommit = initializeGitRepository(upstreamRoot);
+		await rewriteManifestSourceCommit(manifestPath, recordedCommit);
+
+		const manifest = JSON.parse(
+			await readFile(manifestPath, "utf8"),
+		) as TranslationManifest;
+		manifest.records[0].sourceHash = "0".repeat(64);
+		await writeFile(manifestPath, JSON.stringify(manifest, null, "\t"), "utf8");
+
+		const result = await validateContent({
+			projectRoot,
+			upstreamRoot,
+			manifestPath,
+			atRecordedCommit: true,
+		});
+
+		expect(result.ok).toBe(false);
+		expect(result.errors.join("\n")).toContain(
+			"manifest hash mismatch at recorded commit",
+		);
+	});
+
+	it("訳文の表記揺れを terminology drift として報告する", async () => {
+		const { projectRoot, manifestPath } = await createValidProject();
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/guide/current.mdx"),
+			createTranslation("Guide", [
+				"# Guide",
+				"",
+				"オーケストレータがサーバ環境で動く。",
+				"",
+				"```bash",
+				"echo hi",
+				"```",
+			]),
+		);
+
+		const result = await validateContent({ projectRoot, manifestPath });
+
+		expect(result.ok).toBe(false);
+		const combinedErrors = result.errors.join("\n");
+		expect(combinedErrors).toContain(
+			"「オーケストレータ」は「オーケストレーター」に統一する",
+		);
+		expect(combinedErrors).toContain("「サーバ」は「サーバー」に統一する");
 	});
 
 	it("rejects a recorded translation whose upstream source is missing", async () => {

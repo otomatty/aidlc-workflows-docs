@@ -234,6 +234,99 @@ describe("runSync", () => {
 			{ sourcePath: "docs/untranslated.md", status: "untranslated" },
 		]);
 		expect(existsSync(path.join(projectRoot, "docs/added.mdx"))).toBe(false);
+		// 上流が git リポジトリでない場合、changed でも diffStat は付かない。
+		const changedEntry = result.report.entries.find(
+			(entry) => entry.status === "changed",
+		);
+		expect(changedEntry?.diffStat).toBeUndefined();
+	});
+
+	it("changed エントリに変更規模と推奨モード(patch / retranslate)を付与する", async () => {
+		const projectRoot = await createProjectRoot();
+		const upstreamRoot = await createUpstreamRoot();
+		temporaryDirectories.push(projectRoot, upstreamRoot);
+
+		const originalLines = Array.from(
+			{ length: 10 },
+			(_, index) => `Line ${index + 1}.`,
+		);
+		const originalSource = `# Small\n\n${originalLines.join("\n")}\n`;
+
+		await writeFileEnsuringDirectory(
+			path.join(upstreamRoot, "docs/changed-small.md"),
+			originalSource,
+		);
+		await writeFileEnsuringDirectory(
+			path.join(upstreamRoot, "docs/changed-big.md"),
+			originalSource,
+		);
+		const recordedCommit = initializeGitRepository(upstreamRoot);
+
+		// 小さな追記(churn 50% 未満)→ patch、全面書き換え(50% 以上)→ retranslate。
+		await writeFileEnsuringDirectory(
+			path.join(upstreamRoot, "docs/changed-small.md"),
+			`${originalSource}Appended line.\n`,
+		);
+		await writeFileEnsuringDirectory(
+			path.join(upstreamRoot, "docs/changed-big.md"),
+			"# Rewritten\n\nEntirely new content.\n",
+		);
+
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/changed-small.mdx"),
+			createTranslation("Small"),
+		);
+		await writeFileEnsuringDirectory(
+			path.join(projectRoot, "docs/changed-big.mdx"),
+			createTranslation("Big"),
+		);
+
+		const originalHash = await computeSourceHash(originalSource);
+		const manifestPath = await writeManifest(projectRoot, {
+			records: [
+				{
+					sourcePath: "docs/changed-small.md",
+					translationPath: "docs/changed-small.mdx",
+					sourceCommit: recordedCommit,
+					sourceHash: originalHash,
+				},
+				{
+					sourcePath: "docs/changed-big.md",
+					translationPath: "docs/changed-big.mdx",
+					sourceCommit: recordedCommit,
+					sourceHash: originalHash,
+				},
+			],
+		});
+
+		const result = await runSync({
+			upstreamRoot,
+			projectRoot,
+			manifestPath,
+			format: "text",
+		});
+		const entriesBySourcePath = new Map(
+			result.report.entries.map((entry) => [entry.sourcePath, entry]),
+		);
+
+		const smallEntry = entriesBySourcePath.get("docs/changed-small.md");
+		expect(smallEntry?.status).toBe("changed");
+		expect(smallEntry?.diffStat).toMatchObject({
+			addedLines: 1,
+			deletedLines: 0,
+			sourceLines: 13,
+			recommendedMode: "patch",
+		});
+
+		const bigEntry = entriesBySourcePath.get("docs/changed-big.md");
+		expect(bigEntry?.status).toBe("changed");
+		expect(bigEntry?.diffStat?.recommendedMode).toBe("retranslate");
+		expect(bigEntry?.diffStat?.churnRatio).toBeGreaterThanOrEqual(0.5);
+
+		expect(result.output).toContain(
+			"changed docs/changed-small.md (churn 8%, mode=patch)",
+		);
+		expect(result.output).toContain("mode=retranslate");
 	});
 
 	it("rejects record mode when the upstream docs tree is dirty", async () => {
