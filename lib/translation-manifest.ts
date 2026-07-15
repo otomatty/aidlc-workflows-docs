@@ -38,6 +38,26 @@ export type SyncStatus = (typeof SYNC_STATUSES)[number];
 export type TranslationRecord = z.infer<typeof translationRecordSchema>;
 export type TranslationManifest = z.infer<typeof translationManifestSchema>;
 
+/** changed ページの更新モード。churn 率 50% 未満なら差分パッチ、以上なら全文再翻訳。 */
+export type TranslationUpdateMode = "patch" | "retranslate";
+
+/**
+ * changed ページの変更規模。記録済み sourceCommit と現在の原文の diff から算出する。
+ * 上流が git リポジトリでない場合や sourceCommit が clone に無い場合は付与されない。
+ */
+export interface SyncDiffStat {
+	/** 追加行数(git diff --numstat) */
+	addedLines: number;
+	/** 削除行数(git diff --numstat) */
+	deletedLines: number;
+	/** 現在の原文の総行数 */
+	sourceLines: number;
+	/** (追加行 + 削除行) ÷ 原文総行数。0〜1 に丸めない生の比率 */
+	churnRatio: number;
+	/** 推奨される更新モード */
+	recommendedMode: TranslationUpdateMode;
+}
+
 export interface SyncEntry {
 	sourcePath: string;
 	status: SyncStatus;
@@ -45,6 +65,8 @@ export interface SyncEntry {
 	recordedHash?: string;
 	currentHash?: string;
 	sourceCommit?: string;
+	/** status が changed の場合のみ、算出できたときに付く */
+	diffStat?: SyncDiffStat;
 }
 
 export interface SyncReport {

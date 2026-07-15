@@ -10,12 +10,17 @@ import {
 	computeSourceHash,
 	formatSyncStatus,
 	MANIFEST_RELATIVE_PATH,
+	normalizeLineEndings,
 	readTranslationManifest,
+	type SyncDiffStat,
 	type SyncReport,
 	serializeTranslationManifest,
 	type TranslationManifest,
 	type TranslationRecord,
 } from "../lib/translation-manifest";
+
+/** 差分パッチモードを推奨する churn 率の上限(これ以上は全文再翻訳を推奨) */
+const RETRANSLATE_CHURN_THRESHOLD = 0.5;
 
 type OutputFormat = "text" | "json";
 
@@ -25,11 +30,10 @@ export interface RunSyncOptions {
 	manifestPath?: string;
 	record?: boolean;
 	/**
-	 * Translation paths (e.g. `docs/guide/01-getting-started.mdx`) whose records
-	 * should be re-blessed at the current upstream HEAD. Without explicit paths,
-	 * `--record` only adds records for new translations and fails when an
-	 * existing record no longer matches upstream — so an updated source can't be
-	 * silently marked translated.
+	 * 上流 HEAD で再記録(re-bless)する翻訳パス(例: `docs/guide/01-getting-started.mdx`)。
+	 * パスを明示しない `--record` は新規翻訳のレコード追加のみを行い、既存レコードが
+	 * 上流と一致しない場合は失敗する — 更新された原文が黙って「翻訳済み」に
+	 * ならないようにするためのガード。
 	 */
 	recordPaths?: string[];
 	format?: OutputFormat;
@@ -64,6 +68,51 @@ function ensureCleanUpstreamDocsTree(upstreamRoot: string): void {
 	}
 }
 
+function countLines(content: string): number {
+	const normalized = normalizeLineEndings(content);
+	const lineCount = normalized.split("\n").length;
+	return normalized.endsWith("\n") ? lineCount - 1 : lineCount;
+}
+
+/**
+ * 記録済み sourceCommit と現在の原文(作業ツリー)の diff から変更規模を算出する。
+ * 上流が git リポジトリでない・sourceCommit が clone に存在しない等の場合は
+ * undefined を返し、同期レポート自体は成立させる。
+ */
+async function computeDiffStat(
+	upstreamRoot: string,
+	sourceCommit: string,
+	sourcePath: string,
+): Promise<SyncDiffStat | undefined> {
+	try {
+		const numstatOutput = runGit(upstreamRoot, [
+			"diff",
+			sourceCommit,
+			"--numstat",
+			"--",
+			sourcePath,
+		]);
+		const numstatMatch = numstatOutput.match(/^(\d+)\t(\d+)\t/);
+		const addedLines = numstatMatch ? Number(numstatMatch[1]) : 0;
+		const deletedLines = numstatMatch ? Number(numstatMatch[2]) : 0;
+		const sourceLines = countLines(
+			await readFile(path.resolve(upstreamRoot, sourcePath), "utf8"),
+		);
+		const churnRatio = (addedLines + deletedLines) / Math.max(sourceLines, 1);
+
+		return {
+			addedLines,
+			deletedLines,
+			sourceLines,
+			churnRatio,
+			recommendedMode:
+				churnRatio < RETRANSLATE_CHURN_THRESHOLD ? "patch" : "retranslate",
+		};
+	} catch {
+		return undefined;
+	}
+}
+
 async function buildRecordedManifest(
 	projectRoot: string,
 	upstreamRoot: string,
@@ -93,9 +142,8 @@ async function buildRecordedManifest(
 		}
 
 		const existingRecord = manifestByTranslationPath.get(doc.relativePath);
-		// The manifest is authoritative for sourcePath (upstream filenames don't
-		// always mirror the translation); the structural mirror only seeds new
-		// records.
+		// sourcePath の真実源はマニフェスト(上流ファイル名は翻訳と常にミラーとは
+		// 限らない)。構造ミラーによる導出は新規レコードの初期値にのみ使う。
 		const sourcePath =
 			existingRecord?.sourcePath ?? sourcePathForTranslation(doc.relativePath);
 		const sourceAbsolutePath = path.resolve(upstreamRoot, sourcePath);
@@ -170,10 +218,32 @@ function formatTextReport(report: SyncReport): string {
 	];
 
 	for (const entry of report.entries) {
-		lines.push(`${formatSyncStatus(entry.status)} ${entry.sourcePath}`);
+		const diffStatSuffix = entry.diffStat
+			? ` (churn ${Math.round(entry.diffStat.churnRatio * 100)}%, mode=${entry.diffStat.recommendedMode})`
+			: "";
+		lines.push(
+			`${formatSyncStatus(entry.status)} ${entry.sourcePath}${diffStatSuffix}`,
+		);
 	}
 
 	return `${lines.join("\n")}\n`;
+}
+
+/** changed エントリに変更規模(diffStat)を付与する。算出できないものはそのまま。 */
+async function attachDiffStats(
+	report: SyncReport,
+	upstreamRoot: string,
+): Promise<void> {
+	for (const entry of report.entries) {
+		if (entry.status !== "changed" || !entry.sourceCommit) {
+			continue;
+		}
+		entry.diffStat = await computeDiffStat(
+			upstreamRoot,
+			entry.sourceCommit,
+			entry.sourcePath,
+		);
+	}
 }
 
 export async function runSync(options: RunSyncOptions): Promise<RunSyncResult> {
@@ -202,6 +272,7 @@ export async function runSync(options: RunSyncOptions): Promise<RunSyncResult> {
 		recordedManifest ?? manifest,
 		{ projectRoot },
 	);
+	await attachDiffStats(report, upstreamRoot);
 	let manifestUpdated = false;
 
 	if (recordedManifest) {

@@ -26,10 +26,16 @@ bun run sync -- --upstream "../../aidlc-workflows"
 | `bun run dev` | Blume 開発サーバー |
 | `bun run check` | lint → unit test → content validation → build |
 | `bun run test:e2e` | Playwright（内部で build + preview） |
-| `bun run sync -- --upstream <path>` | 上流との差分レポート（追加 / 変更 / 削除 / 未翻訳 / current） |
+| `bun run sync -- --upstream <path>` | 上流との差分レポート（追加 / 変更 / 削除 / 未翻訳 / current。changed には変更規模と推奨モード patch / retranslate が付く） |
 | `bun run sync -- --upstream <path> --record [docs/…​.mdx]` | 翻訳をマニフェストへ記録（引数なしは新規のみ、既存の更新は対象パスを明示） |
 
-内部リンク・アンカー切れは `bun run build`（Blume のリンク検証）が検出します。
+内部リンク・アンカー切れは `bun run build`（Blume のリンク検証）が検出します。訳語の表記揺れ（「オーケストレータ」「サーバ」など長音符の欠落）は `bun run validate:content` が検出します。
+
+翻訳の不変条件（フェンス本文のバイト一致・URL 集合・日本語散文）は、`--upstream` に加えて `--at-recorded` を渡すとマニフェスト記録時点の原文（`git show <sourceCommit>:<sourcePath>`）と照合されます。CI はこのモードで上流 v2 を clone して全レコードを検証します。
+
+```bash
+bun scripts/validate-content.ts --upstream <path> --at-recorded
+```
 
 ## 翻訳ルール
 
