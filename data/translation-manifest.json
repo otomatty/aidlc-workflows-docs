@@ -316,8 +316,8 @@
 		{
 			"sourcePath": "docs/reference/04-stage-protocol.md",
 			"translationPath": "docs/reference/04-stage-protocol.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "b772db9b9c7acd015c53885cc6882bccbf30e6de720459d970040f7818538a86"
+			"sourceCommit": "ccc3b88e062d8f97a59ac878ac80669326083674",
+			"sourceHash": "c49651c39548abac5b920a2f572020f873b01199d537ec23eea71e75ca506c62"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/construction.md",
@@ -394,8 +394,8 @@
 		{
 			"sourcePath": "docs/reference/12-state-machine.md",
 			"translationPath": "docs/reference/12-state-machine.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "99bb1c9a1907003a114afa17b9ce7ced632a66e80802ed3bebe7b4db6f06a523"
+			"sourceCommit": "ccc3b88e062d8f97a59ac878ac80669326083674",
+			"sourceHash": "77b6044cf270d2ae784677ca6ad2c69415a2c1a1fb26e6cc201beb15ab45cb2c"
 		},
 		{
 			"sourcePath": "docs/reference/13-runtime-graph.md",
