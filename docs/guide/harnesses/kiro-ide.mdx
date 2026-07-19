@@ -32,7 +32,7 @@ cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have 
 
 `your-project/` を Kiro IDE で開きます。このインストールには次が含まれます。
 
-- `.kiro/settings/cli.json` と `chat.defaultAgent: "aidlc"`。そのため AI-DLC のコンダクターエージェントが既定で有効になり、`/aidlc` がそのまま使えます。
+- `.kiro/skills/aidlc/SKILL.md` - `/aidlc` を呼び出したときに読み込まれるコンダクターです。同梱の `.kiro/settings/cli.json` と agent-v1 JSON ファイルは CLI 専用の互換サーフェスであり、IDE の既定エージェントを選択するものではありません。
 - `.kiro/hooks/*.kiro.hook` - IDE ネイティブのフック形式で登録されるフレームワークフックです。IDE の Agent Hooks パネルに表示されます。
 
 チャットパネルで `/aidlc --doctor` を実行してセットアップを確認し、その後 `/aidlc <description>` でワークフローを開始します。
@@ -91,9 +91,9 @@ IDE はフックの文脈を **環境変数 `USER_PROMPT`** で渡します（st
 <a id="for-framework-developers"></a>
 ## フレームワーク開発者向け
 
-`dist/kiro-ide` は `core/` と `harness/kiro-ide/` から `bun scripts/package.ts kiro-ide` で **生成** されます（コアの複製に対して `{{HARNESS_DIR}}` トークンを `.kiro` に置換し、`rules/` を `steering/` へ改名します）。`bun scripts/package.ts --check` は差分監視であり、CI で実行されます。手書きの Kiro IDE 側ソースは `harness/kiro-ide/` にあり、オーケストレータースキル（`skills/aidlc/`）、エージェント JSON 群（`agents/`）、フックアダプターと `.kiro.hook` ファイル（`hooks/`）、`settings/cli.json`、`AGENTS.md` を含みます。編集するのはそれら（または `core/`）であり、生成物の `dist/kiro-ide` ではありません。
+`dist/kiro-ide` は `core/` と `harness/kiro-ide/` から `bun scripts/package.ts kiro-ide` で **生成** されます（コアの複製に対して `{{HARNESS_DIR}}` トークンを `.kiro` に置換し、`rules/` を `steering/` へ改名します）。`bun scripts/package.ts --check` は差分監視であり、CI で実行されます。手書きの Kiro IDE 側ソースは `harness/kiro-ide/` にあり、オーケストレータースキル（`skills/aidlc/`）、CLI 互換のエージェント JSON 群（`agents/`）、フックアダプターと `.kiro.hook` ファイル（`hooks/`）、CLI 専用の `settings/cli.json`、`AGENTS.md` を含みます。編集するのはそれら（または `core/`）であり、生成物の `dist/kiro-ide` ではありません。
 
-IDE ハーネスが CLI ハーネス（`harness/kiro/`）と異なるのは 3 点です。`.kiro.hook` ファイルを同梱すること（CLI はエージェント JSON の `hooks` ブロックに依存し、IDE はそれを無視します）、`aidlc.json` から使われない `hooks` ブロックを省くこと、そして委譲先エージェントの `.md` ファイルに `tools:` フロントマター許可をマニフェストが注入することです（`frontmatterAdditions`）。IDE は委譲先サブエージェントのツールを agent-v1 JSON ではなく `.md` フロントマターから解決するため、この許可がないと IDE 側の委譲先エージェントはツールを持たないまま実行されます。なお、このフロントマター許可は無制限であり（IDE には `allowedCommands` / `allowedPaths` 相当がないため）、CLI の JSON サンドボックスより広い許可になります。詳細は [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) を参照してください。
+IDE ハーネスが CLI ハーネス（`harness/kiro/`）と異なるのは 3 点です。コンダクターが `settings/cli.json` で選択されるエージェントではなく `/aidlc` スキルであること、`.kiro.hook` ファイルを同梱すること（CLI はエージェント JSON の `hooks` ブロックに依存し、IDE はそれを無視します）、そして委譲先エージェントの `.md` ファイルに `tools:` フロントマター許可をマニフェストが注入することです（`frontmatterAdditions`）。IDE は委譲先サブエージェントのツールを agent-v1 JSON ではなく `.md` フロントマターから解決するため、この許可がないと IDE 側の委譲先エージェントはツールを持たないまま実行されます。なお、このフロントマター許可は無制限であり（IDE には `allowedCommands` / `allowedPaths` 相当がないため）、CLI の JSON サンドボックスより広い許可になります。詳細は [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) を参照してください。
 
 <a id="next-steps"></a>
 ## 次のステップ

@@ -15,7 +15,7 @@ describe("content coverage", () => {
 		const docs = await collectTranslatedDocs(projectRoot);
 
 		expect(manifest.records).toHaveLength(docs.length);
-		expect(manifest.records).toHaveLength(89);
+		expect(manifest.records).toHaveLength(90);
 		expect(EXPECTED_JSON_EXAMPLES).toHaveLength(3);
 
 		const translationPaths = new Set(docs.map((doc) => doc.relativePath));

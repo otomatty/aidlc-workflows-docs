@@ -1,0 +1,62 @@
+---
+title: opencode での AI-DLC
+description: opencode ハーネス向けの分割レイアウト（.aidlc/ と .opencode/）、アダプタープラグイン、他ハーネスとの差分を説明します。
+---
+`dist/opencode/` は、このフレームワークが出荷するハーネス配布物の 1 つであり、オープンソースの **opencode** ハーネス（opencode.ai）向けです。1 つの決定論的なコアを複数のハーネスへ展開します。エンジン、状態機械、監査ログ、グラフ、スウォーム審判、学習用ゲートはどの配布物でもバイト単位で同一であり、異なるのはシェルだけです。このツリーは `core/` と `harness/opencode/` から `bun scripts/package.ts opencode` で **生成** されます。手作業で編集してはいけません（差分監視により CI が失敗します）。
+
+<a id="layout-two-dot-dirs-on-purpose"></a>
+## レイアウト: 2 つのドットディレクトリは意図的な分割
+
+opencode は `.opencode/tools/` と `.opencode/tool/` 配下のすべての `*.ts` をカスタムツール定義として自動インポートします。CLI 形式のエンジンスクリプト（トップレベルのディスパッチ、`process.exit`）をインポートするとセッションがクラッシュします（opencode 1.17.18 で実際に再現済み）。そのため、この配布物は次のように分割されています。
+
+- **`.aidlc/`** - AIDLC エンジンツリー（tools、hooks、skills、agents、knowledge、scopes、sensors、aidlc-common）。opencode はここをスキャンしません。同梱の `opencode.json` が `skills.paths: [".aidlc/skills"]` を登録するため、オーケストレータースキルとすべての生成ランナーはここから発見されます。
+- **`.opencode/`** - ネイティブに消費されるサーフェスのみ: 14 のペルソナサブエージェント（`agents/*.md`、`mode: subagent`）、`/aidlc` コマンド（`command/aidlc.md`）、フックアダプタープラグイン（`plugin/aidlc-opencode-adapter.ts`、opencode が自動発見）。
+
+<a id="prerequisites"></a>
+## 前提条件
+
+- **opencode ≥ 1.17** - このインストールが依存するプラグインフックサーフェス（`tool.execute.before`、`tool.execute.after`、`chat.message`、`session.idle`、`experimental.session.compacting`）と、プロジェクトローカルのスキル／エージェント発見のためです。`opencode --version` で確認してください。
+- **bun** - 他のすべてのハーネスと同じ要件です。すべてのツールとフックは bun 経由で実行されます。アダプタープラグインは bun を `PATH` から解決し、無ければ `~/.bun/bin/bun` を使います。
+- **モデルプロバイダー** - 同梱のプロジェクト `opencode.json` はセッションモデルを固定しません。グローバルの opencode 設定がモデルを供給します。ティア付きペルソナは `amazon-bedrock/global.anthropic.claude-sonnet-4-6` を固定します。プロバイダーが異なる場合は、プロジェクトの `opencode.json` でエージェントごとに上書きしてください。
+
+<a id="install"></a>
+## インストール
+
+1. 配布物をプロジェクトへコピーします。
+
+   ```bash
+   cp -r dist/opencode/.aidlc/    your-project/.aidlc/
+   cp -r dist/opencode/.opencode/ your-project/.opencode/
+   cp -r dist/opencode/aidlc/     your-project/aidlc/      # the workspace shell — a sibling of .aidlc/, not inside it
+   cp dist/opencode/opencode.json your-project/opencode.json  # or merge into yours
+   cp dist/opencode/AGENTS.md     your-project/AGENTS.md      # or merge into yours
+   ```
+
+   `opencode.json` には重要な 3 つのブロックがあります: `skills.paths`（`.aidlc/skills` からのスキル発見）、`instructions`（メソッドツリーのインクルード。`/aidlc space <name>` がこれを付け替えます）、そして AIDLC の bash エントリポイントと `.aidlc/tools/`・`.aidlc/hooks/` 配下の編集に対する権限ルールです。既存の `opencode.json` または `opencode.jsonc` にマージする場合は、3 つとも維持してください。権限境界はアダプターが強制します: 対象はパッケージ済みツリーから埋め込まれたエントリポイントであり、チェーン・リダイレクト・展開・コマンド置換なしの単一の直接コマンドとして呼び出される必要があります。エンジンコードの編集は承認を求めるプロンプトになります。
+
+2. ワークフローを始める **前に**、同梱 `AGENTS.md` の「Git Integration」節にある `.gitignore` 設定を適用してください（クローンごとの監査シャードは意図的にコミットされます。カーソルとマシン固有の実行時状態は無視したままにします）。
+
+3. プロジェクトで opencode を起動し、`/aidlc --doctor` を実行してから、`/aidlc` に続けて作りたいものを記述します。
+
+<a id="whats-different-on-this-harness"></a>
+## このハーネスでの差分
+
+- **質問は番号付き文章の選択肢として表示されます**（構造化された質問ウィジェットはありません）。`[Answer]:` タグ付きの質問 FILE が引き続き信頼できる情報源です。
+- **フックはアダプタープラグイン経由で動きます。** opencode には hooks.json や settings によるフックレジストリがありません。`.opencode/plugin/aidlc-opencode-adapter.ts` が opencode のプラグインフックモーメントを `.aidlc/hooks/` のコアフック本体（bun サブプロセスとして実行）へ写像します: ツール実行前のレビュアー読み取りスコープと AIDLC bash 境界、write/edit/apply_patch での監査+センサー、bash でのランタイム再コンパイル、todowrite でのステータスライン同期、task でのサブエージェント記録、人間のターンごとのプレゼンス発行、コンパクション前の状態検証です。
+- **転送ループの強制は advisory（勧告的）です。** Stop の継ぎ目は `session.idle` イベントで、ブロッキングではなくリアクティブです。コアの stop フックが `block` と答えると、プラグインはナッジプロンプトを注入してループを再係合します（センチネル付きなので人間プレゼンスを発行することはありません）。チャット中または一時停止中の人間は、フックの対話上限によって解放されます。
+- **ペルソナはネイティブサブエージェントです**（`mode: subagent`）。指揮者はほとんどのステージでインラインにペルソナを採用し、2 つのサブエージェントステージ（2.1 リバースエンジニアリング、3.5 コード生成）では `task` ツールで委譲します。ネイティブの権限マップが `task` を拒否するため、委譲されたエージェントが再委譲することはできません。プラグイン合成は、プラグインペルソナについても同じ `.opencode/agents/` の対を生成します。
+- **スペース切り替えは JSONC を保持します。** `/aidlc space <name>` は `opencode.json` と `opencode.jsonc` のどちらでもメソッド glob を更新し、コメントや末尾カンマを除去せず、明示的なペルソナメモリパスも整合させます。
+- **構築スウォームは task ツールのファンアウトとしてのみ動きます**（`AIDLC_USE_SWARM=1` は明示的な no-op です - Workflow ツールが存在しません）。
+- **セッション終了のモーメントがありません** - `SESSION_ENDED` 監査イベントは発行されません。コンパクション前の検証は発火 **します**（`experimental.session.compacting`）。
+- **ステータスライン／ウェルカムメッセージはありません** - `/aidlc --status` とゲートでの進捗行を使ってください。
+- **MCP サーバー**: 何も同梱されません。必要であれば `opencode.json` の `mcp:` 配下に自分で設定してください。
+
+<a id="verifying-an-install"></a>
+## インストールの検証
+
+```bash
+bun .aidlc/tools/aidlc-utility.ts doctor    # all checks pass on a fresh copy
+opencode run --command aidlc -- "--status"  # /aidlc --status through the harness
+```
+
+doctor の opencode 固有チェック: アダプタープラグインが `.opencode/plugin/` に存在すること、プロジェクトルートに `opencode.json` または `opencode.jsonc` が存在すること、`.opencode/command/aidlc.md` が存在することです。

@@ -76,8 +76,8 @@
 		{
 			"sourcePath": "docs/guide/12-cli-commands.md",
 			"translationPath": "docs/guide/12-cli-commands.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "c9fe233ee17b9edc3fb4fd67dd04a0c1b5da04e9f3c05a5aa9c89a824e9bb769"
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "df78ebc2295e0f1ab1e300eff69488472c3fa55150da9fea69ddd63cf2ed1b3d"
 		},
 		{
 			"sourcePath": "docs/guide/13-customization.md",
@@ -152,6 +152,12 @@
 			"sourceHash": "7a74c92539f05f2d01491a576c222b27b70bf9acd6857ff9e00ddfa6b7d101ff"
 		},
 		{
+			"sourcePath": "docs/guide/agents/README.md",
+			"translationPath": "docs/guide/agents/index.mdx",
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "8dfb248bf88c427a10f332c6180b40a2a9a21eaf9ee4e08f8fea2453aeec01cd"
+		},
+		{
 			"sourcePath": "docs/guide/agents/operations-agent.md",
 			"translationPath": "docs/guide/agents/operations-agent.mdx",
 			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
@@ -176,12 +182,6 @@
 			"sourceHash": "472acae1361d3437cea0b889ab9b4f33b266556063fed1194b291c62fd565dbb"
 		},
 		{
-			"sourcePath": "docs/guide/agents/README.md",
-			"translationPath": "docs/guide/agents/index.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "7d17e6071e86ca3acdc27d4585f02795578b5698dfae7ff6a995e033024f14ff"
-		},
-		{
 			"sourcePath": "docs/guide/glossary.md",
 			"translationPath": "docs/guide/glossary.mdx",
 			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
@@ -190,8 +190,14 @@
 		{
 			"sourcePath": "docs/guide/harnesses/codex-cli.md",
 			"translationPath": "docs/guide/harnesses/codex-cli.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "ec50d42bbb22e186a7b731558d558b2fcc359a6cb6cd9f16c13d0ea4f421783e"
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "6fc694ce501fdc1bfed26af11a5034171525e70e3d0bc102424ac3337b25ef28"
+		},
+		{
+			"sourcePath": "docs/guide/harnesses/README.md",
+			"translationPath": "docs/guide/harnesses/index.mdx",
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "caea2340a392886cce7d03b72b0d42355a2625d9de6fa9f6a4335cbd3caabd0f"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-cli.md",
@@ -202,14 +208,14 @@
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-ide.md",
 			"translationPath": "docs/guide/harnesses/kiro-ide.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "3db87bb0c1260eb2e00dae7ad73b5fc3ce0ca3048e2450316dbb7f3ad0bf845a"
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "864e71eb1ce7fb17374d9b414e6d8ae22a3ee67b5a084d00f62dfb70c3dd01a8"
 		},
 		{
-			"sourcePath": "docs/guide/harnesses/README.md",
-			"translationPath": "docs/guide/harnesses/index.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "47705ff201b34d9e3b596cb47b2608a048aee02ddcdd0c5c9b2cf64f29e4e86d"
+			"sourcePath": "docs/guide/harnesses/opencode.md",
+			"translationPath": "docs/guide/harnesses/opencode.mdx",
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "328b5a1c28026870c96d61cea1b7b641641c49fbb07dabc593037f990afcdf06"
 		},
 		{
 			"sourcePath": "docs/guide/workshop-mode.md",
@@ -476,6 +482,12 @@
 			"sourceHash": "55eebb47d585bf1acb94a87ffefaa3cf0161cfa8649a82eabb3ab6359511fdef"
 		},
 		{
+			"sourcePath": "docs/reference/agents/README.md",
+			"translationPath": "docs/reference/agents/index.mdx",
+			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
+			"sourceHash": "9d70f2928e9df0355221dfa9ad1603bd2d105999c608428dd9850e43c7423dc6"
+		},
+		{
 			"sourcePath": "docs/reference/agents/operations-agent.md",
 			"translationPath": "docs/reference/agents/operations-agent.mdx",
 			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
@@ -498,12 +510,6 @@
 			"translationPath": "docs/reference/agents/quality-agent.mdx",
 			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
 			"sourceHash": "5a36c118b26e23b69c70db4144257aa3239d69bccff476cf1cc3057a4ee13aae"
-		},
-		{
-			"sourcePath": "docs/reference/agents/README.md",
-			"translationPath": "docs/reference/agents/index.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "9d70f2928e9df0355221dfa9ad1603bd2d105999c608428dd9850e43c7423dc6"
 		},
 		{
 			"sourcePath": "docs/reference/diagrams.md",

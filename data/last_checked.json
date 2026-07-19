@@ -1,8 +1,8 @@
 {
-  "branch": "v2",
-  "last_checked_commit_sha": "ccc3b88e062d8f97a59ac878ac80669326083674",
-  "last_checked_commit_date": "2026-07-16 19:20:42 +1000",
-  "last_checked_commit_message": "fix: count codekb-stage gate revisions + unpin environment-dependent test values (2.3.11) (#573)",
-  "checked_at": "2026-07-16",
-  "site_version": "2.4.1"
+	"branch": "v2",
+	"last_checked_commit_sha": "cf48b73ee647c25611f23971ae602875fb7b5430",
+	"last_checked_commit_date": "2026-07-18 17:21:04 +1000",
+	"last_checked_commit_message": "feat: opencode harness support (2.4.6) (#571)",
+	"checked_at": "2026-07-19",
+	"site_version": "2.4.6"
 }

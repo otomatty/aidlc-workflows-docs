@@ -27,13 +27,22 @@ description: Codex CLI ハーネス向けの前提条件、インストール手
 
 2. 同梱 `AGENTS.md` の「Git Integration」節にある `.gitignore` 設定を、ワークフローを始める **前に** 適用してください。各インテントの `audit/` 配下にあるクローンごとの監査シャードは意図的にコミットされます（各クローンが自分自身の `<host>-<clone>.md` へ書き込むため、並行追記でも Git 競合しません）。一方で、利用者ごとのカーソル情報やマシン固有の実行時状態は無視したままにします。
 
-3. プロジェクトを信頼済みにし、フック信頼設定を事前投入します。Codex は未信頼のフックを実行しません（`--dangerously-bypass-hook-trust` フラグでも実行されません）。対話的な TUI セッションを 1 回起動してフックのダイアログで "Trust all and continue" を選ぶか、決定論的に事前投入してください。
+3. プロジェクトを信頼済みにし、フック信頼設定を事前投入します。Codex は未信頼のフックを実行しません（`--dangerously-bypass-hook-trust` フラグでも実行されません）。対話的な TUI セッションを 1 回起動してフックのダイアログで "Trust all and continue" を選ぶか、AI-DLC のソースチェックアウトから決定論的に事前投入してください。固定バージョンの開発依存を一度インストールしてから、設定行を生成します。
 
    ```bash
-   bun scripts/package.ts codex trust --project /abs/path/to/your-project
+   bun install --frozen-lockfile
+   bun scripts/package.ts codex trust --project "/abs/path/to/your project"
    ```
 
-   これは `$CODEX_HOME/config.toml` に貼り付け可能な `[hooks.state]` の設定行を出力します（ハッシュはパスではなくフックの同一性を対象に計算されるため、出力される設定行は同梱 `hooks.json` に対して正確です）。
+   このコマンドは `$CODEX_HOME/config.toml` に貼り付け可能な `[hooks.state]` の設定行を出力します（ハッシュはパスではなくフックの同一性を対象に計算されるため、出力される設定行は同梱 `hooks.json` に対して正確です）。出力全体は TOML としてシリアライズされるため、引用符付きパス、スペース、Windows のバックスラッシュはそのまま保持されます。フックマニフェストが `<project>/.codex/hooks.json` に無い場合は、その正確なパスを明示的に渡してください。
+
+   ```bash
+   bun scripts/package.ts codex trust \
+     --project "/abs/path/to/your project" \
+     --hooks-json "/abs/custom path/hooks.json"
+   ```
+
+   シェルでは両方の引数を引用符で囲みます。`--hooks-json` は Codex の信頼アイデンティティとしてそのまま使われます。設定行の生成後に正規化や置き換えをしてはいけません。コマンドの標準出力全体をユーザー設定へ貼り付けてください。同じ `hooks.json` パスのエントリが既に存在する場合はそのセット全体を置き換えます。2 つ目のコピーを追記してはいけません。TOML テーブルの重複は設定全体を無効にします。
 
 4. 同梱 `.codex/config.toml` を `~/.codex/config.toml` にマージします（またはプロジェクト単位に置いたままでも構いません。信頼済みプロジェクトはそれを読み取ります）。次で確認してください。
 
