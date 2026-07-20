@@ -1,0 +1,165 @@
+---
+title: 監査ログのアーカイブ手順
+description: aidlc-workflows v2 の append-only 監査シャードが肥大化したときの手動アーカイブ手順です。
+---
+aidlc-workflows v2 の監査シャード（`audit/<host>-<clone>.md`）は **append-only** のため、運用に伴い肥大化します。これは設計どおりであり、サイズ管理は **手動アーカイブ** で行います（自動ローテーションはありません）。
+
+このページは上流トラブルシューティング節の運用向け拡充です（上流ドキュメントの直訳ではありません。[変更履歴](/changelog) と同じサイト独自ページです）。
+
+上流の説明: [Troubleshooting — Audit Log Growing Too Large](https://github.com/awslabs/aidlc-workflows/blob/v2/docs/guide/15-troubleshooting.md#audit-log-growing-too-large)  
+サイト内の要約: [トラブルシューティング — 監査ログが大きくなりすぎる](/guide/troubleshooting#audit-log-growing-too-large)  
+関連: [状態管理と監査証跡](/guide/state-and-audit)
+
+---
+
+<a id="design-premises"></a>
+## 前提（設計の要点）
+
+| 項目 | 内容 |
+|---|---|
+| 置き場所 | `<record>/audit/<host>-<clone>.md` |
+| 書き込み | 追記のみ。上書き・truncate・要約削除は禁止 |
+| 経路選択 | エンジンは `aidlc-state.md` のみ参照。`audit/` は読まない |
+| Git | `audit/` と `audit-archive/` はコミット対象（gitignore しない） |
+| 主な肥大要因 | `SENSOR_*`・`ARTIFACT_*` などフック由来イベント |
+
+`<record>` はインテントの記録ディレクトリです。
+
+```text
+aidlc/spaces/<space>/intents/<YYMMDD>-<label>/
+```
+
+例: `aidlc/spaces/default/intents/260719-tb-lxp-mvp/`（`<space>` は通常 `default`）。
+
+---
+
+<a id="when-to-archive"></a>
+## いつアーカイブするか
+
+次のいずれかを目安にします。
+
+- シャードが数千行〜数万行、またはおおよそ 1MB 超
+- コミット diff が監査追記だけで読みにくくなった
+- コンストラクションでセンサー / 成果物書き込みが続いたあと
+
+厳密なしきい値は上流にありません。チーム運用で決めてよいです。
+
+---
+
+<a id="procedure"></a>
+## 手順
+
+`/aidlc` 実行中・フックによる連続書き込み中は避けてください。
+
+<a id="step-1-identify-shard"></a>
+### 1. 対象シャードを確認
+
+```bash
+RECORD="aidlc/spaces/default/intents/<YYMMDD>-<label>"
+cd "$RECORD"
+ls -la audit/
+wc -l -c audit/*.md
+```
+
+ファイル名はクローンごとに異なります（`<hostname>-<clone-id>.md`）。自分のマシンのシャードだけ動かしてください。
+
+<a id="step-2-move-to-archive"></a>
+### 2. アーカイブ先へ退避
+
+宛先が既にあると同名 `mv` で上書きされるため、**存在チェックを先に行い**、衝突したらサフィックスを変えます（月だけでなく日や連番でも可）。
+
+```bash
+mkdir -p audit-archive
+HOST_CLONE="<host>-<clone>"
+DEST="audit-archive/${HOST_CLONE}-YYYY-MM.md"
+test ! -e "$DEST" || { echo "exists: $DEST — use a unique suffix"; exit 1; }
+mv "audit/${HOST_CLONE}.md" "$DEST"
+```
+
+現行クローンの例:
+
+```bash
+mkdir -p audit-archive
+HOST_CLONE="saedgewell-8b04e1c836c8"
+DEST="audit-archive/${HOST_CLONE}-2026-07.md"
+test ! -e "$DEST" || { echo "exists: $DEST — use a unique suffix"; exit 1; }
+mv "audit/${HOST_CLONE}.md" "$DEST"
+```
+
+- サフィックスは月（`2026-07`）、ISO 日付、連番のいずれでもよい。**宛先一意であること**が要件
+- **削除せず `mv` で残す**（証跡保全）
+
+<a id="step-3-confirm-new-shard"></a>
+### 3. 新規シャードの再生成を確認
+
+**`/aidlc` を実行する。** フレームワークが `appendAuditEntry` 経由で同名シャードを再作成します。
+
+Write / Edit だけでフックを発火させても足りません。`audit-logger` はアクティブな `audit/` シャードが無いと無言終了するため、成果物書き込みが監査されずに進むおそれがあります（[フックとツール](/reference/hooks-and-tools)）。
+
+```bash
+ls audit/
+# → <host>-<clone>.md が再登場（ヘッダ付きの新規ファイル）であること
+```
+
+再登場を確認してから通常作業に戻ってください。
+
+<a id="step-4-git"></a>
+### 4. Git に載せる
+
+`audit/` と `audit-archive/` はコミット対象です。アーカイブ後は両方をステージしてコミットし、証跡を共有履歴に残してください。いつコミットするかのタイミングだけチーム運用で決められます。ローカルにだけ残したままにしないでください。
+
+```bash
+git add "$RECORD/audit" "$RECORD/audit-archive"
+git status   # 退避した旧シャードと新規シャードの両方が見えること
+# その後コミットする
+```
+
+大きなシャードを動かす前にアーカイブすると、以降の diff が扱いやすくなります。
+
+---
+
+<a id="do-not"></a>
+## やってはいけないこと
+
+| 禁止 | 理由 |
+|---|---|
+| シャードを編集してイベントを間引く | append-only / 追跡可能性要件に反する |
+| `Write` でファイル全体を書き戻す | 重複・破損の典型パターン |
+| アーカイブせずに削除する | 証跡が失われる |
+| 既存の `audit-archive/` 同名ファイルへ上書き `mv` する | 過去の証跡が消える |
+| Write / Edit だけで再生成したつもりになる | フックはシャード欠落時に無言終了し、監査が途切れる |
+| 他クローンのシャードをまとめて動かす | 並行作業中のマシンの履歴を壊す |
+
+---
+
+<a id="faq"></a>
+## よくある確認
+
+| 疑問 | 答え |
+|---|---|
+| アーカイブ後にステージが進まなくなる？ | ならない。経路選択は `aidlc-state.md` のみ |
+| アーカイブは git に入れる？ | 入れる（上流方針）。`audit/` と `audit-archive/` の両方をコミットする |
+| doctor は必要？ | 任意。不安なら `bun .claude/tools/aidlc-utility.ts doctor` |
+| 複数シャードがあるとき | 各クローンが自分の `<host>-<clone>.md` だけ扱う。完全履歴を読むときは `audit/*.md` と `audit-archive/*.md` をまとめて時刻順マージする（`audit/` は現行シャードのみ） |
+
+---
+
+<a id="checklist"></a>
+## チェックリスト
+
+- [ ] `/aidlc` が動いていないことを確認した
+- [ ] `ls audit/` で対象ファイル名を確認した
+- [ ] `audit-archive/` を作成し、宛先非存在を確認したうえで `mv` で退避した（削除していない）
+- [ ] `/aidlc` を実行し、`ls audit/` で新規シャードを確認した（Write / Edit だけでは不十分）
+- [ ] `audit/` と `audit-archive/` をステージしてコミットした
+
+---
+
+<a id="related"></a>
+## 関連
+
+- [状態管理と監査証跡](/guide/state-and-audit) — `aidlc-state.md` と `audit/` の役割分担
+- [トラブルシューティング](/guide/troubleshooting#audit-log-growing-too-large) — 上流要約節
+- [成果物リファレンス](/guide/artifacts-reference#what-to-commit-vs-gitignore) — コミット方針
+- [フックとツール](/reference/hooks-and-tools) — シャード欠落時の audit-logger ガード
+- [CLI コマンド](/guide/cli-commands#aidlc---doctor-health-check) — `--doctor`

@@ -12,6 +12,7 @@ export const CONTENT_ROOT = "docs";
 export const NON_TRANSLATION_PATHS = new Set([
 	"docs/changelog.mdx",
 	"docs/watch-prompt.mdx",
+	"docs/guide/18-archiving-audit-logs.mdx",
 ]);
 const EXCLUDED_DIRECTORIES = new Set(["superpowers"]);
 
