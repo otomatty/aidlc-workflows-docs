@@ -170,7 +170,7 @@ bun --version
 mv audit/<host>-<clone>.md audit-archive/<host>-<clone>-2026-02.md
 ```
 
-次に `/aidlc` を実行したとき（またはフック起点の書き込みが起きたとき）に、新しいシャードが作られます。すべての監査内容は安全にアーカイブできます。エンジンは経路選択のために `audit/` シャードを読みません。
+次に `/aidlc` を実行すると、新しいシャードが作られます（Write / Edit だけでは足りません。詳細は [監査ログのアーカイブ手順](/guide/archiving-audit-logs)）。すべての監査内容は安全にアーカイブできます。エンジンは経路選択のために `audit/` シャードを読みません。
 
 <a id="git-considerations"></a>
 ### Git に関する注意
