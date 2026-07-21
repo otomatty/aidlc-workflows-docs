@@ -387,7 +387,7 @@ bun .claude/tools/aidlc-runtime.ts fragment-merge --slug <kebab-slug>
 ランタイムグラフのコンパイルは、特定のセッションの外部から観測可能でなければならない
 データプレーンの基盤です。LLM が呼び出すツールに結合すると、LLM の呼び出し漏れが
 決定性の保証を壊します。人が承認をクリックした後にコンダクターが
-`aidlc-orchestrate.ts report --stage <slug> --result approved` を呼び出し忘れると、
+`aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` を呼び出し忘れると、
 監査行は追加されず、コンパイルも起動しません。ランタイムグラフは静かに遅延し、
 回復基盤は破損します。
 

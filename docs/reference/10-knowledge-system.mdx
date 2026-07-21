@@ -83,7 +83,7 @@ sequenceDiagram
     participant TAK as チーム別エージェントナレッジ
     participant PA as 既存成果物
 
-    O->>G: 手順 1: `aidlc/spaces/<space>/memory/` を読み込む
+    O->>G: 手順 1: `aidlc/spaces/<active-space>/memory/` を読み込む
     Note over G: `org.md` + `team.md` + `project.md` + `phases/<phase>.md`
     G-->>O: ルールを読み込み（厳格な加算方式。全層を適用）
 
@@ -112,7 +112,7 @@ sequenceDiagram
 
 | 手順 | ソース | 層 | 管理者 | 読み込み時点 |
 |------|--------|------|-----------|--------|
-| 1 | `aidlc/spaces/<space>/memory/` | -- | フレームワーク + 自己学習 | 最初 |
+| 1 | `aidlc/spaces/<active-space>/memory/` | -- | フレームワーク + 自己学習 | 最初 |
 | 2 | `.claude/knowledge/aidlc-shared/` | 1 | フレームワーク | 初期 |
 | 3 | `.claude/knowledge/[agent]/` | 1 | フレームワーク | 初期 |
 | 4 | `aidlc/knowledge/aidlc-shared/` | 2 | チーム | 中盤 |

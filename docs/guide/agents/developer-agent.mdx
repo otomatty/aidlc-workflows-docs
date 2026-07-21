@@ -6,7 +6,7 @@ description: aidlc-developer-agent の実装責務、主導・支援ステージ
 
 aidlc-developer-agent は、あなたのシニアソフトウェア開発者です。アーキテクチャ設計と作業ユニット仕様を、本番品質のコードへ変換します。リバースエンジニアリングでは、aidlc-architect-agent が統合に使うための詳細なコードスキャンを実行します。
 
-aidlc-developer-agent は、構想と構築にまたがる 2 つのステージを主導します。そのうち 1 つのステージ（Code Generation）はサブエージェントとして動作し、ユーザーとの対話なしに自律的に進みます。ビルドツール、パッケージマネージャー、テストコマンドを実行するために Bash を利用できます。
+aidlc-developer-agent は、Reverse Engineering のコードスキャンと Code Generation を主導し、構想フェーズの両アンサンブルにディスパッチされるコラボレーターでもあります。Practices Discovery のハブアンドスポークではコードパターンの証拠を検分し、User Stories のモブでは実装可能性の観点（implementability voice）を担います。Code Generation は集中型のサブエージェントとして動作します。ビルドツール、パッケージマネージャー、テストコマンドを実行するために Bash を利用できます。
 
 Workspace Detection（0.2）は以前、aidlc-developer-agent がサブエージェントとして主導していましたが、現在は `aidlc-utility init` 内でルールに基づくスキャナーとして決定論的に実行されます。そのため aidlc-developer-agent は、もはや初期化フェーズには関与しません。
 
@@ -23,7 +23,8 @@ Workspace Detection（0.2）は以前、aidlc-developer-agent がサブエージ
 
 | ステージ | フェーズ | 貢献内容 |
 |-------|-------|-------------|
-| 2.2 Practices Discovery | 構想 | コードパターンの証拠を収集するスキャン |
+| 2.2 Practices Discovery | 構想 | 相互ブラインドのコードパターンスポーク。自身のコントリビューションファイルを書く |
+| 2.4 User Stories | 構想 | モブアンサンブルでの実装可能性の観点。自身のコントリビューションファイルを書く |
 | 3.1 Functional Design | 構築 | API 契約とデータモデルの入力を提供 |
 | 4.3 Deployment Execution | 運用 | データベース移行 |
 

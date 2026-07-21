@@ -183,8 +183,8 @@ consumes:
 `aidlc/spaces/<space>/codekb/<repo>/` に格納されます。パスは
 `resolveArtifactPath` の `isCodekb` 分岐
 （`dist/claude/.claude/tools/aidlc-orchestrate.ts`）により、レコード相対規則の
-外で解決されます。同じディレクトリは読み取り専用の `/aidlc codekb-path` コマンド
-でも出力されます。
+外で解決されます。同じディレクトリは、読み取り専用のユーティリティ直接呼び出し
+`bun <harness-dir>/tools/aidlc-utility.ts codekb-path` でも出力されます。
 
 **衝突時は正規名とファイル名が異なります。** 衝突を分割した場合（上記参照）、
 ディスク上のファイル名は分割前の形式（`test-results.md`）を維持できますが、正規名は

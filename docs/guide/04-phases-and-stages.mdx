@@ -145,7 +145,7 @@ flowchart TD
 flowchart TD
     S21{{"`**2.1 リバースエンジニアリング**
     (aidlc-developer-agent + aidlc-architect-agent)
-    サブエージェント: 2 段階`"}}
+    パイプライン: 2 リンク`"}}
     S2P["2.2 プラクティスの発見\n(aidlc-pipeline-deploy-agent)"]
     S22["2.3 要件分析\n(aidlc-product-agent)"]
     S23["2.4 ユーザーストーリー\n(aidlc-product-agent)"]
@@ -161,7 +161,7 @@ flowchart TD
     S21 -.->|条件付き| S2P
     S2P -.->|条件付き| S22
 
-    subgraph RE_DETAIL["2 段階のリバースエンジニアリング"]
+    subgraph RE_DETAIL["2 リンクのリバースエンジニアリングパイプライン"]
         direction LR
         DEV_SCAN["手順 1: 開発者\nコードスキャン"]
         ARCH_SYNTH["手順 2: アーキテクト\n統合"]
@@ -192,20 +192,20 @@ flowchart TD
     style RE_DETAIL fill:#e8eaf6,stroke:#3f51b5
 ```
 
-\{/* Text fallback: ブラウンフィールド判定（ステージ 0.3 の結果）を行います。はいの場合、2.1 リバースエンジニアリングが 2 段階の委譲（開発者によるコードスキャンの後にアーキテクトによる統合）で実行されます。その後、2.2 プラクティスの発見（CONDITIONAL。チームの作業方法を発見し、確認ゲートで team/project ルールファイルへ昇格させます）、2.3 要件分析（ALWAYS）、必要に応じて 2.4 ユーザーストーリー、必要に応じて 2.5 詳細モックアップ、必要に応じて 2.6 アプリケーション設計、2.7 作業単位の生成（ALWAYS）、2.8 デリバリー計画（ALWAYS）と続き、最後に検証ゲート 2 を通ります。 */\}
+\{/* Text fallback: ブラウンフィールド判定（ステージ 0.3 の結果）を行います。はいの場合、2.1 リバースエンジニアリングが 2 リンクのパイプライン（開発者によるコードスキャンの後にアーキテクトによる統合と書き出し）として実行されます。その後、2.2 プラクティスの発見が、含まれるすべてのスコープに対してハブアンドスポーク（主担当のドラフト、互いにブラインドな quality/developer/devsecops のスポーク、人間へのインタビュー、主担当による統合）として実行され、確認・確定された内容をアクティブスペースのメモリへ昇格させます。続いて 2.3 要件分析（ALWAYS）、必要に応じて 2.4 ユーザーストーリーのモブ、必要に応じて 2.5 詳細モックアップ、必要に応じて 2.6 アプリケーション設計、2.7 作業単位の生成（ALWAYS）、2.8 デリバリー計画（ALWAYS）と続き、最後に検証ゲート 2 を通ります。 */\}
 
 | # | ステージ | 主担当 | 支援 | 主な成果物 | 条件 |
 |---|-------|------|-----------|---------------|-----------|
 | 2.1 | リバースエンジニアリング | aidlc-developer-agent | aidlc-architect-agent | 9 つのリバースエンジニアリング成果物 | ブラウンフィールドプロジェクト |
-| 2.2 | プラクティスの発見 | aidlc-pipeline-deploy-agent | aidlc-quality-agent、aidlc-developer-agent、aidlc-devsecops-agent | `team-practices.md`、`discovered-rules.md`、`evidence.md`（承認・確定時に `aidlc/spaces/<space>/memory/team.md` / `memory/project.md` へ昇格） | CONDITIONAL |
+| 2.2 | プラクティスの発見 | aidlc-pipeline-deploy-agent | aidlc-quality-agent、aidlc-developer-agent、aidlc-devsecops-agent | `team-practices.md`、`discovered-rules.md`、`evidence.md`（承認・確定時に `aidlc/spaces/<active-space>/memory/team.md` / `project.md` へ昇格） | CONDITIONAL |
 | 2.3 | 要件分析 | aidlc-product-agent | — | `requirements.md` | ALWAYS |
-| 2.4 | ユーザーストーリー | aidlc-product-agent | aidlc-design-agent | `stories.md`、`personas.md` | ユーザー向け機能がある場合 |
+| 2.4 | ユーザーストーリー | aidlc-product-agent | aidlc-design-agent、aidlc-developer-agent、aidlc-quality-agent | `stories.md`、`personas.md` | ユーザー向け機能がある場合 |
 | 2.5 | 詳細モックアップ | aidlc-design-agent | aidlc-product-agent | 高精細モックアップ、インタラクション仕様 | UI のあるプロジェクト |
 | 2.6 | アプリケーション設計 | aidlc-architect-agent | aidlc-aws-platform-agent、aidlc-design-agent | アプリケーション設計成果物、ADR | 実行計画による |
 | 2.7 | 作業単位の生成 | aidlc-architect-agent | aidlc-delivery-agent | `unit-of-work.md`、`unit-of-work-dependency.md`（DAG）、`unit-of-work-story-map.md` | ALWAYS |
 | 2.8 | デリバリー計画 | aidlc-delivery-agent | aidlc-architect-agent | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | ALWAYS |
 
-**主な動作:** ステージ 2.1 は **サブエージェント** として、2 段階のリバースエンジニアリングパターンで動作します。最初に aidlc-developer-agent がコードスキャンを行い、その後 aidlc-architect-agent が統合を行います。これはブラウンフィールド（既存コードベースのある）プロジェクトでのみ実行されます。
+**主な動作:** ステージ 2.1 は **パイプライン**（2 リンクのチェーン）として動作します。最初に aidlc-developer-agent がコードスキャンを行い、その後 aidlc-architect-agent が統合を行って成果物を書き出します。これはブラウンフィールドプロジェクトでのみ実行されます。ステージ 2.2 は、グリーンフィールドとブラウンフィールドの両方の作業で **サブエージェントのハブアンドスポーク** として動作します。主担当がドラフトを作成し、quality/developer/devsecops がそれぞれ独立に検査し、人間へのインタビューでギャップを解消し、主担当が統合します。ステージ 2.4 は **モブ** として動作します。主担当がドラフトを作成し、design、developer、quality の各エージェントがコントリビューションファイルを介して並行で貢献します。
 
 ---
 
@@ -413,9 +413,12 @@ flowchart TD
 | モード | ステージ | ユーザー操作 | 説明 |
 |------|--------|-----------------|-------------|
 | インライン（自動続行） | 0.1、0.2、0.3 | なし | `aidlc-utility init` の中で決定論的に実行、承認ゲートなし |
-| インライン | それ以外のすべてのステージ | あり | エージェントが会話の中で作業し、最後に承認ゲートを出す |
-| サブエージェント（単純） | 3.5 | 承認ゲートのみ | コード生成がバックグラウンドで動く |
-| サブエージェント（2 段階） | 2.1 | 承認ゲートのみ | 開発者によるスキャン + アーキテクトによる統合 |
+| インライン | 28 ステージ | あり | エージェントが会話の中で作業し、最後に承認ゲートを出す |
+| サブエージェント | 2.2、3.5 | 2.2 はプラクティスのインタビュー + 最終ゲート、3.5 は承認ゲート | ハブアンドスポークのプラクティスの発見。単独集中のコード生成 |
+| パイプライン（2 リンク） | 2.1 | 承認ゲートのみ | 開発者によるスキャンの後、アーキテクトによる統合と書き出し |
+| モブ | 2.4 | ステージ途中の判断確認の質問 + 承認ゲート | 主担当がドラフトを作成し、design/developer/quality がコントリビューションファイルを介して並行で協働する |
+
+全 32 ステージのトポロジー内訳は、**インライン 28 / サブエージェント 2 / パイプライン 1 / モブ 1** です。
 
 ---
 

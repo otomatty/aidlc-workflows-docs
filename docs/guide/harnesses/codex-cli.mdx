@@ -64,7 +64,7 @@ description: Codex CLI ハーネス向けの前提条件、インストール手
 - **スウォームフロア = `codex exec` ワーカー** - 構築の作業ユニットごとに 1 つの無人ワーカーをその Bolt の worktree で起動し（常に `< /dev/null`）、同じ決定論的な審判を使います。ここでは `AIDLC_USE_SWARM=1` に対応する Workflow ツールがないため、明示的に縮退します（`SWARM_DEGRADED` が監査されます）。
 - **セッションのライフサイクル**: Codex には SessionEnd イベントがありません。未終了セッションは、次回セッション開始時に推論された `SESSION_ENDED` 監査行として整合されます。Codex 専用の PostCompact イベントは、コンパクション後にワークフローミッションを再注入します。これは Claude ハーネスに対する決定性の改善です。
 - **成果物監査の忠実度**: 無人の `codex exec` 実行では、モデルがシェルの heredoc を使ってファイルを書くことが多く、`apply_patch` のフックマッチャーを通らないため、`ARTIFACT_*` 行が疎になる場合があります。対話的な TUI セッション（システムプロンプトが `apply_patch` を必須化している環境）が、高忠実度の監査モードです。
-- **AIDLC のルール層** はワークスペースルートの `aidlc/spaces/<space>/memory/` に置かれます（手作業で編集する元データは 1 つで、どのハーネスでも同一です）。`config.toml` 内の `AIDLC_RULES_DIR` 環境設定がリゾルバーにその場所を指し示し、オーケストレーターは `@aidlc/spaces/<space>/memory/...` というプロンプトメンションを注入します。Codex 標準の `.codex/rules/` ディレクトリには Starlark の権限ルールが置かれ、AIDLC の方法論とは別物です。
+- **AIDLC のルール層** はワークスペースルートの `aidlc/spaces/<active-space>/memory/` に置かれます（手作業で編集する元データは 1 つで、どのハーネスでも同一です）。`config.toml` 内の `AIDLC_RULES_DIR` 環境設定がリゾルバーにその場所を指し示し、オーケストレーターは `@aidlc/spaces/<active-space>/memory/...` というプロンプトメンションを注入します。Codex 標準の `.codex/rules/` ディレクトリには Starlark の権限ルールが置かれ、AIDLC の方法論とは別物です。
 - **ウェルカムメッセージはありません**: Claude ハーネスでは、セッション開始時に `settings.json` の `companyAnnouncements` からフェーズ / ステージ / スコープのオンボーディングバナーを表示しますが、Codex に相当機能はありません。セッション開始経路が注入するのは再開コンテキストのみです。
 - **MCP サーバー**: Codex は `config.toml` の `[mcp_servers.<name>]` テーブル（プロジェクトの `.codex/config.toml` または `~/.codex/config.toml`）から MCP 定義を読み込みます。必要なサーバーはそこへ追加してください。同梱設定は **何も** 宣言しません（Claude ハーネスは `.mcp.json` で 5 つ出荷しますが、Codex は既定で 0 です）。
 

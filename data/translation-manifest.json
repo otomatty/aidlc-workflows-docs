@@ -3,117 +3,117 @@
 		{
 			"sourcePath": "docs/guide/00-introduction.md",
 			"translationPath": "docs/guide/00-introduction.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "64102ba82f3fcd0b40d6d449dc8c293d9b928d7b2a0f9dd601fa0082c13610a9"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "823922a9f1a4adb06a48c5025b656c2304f9114bdacf0fa7b5a34f5b140da96d"
 		},
 		{
 			"sourcePath": "docs/guide/01-getting-started.md",
 			"translationPath": "docs/guide/01-getting-started.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "180434163ae1fd808ea87a844165a212ff91f183c103da1ef823b721d8db2533"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "5062d829dd42ab0bb0a65badbcb966e7cf05b9dc876dff343f51ac8896ba2714"
 		},
 		{
 			"sourcePath": "docs/guide/02-your-first-workflow.md",
 			"translationPath": "docs/guide/02-your-first-workflow.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "222d8bb9746f959b9bfbbea5959b72a0995dfa5034dc509e22105239a8dd0f1d"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "a82d41741be5d9b9e66cbb96306e7cb3c6f3c0838841690f90dafcd79c65e853"
 		},
 		{
 			"sourcePath": "docs/guide/03-spaces-and-intents.md",
 			"translationPath": "docs/guide/03-spaces-and-intents.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "1be3e1e661b4ad25d5fdbd4048f757c296abbaf23344ab82d2dbb3666cda254b"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "96191335b4471cf8d381fa29e461f5415f5722e7ba38b19f24389a70fd8be0d3"
 		},
 		{
 			"sourcePath": "docs/guide/04-phases-and-stages.md",
 			"translationPath": "docs/guide/04-phases-and-stages.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "d2c8b63e52f43a0fa4dc161a920a0d2c57e09f636e2751163ac32402872731e4"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "4877cce25e1c8bffd57e38944a6f101e39f82c977474cf02937696c36f3f461d"
 		},
 		{
 			"sourcePath": "docs/guide/05-scopes-and-depth.md",
 			"translationPath": "docs/guide/05-scopes-and-depth.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "bc100eff03939ba55b28b2e8f1be14b8a6ed54718ec298634680bd98eabae592"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "72698c396543912d8c87ecddc960e4718e8dfe8f226f9feb434ba19630bf9183"
 		},
 		{
 			"sourcePath": "docs/guide/06-agents.md",
 			"translationPath": "docs/guide/06-agents.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "beb7b482080f3489333c6dfd291efda599f19e1ffb6d323342e659bbfa009a61",
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "dd0e8b8a59a4371c97b3a3afba36d11031d9552b4ff09f18fdd7a6a477dccaf2",
 			"route": "/guide/agents-overview"
 		},
 		{
 			"sourcePath": "docs/guide/07-interaction-modes.md",
 			"translationPath": "docs/guide/07-interaction-modes.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "012e91799d5b27152898184f14c92da5569766fbb13963e25f041c508bba8327"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "8077764f746e364621fe6516e4f7e3e507d341af33e2d2798500a2b10f8aa694"
 		},
 		{
 			"sourcePath": "docs/guide/08-knowledge.md",
 			"translationPath": "docs/guide/08-knowledge.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "29d6384d6bb9d4d7ec263107da5230b1308a78b53e8808818c35c77167160730"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "fec8e37f959d47df372c8b69bc1b850d09b08b4e3c7b2eef799f843c84245bb9"
 		},
 		{
 			"sourcePath": "docs/guide/09-rules-and-the-learning-loop.md",
 			"translationPath": "docs/guide/09-rules-and-the-learning-loop.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "844259378d2cbca73dc0bad0edd8c6499cd4ad8cb58252881eca6b45b87e88cd"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "168317f332d00b6f6d09f7f3357eb8801fae0f17464e2f027bacbc44dec5fd23"
 		},
 		{
 			"sourcePath": "docs/guide/10-state-and-audit.md",
 			"translationPath": "docs/guide/10-state-and-audit.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "5928c4fbf2ba8ea0168ee1baf6a3ed7183dfe4a90ebcc2a964bac5f5728d15ce"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "3d8ee153455b977ae54d3ec655d77402f5ba00b033696664dde1fedc753f6c54"
 		},
 		{
 			"sourcePath": "docs/guide/11-session-management.md",
 			"translationPath": "docs/guide/11-session-management.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "6bff10e897f797deb0d3061f508108e3c48cefd4b0539f934c8441db2d2dff28"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "d9b3f956f75419f4e49870a904b82f9bae0d58ca1c2bf95b76de99b99d2fe268"
 		},
 		{
 			"sourcePath": "docs/guide/12-cli-commands.md",
 			"translationPath": "docs/guide/12-cli-commands.mdx",
-			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
-			"sourceHash": "df78ebc2295e0f1ab1e300eff69488472c3fa55150da9fea69ddd63cf2ed1b3d"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "ddb00482e897717e0042984b2766ed5f41c777891ec157b2d1695ac0567682a4"
 		},
 		{
 			"sourcePath": "docs/guide/13-customization.md",
 			"translationPath": "docs/guide/13-customization.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "7f9b0dcdc7d75d722bb611e582186966591edfd77af72d5a4d1d7023fe7444a2"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "739392782aee25eaf131e1e35a21097701f97870f8c27754b70370b0ab2d58b5"
 		},
 		{
 			"sourcePath": "docs/guide/14-artifacts-reference.md",
 			"translationPath": "docs/guide/14-artifacts-reference.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "a63eae09b7eb2e9e53cbdbbb8d2951c075565f7fe98a59aaf653fc5474822939"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "402acc3b2a6d947d267e727408b03ec0a62287bf10c415dc29a01f9ab1c1acf7"
 		},
 		{
 			"sourcePath": "docs/guide/15-troubleshooting.md",
 			"translationPath": "docs/guide/15-troubleshooting.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "8af906fa9ef65714e26bbab094ffab1d6be112238249ae52cd64729776e7b6c0"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "b1459a83c8bd161032e4c8fcd67311bf5d62289c43df8ed07edc445c5bcb26d6"
 		},
 		{
 			"sourcePath": "docs/guide/16-worked-examples.md",
 			"translationPath": "docs/guide/16-worked-examples.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "4a72592baf7f6fef6a9b1b39c9ae362c74b1a735622fbc16a309e084584b3487"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "36192ec4b03160160419961c173a1171f24f4059dba76042d8e5e45adebe96aa"
 		},
 		{
 			"sourcePath": "docs/guide/17-skills.md",
 			"translationPath": "docs/guide/17-skills.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "209fce57908b7b5eb5928d54aa6f8a160d634eb696d00835eb321818888e3b6d"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "63b4a9b797da8bfbd1c2849294754aec807d5540a8b887098e8daa95015c0400"
 		},
 		{
 			"sourcePath": "docs/guide/agents/architect-agent.md",
 			"translationPath": "docs/guide/agents/architect-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "993cf02e9f01db6f7f83f4aa7afe62ecea60784baa9ee487d6574362715ad2a2"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "49b5bc4178854ba823b4f493918268e4fdc04c18660d1cb4589363dbb8110f16"
 		},
 		{
 			"sourcePath": "docs/guide/agents/aws-platform-agent.md",
@@ -142,20 +142,14 @@
 		{
 			"sourcePath": "docs/guide/agents/developer-agent.md",
 			"translationPath": "docs/guide/agents/developer-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "cde8bbbfb3cc4c230e5939f7b7fae295bf206ecafdee87cfe8e06a32ee2b26f1"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "57b094bd670ab6d8f2e97fd101f9264b815bbfbf93bf7bf1fbd02db65ef5da97"
 		},
 		{
 			"sourcePath": "docs/guide/agents/devsecops-agent.md",
 			"translationPath": "docs/guide/agents/devsecops-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "7a74c92539f05f2d01491a576c222b27b70bf9acd6857ff9e00ddfa6b7d101ff"
-		},
-		{
-			"sourcePath": "docs/guide/agents/README.md",
-			"translationPath": "docs/guide/agents/index.mdx",
-			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
-			"sourceHash": "8dfb248bf88c427a10f332c6180b40a2a9a21eaf9ee4e08f8fea2453aeec01cd"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "5fddcb4ad98bd27dd447186b6d5e4fb9ac8f269a658f36ff8a93b97d795688a9"
 		},
 		{
 			"sourcePath": "docs/guide/agents/operations-agent.md",
@@ -166,8 +160,8 @@
 		{
 			"sourcePath": "docs/guide/agents/pipeline-deploy-agent.md",
 			"translationPath": "docs/guide/agents/pipeline-deploy-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "9107007efae491365644547842f3b0cb649a7aaea2cf2fc64bbe03b2cb345fcb"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "fe48199169ccfdec894530476b87b7be6a95092cd8092349a01d49a3c1e02de4"
 		},
 		{
 			"sourcePath": "docs/guide/agents/product-agent.md",
@@ -178,38 +172,38 @@
 		{
 			"sourcePath": "docs/guide/agents/quality-agent.md",
 			"translationPath": "docs/guide/agents/quality-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "472acae1361d3437cea0b889ab9b4f33b266556063fed1194b291c62fd565dbb"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "47861a41d47adae771fe6040cb0af72dc5d6aeb0ad8f78ed614893ee5fed5d87"
+		},
+		{
+			"sourcePath": "docs/guide/agents/README.md",
+			"translationPath": "docs/guide/agents/index.mdx",
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "7468522b2ed199d7ad5d42ac33e1c934ab4b9c461655b8ad5075a56df275f69a"
 		},
 		{
 			"sourcePath": "docs/guide/glossary.md",
 			"translationPath": "docs/guide/glossary.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "df5b62628e7c3c9aadcda6d6ec2feb72f77df9f52d1c3520d9c56377ef073da5"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "0cbfc8248d9c6487393512f13a322a0cf724ebad25dad85019c79266fc2e186a"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/codex-cli.md",
 			"translationPath": "docs/guide/harnesses/codex-cli.mdx",
-			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
-			"sourceHash": "6fc694ce501fdc1bfed26af11a5034171525e70e3d0bc102424ac3337b25ef28"
-		},
-		{
-			"sourcePath": "docs/guide/harnesses/README.md",
-			"translationPath": "docs/guide/harnesses/index.mdx",
-			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
-			"sourceHash": "caea2340a392886cce7d03b72b0d42355a2625d9de6fa9f6a4335cbd3caabd0f"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "4cd30789bec575428b4d3b3d9a22e5bb542fb4bd2343c3914fd83588e5ded059"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-cli.md",
 			"translationPath": "docs/guide/harnesses/kiro-cli.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "8e793976577cd725398324e4d946cb524745636b31fe3ab48966a2a5d224491f"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "ff84e3b40ac44b580fa5d4d71a9f1b5d9372ea95f00e145a5d140a921f32692d"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-ide.md",
 			"translationPath": "docs/guide/harnesses/kiro-ide.mdx",
-			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
-			"sourceHash": "864e71eb1ce7fb17374d9b414e6d8ae22a3ee67b5a084d00f62dfb70c3dd01a8"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "a0de3b6fd1a0e9e203b2a8201e402e4bf50c8aed90ddf524ea5401eceda0fc50"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/opencode.md",
@@ -218,34 +212,40 @@
 			"sourceHash": "328b5a1c28026870c96d61cea1b7b641641c49fbb07dabc593037f990afcdf06"
 		},
 		{
+			"sourcePath": "docs/guide/harnesses/README.md",
+			"translationPath": "docs/guide/harnesses/index.mdx",
+			"sourceCommit": "cf48b73ee647c25611f23971ae602875fb7b5430",
+			"sourceHash": "caea2340a392886cce7d03b72b0d42355a2625d9de6fa9f6a4335cbd3caabd0f"
+		},
+		{
 			"sourcePath": "docs/guide/workshop-mode.md",
 			"translationPath": "docs/guide/workshop-mode.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "28a8b98d6f0504edcd16f60a8c01ac4ceb326bb6fb094d1b099d038f89182bc6"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "ca9ac04a87ce97be22c9dc328322ca862c8e488dd220c815ca0834017b64672d"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/00-overview.md",
 			"translationPath": "docs/harness-engineering/00-overview.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "e0bbc26b9b893f8d961b968557a0650be350249026045ba5d68f53e9185f2ece"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "e8cd8a399b90e52875c07f77eb581e07977425bfbd357ed394e2115ff122e844"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/01-anatomy-of-a-stage.md",
 			"translationPath": "docs/harness-engineering/01-anatomy-of-a-stage.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "d2abe17d366e36ae3ab9163d3c53b4be4e25d6d7787c4b440fa6667b09467f0e"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "a17adfa77077d404beaadaebd521cf966b5f4104f6986022fb2b3f3c1991adff"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/02-adding-a-stage.md",
 			"translationPath": "docs/harness-engineering/02-adding-a-stage.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "9f59928e514bf10208f865b42859f9a5a3e36d7f1e15e3a322dfcec1a0b173bb"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "59a3524e4f97e75b41d4f98dca32ea6cd34665867fe96a4eeac85730507eb0b6"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/03-adding-an-agent.md",
 			"translationPath": "docs/harness-engineering/03-adding-an-agent.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "cfa6e75bea1b954900b5a79439316d0d1b1bf3c1e19d1e991761f3d8d10cd38c"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "d2d367fe85da8a5ccba2206226b343d824c38b05abcb9ce35c71e5a413895a35"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/04-scopes.md",
@@ -256,8 +256,8 @@
 		{
 			"sourcePath": "docs/harness-engineering/05-rules-and-the-loop.md",
 			"translationPath": "docs/harness-engineering/05-rules-and-the-loop.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "c03ce95bf47817ea55718dd17e06116c71398a854eafc123400e5841d5bebef0"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "3f2e647751f8991e0212874d3dc3159bb200842f4e0550bea22cf0f834eef68d"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/06-sensors.md",
@@ -268,86 +268,86 @@
 		{
 			"sourcePath": "docs/harness-engineering/07-team-knowledge.md",
 			"translationPath": "docs/harness-engineering/07-team-knowledge.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "baf1247fdd0b42873b459242dc32e4c5f97a72d893ef35d4a7ecb0941cefd85a"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "d39a1f4d0692d4c8bbb9bdbb4b181cc3c185ad36a126185dc5d1a551a87fc6e7"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/08-construction-and-swarm.md",
 			"translationPath": "docs/harness-engineering/08-construction-and-swarm.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "7dfbc0d06a884f00ffa9d8e5c51f2d860639cd3bba42d687c14dee7c0b46f78b"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "a22fa763436a647421b3a8c0d3840d51c55d87bfeb15def4c46eb359f9b456bc"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/09-porting-to-a-new-harness.md",
 			"translationPath": "docs/harness-engineering/09-porting-to-a-new-harness.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "6eb424343c5369e088d37b25c00b4cd8f8643e03ef996185cc89ff53d4c3e14b"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "1fc5107bfe360b0d89f0fd7ddab9943c4445aa1e6ededde13ce5c82942c9c143"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/10-authoring-a-plugin.md",
 			"translationPath": "docs/harness-engineering/10-authoring-a-plugin.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "95a999deee4385dbfda4d4d0e11410d153a52d30442ff6034ba0b65447669c21"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "dd2f80b5405d95e5b4a31c71574ea78271844a14f028a200bf01b8a4630febb5"
 		},
 		{
 			"sourcePath": "docs/README.md",
 			"translationPath": "docs/index.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "998bdebab2affb2294b2ebd14b22ad40983693b4d303086b05351171212badca"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "3d6359ed8d4d7e3c66671d8de8465dc4e6c58224988e5f030e153da63027dd7f"
 		},
 		{
 			"sourcePath": "docs/reference/00-overview.md",
 			"translationPath": "docs/reference/00-overview.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "d864471162ac124ece6c368552ef1421ece1c0d76a1d7db5d329e0db6334af76"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "318782a35d03ca5645a7c4d0604a94fe5ca064e3ba87525655a52892ec8fe18e"
 		},
 		{
 			"sourcePath": "docs/reference/01-architecture.md",
 			"translationPath": "docs/reference/01-architecture.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "df1ddb2a6b27e2272a7360685aeae3e722529e7d39e827ef79cde2919b405592"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "66e1b9bbd175d9daa3472eb8713960543010a887605b7a0b9199a4b421027ce8"
 		},
 		{
 			"sourcePath": "docs/reference/02-plane-architecture.md",
 			"translationPath": "docs/reference/02-plane-architecture.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "b2881862d58224e66f8bac827bc0c2278e3e0a3261f87079e4a08750b5436390"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "b25205457317b2f86cb65f6ad89be1d6c4779ad70e6ad9bc57c2dc64f04449e9"
 		},
 		{
 			"sourcePath": "docs/reference/03-orchestrator.md",
 			"translationPath": "docs/reference/03-orchestrator.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "efcff32b7ed6dbf7f4b871c54c663e451b4608b1b2cef9d9168f2b68627cab01"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "ef5ba985f8703d0325203b754c119d160bd7902aecc0f0b12e80ab4343f12994"
 		},
 		{
 			"sourcePath": "docs/reference/04-stage-protocol.md",
 			"translationPath": "docs/reference/04-stage-protocol.mdx",
-			"sourceCommit": "ccc3b88e062d8f97a59ac878ac80669326083674",
-			"sourceHash": "c49651c39548abac5b920a2f572020f873b01199d537ec23eea71e75ca506c62"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "1744159b3272493551f74f81a6e402fe0f9c79e1e99b497b5f0686424714c0e3"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/construction.md",
 			"translationPath": "docs/reference/04-stages/construction.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "9a1bc2fe8b4db18965ba8ed20ceadb496c28ec8efc77c1d225a0f83a12c47a32"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "8a5656d63d8aca468ddfb1f7888e969c8588aa8bd1b086c3f0c12561844e03f5"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/ideation.md",
 			"translationPath": "docs/reference/04-stages/ideation.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "bf5e3535f54f5a17185d2f4257566b28abee93140ceada964d9f11e4dd62d697"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "8929f67f5003ad7a6098d02f2250ce55525521d43aa55a25fce698795fcf942b"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/inception.md",
 			"translationPath": "docs/reference/04-stages/inception.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "78618a5dd63ec39d1522eccddce058b358836c268d04ae7343a8a47fe766a8a0"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "269856592a836fbad18fb43e9e2454f988422aed5798bbc123a0906e6001f123"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/initialization.md",
 			"translationPath": "docs/reference/04-stages/initialization.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "5b0e4029afdde107dfdaca5a1d28db9a464e4d61efaf143da85497a302e54cb7"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "d31dfac778980845251bb4bd89a4800ac6b6370765fd6c215bc71a5ca395cbb0"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/operation.md",
@@ -358,92 +358,92 @@
 		{
 			"sourcePath": "docs/reference/05-agent-system.md",
 			"translationPath": "docs/reference/05-agent-system.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "9238592390297ee2e6d00d1a28062143de0eed426080dc30a41aa30a2c0d8d07"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "e876e343a5ce5a0e96f4f273a50289ede13d0f4b23154dcdc42b609d355d8351"
 		},
 		{
 			"sourcePath": "docs/reference/06-hooks-and-tools.md",
 			"translationPath": "docs/reference/06-hooks-and-tools.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "750694922f476470c532a214a9d45c0a5a794a1cb278168ca67aca2027b05287"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "c6ef6cac4a5df6a5d444d1b7d258f1b8ae79afa0cef307fbd8c5d056c45abf0c"
 		},
 		{
 			"sourcePath": "docs/reference/07-sensor-system.md",
 			"translationPath": "docs/reference/07-sensor-system.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "bb666e5bafe7708b86d73f7a1fad07ea1c7368bdd8cb514b730e72771d21e596"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "9737c9d9f9bfc09d978c7e11607a1cd7f15023acb34c5a34fa58c7bfe42e8ae4"
 		},
 		{
 			"sourcePath": "docs/reference/08-rule-system.md",
 			"translationPath": "docs/reference/08-rule-system.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "22ee7bf13bfdd0c4fe84cfb3841522c369b65c90fd615ef6f96b5b24972c3d6e"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "f938c55f99ad200701f4298dff03215312895132756dcb31682edfdf9555045a"
 		},
 		{
 			"sourcePath": "docs/reference/09-testing.md",
 			"translationPath": "docs/reference/09-testing.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "146b48bf584b462b9d5b18b3a3dfe51475034dd68459ec2210653a71c2cd1a79"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "d6e1a83c2ff5517bb95bc1fbcb8a55bd470ff4720fb79ad2b29dc74a99c0d4e1"
 		},
 		{
 			"sourcePath": "docs/reference/10-knowledge-system.md",
 			"translationPath": "docs/reference/10-knowledge-system.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "dfd20041d91dfae0f5f7519aa657e4043b3a66f4f18175756cec2c1880eebeb7"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "ea4ae350fbb85ca969a74f98d23ab4dbf1b5fc5ad6804acee41ac3ee007ce863"
 		},
 		{
 			"sourcePath": "docs/reference/11-contributing.md",
 			"translationPath": "docs/reference/11-contributing.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "b9f48acd3d05c0e3c6d5188b54e488f39597dd5d5131b8b005cf0eae48429616"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "6045c77f45b3bca795ec486d8ab9e5b736e32e155a8e58def0bd595f0a1dc345"
 		},
 		{
 			"sourcePath": "docs/reference/12-state-machine.md",
 			"translationPath": "docs/reference/12-state-machine.mdx",
-			"sourceCommit": "ccc3b88e062d8f97a59ac878ac80669326083674",
-			"sourceHash": "77b6044cf270d2ae784677ca6ad2c69415a2c1a1fb26e6cc201beb15ab45cb2c"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "70e8c4553435d7e11c822a85718cfa0185e51d1f1961dee0e2812526b7ff7ec2"
 		},
 		{
 			"sourcePath": "docs/reference/13-runtime-graph.md",
 			"translationPath": "docs/reference/13-runtime-graph.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "fc37eecb2141414613ae25026a64b357eb5b353e4d60ca60bff7e4a5a943c38a"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "350a4dabf0d545f98dfb6ed506f29b47dbca14f29152b520b5926b418d661b37"
 		},
 		{
 			"sourcePath": "docs/reference/14-claude-features.md",
 			"translationPath": "docs/reference/14-claude-features.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "4d92e6a1dabf14d7b0f74cc115d6fea4562926f9bf1a98c919d7d03838681b59"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "ab5997a0f014ff7215493b1ebb39af82aaec9fe63afc562fd4cebf92f13f709b"
 		},
 		{
 			"sourcePath": "docs/reference/15-stage-definition.md",
 			"translationPath": "docs/reference/15-stage-definition.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "e7d4609ae62a810264e61663716ce42d821462af289c9c503af58fa47d18f907"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "2c30f76a630e1a709383ea7410b9add33a085d5f52de4450483b23557c7fa571"
 		},
 		{
 			"sourcePath": "docs/reference/16-artifact-vocabulary.md",
 			"translationPath": "docs/reference/16-artifact-vocabulary.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "3f56d0e01949ace364115ea243417ec22c1780f5d6d8fcb995fb824a00959948"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "e808228a4998e0141afab85c84c4f64c1af8d3b14d2acb947fe70ce145396860"
 		},
 		{
 			"sourcePath": "docs/reference/17-skill-system.md",
 			"translationPath": "docs/reference/17-skill-system.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "a42ed610ead51793d814b2ee8f62aa35bb8a7118c9db80561d1064a1875286d9"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "c0f8d8bca9411f904f224a59f8fa17f7b41a29b1035c64f4046c0b41fbdc3ff5"
 		},
 		{
 			"sourcePath": "docs/reference/18-plugin-mechanism.md",
 			"translationPath": "docs/reference/18-plugin-mechanism.mdx",
-			"sourceCommit": "064c1e374222663eec2dd0d07b1803177efe0a97",
-			"sourceHash": "45c5734495ca9a34aa61d649658d2b7fcd6391b8365d7132d4713d43059c954b"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "0bf0eac60e3c20091086b3d9c1cba195a8d18dad9b8fe391d47ac0d9dffab63a"
 		},
 		{
 			"sourcePath": "docs/reference/agents/architect-agent.md",
 			"translationPath": "docs/reference/agents/architect-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "2370379729e62b81ed2ddf285c17f6aee7616b5ca3a9f8981ccc623616d78844"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "00dd17784cc1873694556f83e6918c2bc78929d624752102240c0e2859d1a09c"
 		},
 		{
 			"sourcePath": "docs/reference/agents/aws-platform-agent.md",
@@ -472,20 +472,14 @@
 		{
 			"sourcePath": "docs/reference/agents/developer-agent.md",
 			"translationPath": "docs/reference/agents/developer-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "1ee7d6aec9e1be4ef85d9a58d1a7a89e8e4dda4ca0f5c09662f5502f404be29d"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "dc4e089bf0148a0c2fa6b5c7c23cc88908315b30e46be3ef591c46907cce7aa8"
 		},
 		{
 			"sourcePath": "docs/reference/agents/devsecops-agent.md",
 			"translationPath": "docs/reference/agents/devsecops-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "55eebb47d585bf1acb94a87ffefaa3cf0161cfa8649a82eabb3ab6359511fdef"
-		},
-		{
-			"sourcePath": "docs/reference/agents/README.md",
-			"translationPath": "docs/reference/agents/index.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "9d70f2928e9df0355221dfa9ad1603bd2d105999c608428dd9850e43c7423dc6"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "fb8bd12b84bb7cb119b0c9d0433cba1d227662c444facacf95e5f4246e1218a9"
 		},
 		{
 			"sourcePath": "docs/reference/agents/operations-agent.md",
@@ -496,8 +490,8 @@
 		{
 			"sourcePath": "docs/reference/agents/pipeline-deploy-agent.md",
 			"translationPath": "docs/reference/agents/pipeline-deploy-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "ab916c4063ddc209b56a55b18e1c2d4d0005753333f02c2ceed97c679817ea31"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "f38f5abcd4c76974a6faf79162a8f61ac6603aa1438fd555cd6b64c008ea8980"
 		},
 		{
 			"sourcePath": "docs/reference/agents/product-agent.md",
@@ -508,14 +502,20 @@
 		{
 			"sourcePath": "docs/reference/agents/quality-agent.md",
 			"translationPath": "docs/reference/agents/quality-agent.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "5a36c118b26e23b69c70db4144257aa3239d69bccff476cf1cc3057a4ee13aae"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "6ab4f59581bc535753b4922fcdeebee3e3d292bbd7618a0ec73c7fc5b04f86af"
+		},
+		{
+			"sourcePath": "docs/reference/agents/README.md",
+			"translationPath": "docs/reference/agents/index.mdx",
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "5ea690f907fc28e41e4f31d9abab29cb8a3a493346c57b0c81380e570f89fcf3"
 		},
 		{
 			"sourcePath": "docs/reference/diagrams.md",
 			"translationPath": "docs/reference/diagrams.mdx",
-			"sourceCommit": "3c76878775915b6dc510fa7e1ef0991ba510cd53",
-			"sourceHash": "4437f27f043c3a68bfdd0142ebe05da67b9ed1d752e1df3b560c030c9117a13d"
+			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+			"sourceHash": "25a897efef531c8c6ceabeacb7b1ad5fb89041aab4296eba17bf55a5ecca84a0"
 		},
 		{
 			"sourcePath": "docs/reference/examples/test-pro/README.md",

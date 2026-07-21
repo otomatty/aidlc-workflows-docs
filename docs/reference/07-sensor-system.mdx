@@ -214,7 +214,7 @@ bun .claude/tools/aidlc-sensor-required-sections.ts \
    bun .claude/tools/aidlc-learnings.ts persist --slug <slug> --selections-json <path>
    ```
 
-   決定論的な書き込み役はこのツールです。競合判断はしません。各学習を `aidlc/spaces/<space>/memory/{project,team}.md` へプラクティスとして書き込み、センサー選択についてはマニフェストと起点ステージの `sensors:` メタデータ部へのインポート追加を、1 つの `withAuditLock` トランザクション内で行います。その後 `RULE_LEARNED` / `SENSOR_PROPOSED` を出します。
+   決定論的な書き込み役はこのツールです。競合判断はしません。各学習を `aidlc/spaces/<active-space>/memory/{project,team}.md` へプラクティスとして書き込み、センサー選択についてはマニフェストと起点ステージの `sensors:` メタデータ部へのインポート追加を、1 つの `withAuditLock` トランザクション内で行います。その後 `RULE_LEARNED` / `SENSOR_PROPOSED` を出します。
 
 この選択ファイルは再実行用の成果物でもあります。永続化が途中で落ちても、人間へ再プロンプトせず同じ JSON を再適用できます（書き込まれた各行に `{/* cid:<slug>:<id> */}` マーカーを持たせることで内容存在による冪等性を実現します）。
 

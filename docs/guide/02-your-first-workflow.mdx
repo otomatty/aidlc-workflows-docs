@@ -143,10 +143,10 @@ Progress: 4/32 overall | 1/7 IDEATION stages complete. Next: Market Research
 <a id="inception-phase"></a>
 ## インセプションフェーズ (Inception)
 
-インセプションでは要件を具体化し、解決策を設計します。ステージ 2.1（Reverse Engineering）は **サブエージェント** として動く点が特徴的です。コンダクターは aidlc-developer-agent にコードスキャンを委譲し、その後 aidlc-architect-agent に統合を委譲します。このステージは既存コードベース（**brownfield**）のプロジェクトでのみ実行されます。
+インセプションでは要件を具体化し、解決策を設計します。ステージ 2.1（Reverse Engineering）は **パイプライン**（2 リンクのチェーン）として動く点が特徴的です。コンダクターは aidlc-developer-agent にコードスキャンを委譲し、その後 aidlc-architect-agent に統合と成果物の書き出しを委譲します。このステージは既存コードベース（**brownfield**）のプロジェクトでのみ実行されます。
 
 ```
-─── Stage 2.1: Reverse Engineering (subagent) ──────────────────────────────
+─── Stage 2.1: Reverse Engineering (pipeline) ─────────────────────────────
 Delegating to aidlc-developer-agent for code scan...
 [Running in background — no interaction needed]
 ...
@@ -218,8 +218,8 @@ sequenceDiagram
     A->>A: ステージの手順を実行
     A->>U: 完了サマリーを提示
     U->>A: 承認ゲートに応答
-    A->>O: 状態ファイルを更新
-    O->>O: 次のステージへ進む
+    A->>O: 承認またはスキップの結果を報告
+    O->>O: エンジンが状態を更新してルーティング
 ```
 
 \{/* Text fallback: あなたが /aidlc を実行します。コンダクターがステージファイルを読み、ナレッジとともにエージェントペルソナを読み込みます。エージェントが対話モードを提示し、あなたが入力し、エージェントが手順を実行して完了サマリーを提示します。あなたが承認ゲートに応答すると、コンダクターが結果をエンジンに伝え、状態が進みます。 */\}
@@ -227,7 +227,7 @@ sequenceDiagram
 <a id="subagent-delegation"></a>
 ### サブエージェントへの委譲 (Subagent Delegation)
 
-2 つのステージ（2.1 Reverse Engineering、3.5 Code Generation）はサブエージェントとして実行されます。コンダクターはバックグラウンドのサブプロセスに委譲し、実行中にあなたが対話することはありません。ワークスペース検出（0.2）は現在ではサブエージェントではなく、`aidlc-utility init` の中で決定論的に実行されます。
+4 つのステージがバックグラウンドのサブエージェントへディスパッチされます。2.1 Reverse Engineering（パイプライン: 開発者によるスキャンの後、アーキテクトによる統合と書き出し）、2.2 Practices Discovery（サブエージェントのハブアンドスポーク: 主担当のドラフト、互いにブラインドな 3 つの支援レビュー、人間へのインタビュー、主担当による統合）、2.4 User Stories（モブ: 協働者が並行で貢献し、判断を要する意見の相違はステージ途中であなたに提示されることがあります）、3.5 Code Generation（サブエージェント）です。Practices Discovery は、スポークと最終統合の間で意図的にあなたを議論の場へ招き入れます。User Stories のモブも、ステージ途中で判断確認を提示することがあります。ワークスペース検出（0.2）はサブエージェントではなく、`aidlc-utility intent-birth` の中で決定論的に実行されます。
 
 ```mermaid
 sequenceDiagram
@@ -242,7 +242,7 @@ sequenceDiagram
     T-->>O: 構造化サマリーを返す
     O->>U: 完了サマリーを提示
     U->>O: 承認ゲートに応答
-    O->>O: 状態を更新して前進
+    O->>O: 結果を報告し、エンジンが状態を更新して前進
 ```
 
 \{/* Text fallback: コンダクターがステージファイルを読み、コンテキストを準備して Task ツール経由で委譲します。サブエージェントはユーザー操作なしで自律実行し、構造化サマリーを返します。コンダクターはそのサマリーをあなたに提示し、あなたが承認ゲートに応答すると、コンダクターが結果をエンジンに伝えて状態を進めます。 */\}
@@ -265,7 +265,7 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/
 └── verification/           # Phase boundary verification reports
 ```
 
-（チームナレッジは 1 つ上のスペースレベル、すなわち `aidlc/spaces/<space>/knowledge/` に置かれます。これは `intents/` の隣にあり、そのスペースのすべてのインテントを通して蓄積されます。同様に、チームが承認したプラクティスと学習内容は `aidlc/spaces/<space>/memory/` にあるそのスペースのメモリ層に置かれ、インテントをまたいで持続します。）
+（チームナレッジは 1 つ上のスペースレベル、すなわち `aidlc/spaces/<space>/knowledge/` に置かれます。これは `intents/` の隣にあり、そのスペースのすべてのインテントを通して蓄積されます。同様に、チームが承認したプラクティスと学習内容は `aidlc/spaces/<active-space>/memory/` にあるアクティブスペースのメモリ層に置かれ、インテントをまたいで持続します。）
 
 ---
 

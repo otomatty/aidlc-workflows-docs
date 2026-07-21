@@ -52,7 +52,7 @@ core/aidlc-common/stages/
 | `produces` | このステージが書く成果物（そのまま順方向の辺になる） |
 | `lead_agent` | このステージに責任を持つペルソナ |
 | `support_agents` | 主担当の後にコンダクターが読み込む任意の観点 |
-| `mode` | `inline`、`subagent`、または予約済みの `agent-team` |
+| `mode` | `inline`、`subagent`、`pipeline`、`mob`、または予約済みの `agent-team` |
 | `for_each` | 任意。実体ごとの反復を駆動する成果物名 |
 
 本文は `## Steps` から始まります。主担当エージェントが従う命令形の文章です。その後ろに `## Sensors` と `## Learn` の区画が続きます。フィールド一覧の完全版、型、制約については [フィールドリファレンス — 使用条件](/reference/stage-definition#field-reference--when-to-use) を参照してください。
@@ -119,7 +119,7 @@ bun .claude/tools/aidlc-graph.ts validate-scope <scope-name>
 bun .claude/tools/aidlc-orchestrate.ts next --stage <your-slug> --single
 ```
 
-エンジンの `--single` モードは、その 1 ステージだけを隔離して実行します。解決済みの受け取り・生成パス、主担当エージェント、ルール、センサーを持つ単一の `run-stage` ディレクティブを出力し、コンダクターがそれを実行し、合成 ID の `STAGE_STARTED` / `STAGE_COMPLETED` の組を監査ログに残します。`--single` 実行は意図的に隔離されています。**主ワークフローの `Current Stage` には決して触れません。** ツールは単体実行から主ワークフローを進めることを拒否するので、ステージを 1 つだけ単独実行しても、進行中のワークフローが脱線することはありません。
+エンジンの `--single` モードは、その 1 ステージだけを隔離して実行します。解決済みの受け取り・生成パス、主担当エージェント、ルール、センサーを持つ単一の `run-stage` ディレクティブを出力し、コンダクターがそれを実行し、合成 ID の `STAGE_STARTED` / `STAGE_COMPLETED` の組を監査ログに残します。ディレクティブは `single: true` を持つため、コンダクターは設定された本文、トポロジー、レビュワー、完了チェックを実行し、`report --single --stage <slug> --result completed` で一度だけ報告して `done` で停止します。ワークフローの学習事項の処理や、ワークフロー承認ゲートの開始は行いません。`--single` 実行は意図的に隔離されています。**主ワークフローの `Current Stage` には決して触れません。** ツールは単体実行から主ワークフローを進めることを拒否するので、ステージを 1 つだけ単独実行しても、進行中のワークフローが脱線することはありません。
 
 <a id="the-runner-skill-is-optional-packaging"></a>
 ### ランナースキルは任意のパッケージ

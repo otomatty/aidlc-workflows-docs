@@ -24,7 +24,7 @@ flowchart TD
     end
 
     subgraph RULES["ルール"]
-        GR["aidlc/spaces/<space>/memory/\n(org → team → project →\nphase → stage ルールチェーン)"]
+        GR["aidlc/spaces/<active-space>/memory/\n(org → team → project →\nphase → stage ルールチェーン)"]
     end
 
     subgraph CONTEXT["エージェントコンテキスト"]
@@ -283,7 +283,7 @@ aidlc/knowledge/aidlc-architect-agent/naming-conventions.md
 | 長めの文章、図、表でもよい | 短く、命令形で、1 行ずつにすべき |
 | 例: API Gateway 標準、コーディング規約、ドメイン用語集 | 例: 「PII を決してログに記録しない」「すべてのデータアクセスはリポジトリ層を経由する」「DynamoDB の `scan` 操作を使う設計は却下する」 |
 
-実用的な見分け方があります。**違反したときに人間のレビュアーがステージの出力を差し戻すなら、それはスペースのメモリ層（`aidlc/spaces/<space>/memory/`）に置くべきです。** レビュアーがレビューのときに背景文脈として使うだけなら、それはナレッジです。
+実用的な見分け方があります。**違反したときに人間のレビュアーがステージの出力を差し戻すなら、それはスペースのメモリ層（`aidlc/spaces/<active-space>/memory/`）に置くべきです。** レビュアーがレビューのときに背景文脈として使うだけなら、それはナレッジです。
 
 ルールとナレッジは別の平面にあり、そのため読み込み方も異なります。ナレッジファイルは、ステージ中にエージェントが重み付けして使う参考資料です。ルールは厳密加算のチェーン、つまり org、team、project、フェーズ、ステージを通じて解決され、それをフレームワークがワークフロー前にコンパイルします。適用可能なすべてのルールがエージェントに届き、何かが黙って落とされることはありません。層の間の矛盾は、team または project ルールが最初に書かれた受け入れ時点で検出されるので、ステージ途中で調停されることはありません。
 
@@ -306,7 +306,7 @@ sequenceDiagram
     participant TAK as チームのエージェント固有ナレッジ
     participant PA as 先行成果物
 
-    O->>G: 手順 1: aidlc/spaces/<space>/memory/ を読み込む
+    O->>G: 手順 1: aidlc/spaces/<active-space>/memory/ を読み込む
     Note over G: 解決済みの org → team → project → phase → stage ルールチェーン
     G-->>O: ルールの読み込み完了（解決済みチェーン）
 
@@ -337,7 +337,7 @@ sequenceDiagram
 
 | 手順 | 読み込み元 | 読み込まれるもの | 優先度 |
 |------|--------|-----------|----------|
-| 1 | `aidlc/spaces/<space>/memory/` | 解決済みの org → team → project → フェーズ → ステージルールチェーン | 振る舞いのルール — 適用可能なルールはすべて読み込まれる（厳密加算） |
+| 1 | `aidlc/spaces/<active-space>/memory/` | 解決済みの org → team → project → フェーズ → ステージルールチェーン | 振る舞いのルール — 適用可能なルールはすべて読み込まれる（厳密加算） |
 | 2 | `.claude/knowledge/aidlc-shared/` | 共有方法論の原則 | フレームワークレベルの既定値 |
 | 3 | `.claude/knowledge/<agent>/` | エージェント固有の方法論 | エージェントの専門知識 |
 | 4 | `aidlc/knowledge/aidlc-shared/` | チーム全体標準 | 会社の既定値 |

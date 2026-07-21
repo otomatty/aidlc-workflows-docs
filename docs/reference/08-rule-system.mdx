@@ -9,10 +9,10 @@ description: バージョン 0.5.0 のルールシステムにおける配置、
 <a id="layout"></a>
 ## 配置
 
-ルールは、スペースメモリ層 `aidlc/spaces/<space>/memory/` に置かれます。ここはワークスペースルートにある、人が直接編集できる単一の集合であり、各ハーネスはそれぞれのネイティブな取り込み機構（Claude の `@` による取り込み用スタブ、Kiro のリソースグロブ、Codex の `AIDLC_RULES_DIR`）を通じてこれを読みます。ファイル名は中立なスコープ名です。
+ルールは、アクティブなスペースのメモリ層 `aidlc/spaces/<active-space>/memory/` に置かれます。ここはワークスペースルートにある、人が直接編集できる単一の集合であり、各ハーネスはそれぞれのネイティブな取り込み機構（Claude の `@` による取り込み用スタブ、Kiro のリソースグロブ、Codex の `AIDLC_RULES_DIR`）を通じてこれを読みます。ファイル名は中立なスコープ名です。
 
 ```
-aidlc/spaces/<space>/memory/
+aidlc/spaces/<active-space>/memory/
 ├── org.md
 ├── team.md
 ├── project.md
@@ -23,7 +23,7 @@ aidlc/spaces/<space>/memory/
     └── operation.md
 ```
 
-この配置は、チーム著述のハーネス設定（以前は別のプラクティス名前空間にあったもの）と、自己学習型ガードレール（以前は 2 階層だったもの）を、`aidlc/spaces/<space>/memory/` という 1 つのスペースメモリディレクトリに統合したものです。
+この配置は、チーム著述のハーネス設定（以前は別のプラクティス名前空間にあったもの）と、自己学習型ガードレール（以前は 2 階層だったもの）を、`aidlc/spaces/<active-space>/memory/` という 1 つのアクティブなスペースメモリディレクトリに統合したものです。
 
 <a id="filename-derived-scope"></a>
 ## ファイル名から導出するスコープ

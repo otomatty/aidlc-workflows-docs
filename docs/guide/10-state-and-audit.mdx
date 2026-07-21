@@ -140,11 +140,13 @@ stateDiagram-v2
 ```mermaid
 sequenceDiagram
     participant O as オーケストレーター
+    participant E as エンジン
     participant S as ステージ実行
     participant H as 監査フック
     participant A as audit/ シャード
 
-    O->>A: STAGE_STARTED を記録
+    O->>E: 次のディレクティブを要求
+    E->>A: STAGE_STARTED を出力
     O->>S: ステージ作業を実行
     S->>S: 成果物を intent の記録ディレクトリに書き込む
     S->>H: PostToolUse フックが発火
@@ -152,11 +154,12 @@ sequenceDiagram
     S->>O: ステージ作業が完了
     O->>A: 承認ゲートの選択肢を記録
     O->>O: ユーザーに承認ゲートを提示
-    O->>A: GATE_APPROVED / GATE_REJECTED を記録
-    O->>A: STAGE_COMPLETED を記録
+    O->>E: 承認または却下を報告
+    E->>A: ゲート結果を出力
+    E->>A: 承認時に STAGE_COMPLETED を出力
 ```
 
-\{/* テキスト代替: オーケストレーターはこのクローンの audit/ シャードに STAGE_STARTED を記録します。ステージ実行が成果物を書き込むと PostToolUse フックが発火し、ARTIFACT_CREATED または ARTIFACT_UPDATED イベントを追記します。ステージが完了すると、オーケストレーターは承認ゲートの選択肢、ユーザーの判断、STAGE_COMPLETED の順に記録します。 */\}
+\{/* テキスト代替: オーケストレーターが次のディレクティブを要求し、エンジンが STAGE_STARTED を出力します。ステージ実行が成果物を書き込むと PostToolUse フックが ARTIFACT_CREATED または ARTIFACT_UPDATED を追記します。ステージ作業と承認ゲートの後、オーケストレーターが結果を報告します。エンジンはゲート結果を出力し、承認時には状態更新とルーティングを行いながら STAGE_COMPLETED を出力します。 */\}
 
 ---
 

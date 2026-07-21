@@ -129,7 +129,7 @@ checks have proven reliable.
 スウォームの機構そのものはコードであり、そこから先は開発者リファレンスの領域です。
 
 - **レフェリー** `aidlc-swarm.ts` — 決まった入出力だけを持つ `prepare` / `check` / `finalize` サブコマンド。作業ツリーを分岐作成し、判定を実行し、マージ前にすべての申告済みユニットを再検証し（嘘つきコンダクター防止）、マージバックを直列化し、6 個の `SWARM_*` 監査イベントを出します。
-- **エンジン** `aidlc-orchestrate.ts` — 決定論的な `next` / `report` ルーター。どのコンストラクションバッチがスウォーム対象になるかを判断します。
+- **エンジン** `aidlc-orchestrate.ts` — `next`、`report`、`park` のちょうど 3 つのサブコマンドを持つ決定論的ルーター。どのコンストラクションバッチがスウォーム対象になるかを判断します。
 - **ボルト DAG パーサー** — 依存ブロックを `runtime-graph.json` に読み込むコンパイル工程です。
 
 この 3 つの正式契約は [スキルシステム § 6](/reference/skill-system#6-the-swarm-referee-the-driver-seam-and-the-bolt-dag) にあり、`bolt_dag` ノードのスキーマは [ランタイムグラフ](/reference/runtime-graph) にあります。コンダクター自体の章は [オーケストレーター](/reference/orchestrator) です。

@@ -196,7 +196,7 @@ cp .claude/settings.local.json.example .claude/settings.local.json
 <a id="narrowing-permissions"></a>
 ### 権限を狭める
 
-許可一覧からツールを外すと、利用のたびに手動承認が必要になります。`Task` を外すと、サブエージェントステージ（2.1 リバースエンジニアリング、3.5 コード生成）は委譲ごとに権限確認が出る点に注意してください。ワークスペース検出（0.2）は `aidlc-utility init` の内部で決定論的に実行されるため、`Task` は使いません。
+許可一覧からツールを外すと、利用のたびに手動承認が必要になります。`Task` を外すと、4 つのディスパッチ型ステージ（2.1 リバースエンジニアリング pipeline、2.2 プラクティス発見 subagent、2.4 ユーザーストーリー mob、3.5 コード生成 subagent）は委譲ごとに権限確認が出る点に注意してください。ワークスペース検出（0.2）は `aidlc-utility intent-birth` の内部で決定論的に実行されるため、`Task` は使いません。
 
 ---
 

@@ -150,7 +150,7 @@ fragments:                    # PROSE — spliced into the stage body
 
 `test-pro` はステージ、コントリビューション、センサー、サポートエージェント、スコープ、方法論ナレッジを出荷します。より豊かなプラグインは、後からメソッド / ルールも追加できます。メモリの投影は延期されたままです（18 章 §8 のステータスを参照）。
 
-- **エージェント。** `agents/<plugin>-<role>-agent.md` を `plugin:` 付きで置きます。プラグイン接頭辞がコアのファイル名接頭辞 `aidlc-` を置き換え、ファイル名の語幹はフロントマターの `name` と一致しなければなりません（例: `agents/test-pro-metrics-agent.md` は `name: test-pro-metrics-agent` を持ちます）。コンポーズ後に自動で検出され、プラグインのステージから `lead_agent` / `support_agents` として指名できます。同じパスで内容が異なる衝突が起きても上書きされず、コンポーズがドロップログに記録します。[エージェントの追加](/harness-engineering/adding-an-agent) を参照してください。
+- **エージェント。** `agents/<plugin>-<role>-agent.md` を `plugin:` 付きで置きます。プラグイン接頭辞がコアのファイル名接頭辞 `aidlc-` を置き換え、ファイル名の語幹はフロントマターの `name` と一致しなければなりません（例: `agents/test-pro-metrics-agent.md` は `name: test-pro-metrics-agent` を持ちます）。コンポーズ後に自動で検出され、プラグインのステージから `lead_agent` / `support_agents` として指名できます。同じパスで内容が異なる衝突が起きても上書きされず、コンポーズがドロップログに記録します。OpenCode でのコンポーズでは、ネイティブな `.opencode/agents/` のサブエージェント複製も作成され、入れ子の `task` 委譲は拒否されます。[エージェントの追加](/harness-engineering/adding-an-agent) を参照してください。
 - **センサー。** `sensors/aidlc-<id>.md` のマニフェスト **と** `tools/` 配下のスクリプトを両方出荷します。両方必要です。マニフェストだけでも検出はされますが、実行するにはスクリプトが `tools/` に存在しなければなりません。自分のステージへは `sensors:` で結び付け、コアステージへはコントリビューションの `adds.sensors` で結び付けます。[センサー](/harness-engineering/sensors) を参照してください。
 - **メソッド / ルール。** *（⏳ 延期中。）* `contributes.memory` で `memory/` サブツリー、すなわち `memory/phases/<phase>.md`（または `memory/{org,team,project}.md`）を出荷します。設計上は **デフォルトスペースのメソッドシード**（`aidlc/spaces/default/memory/`）へマージされますが、パッケージャー / コンポーズフックはまだ `memory/` を投影もマージもしません。`rules/` ディレクトリを出荷してはいけません。そのパスはもう読まれません（ルール層はスペースごとのメモリへ移動しました）。[ルールとループ](/harness-engineering/rules-and-the-loop) を参照してください。
 - **ナレッジ。** エージェント別の **方法論** ナレッジを `knowledge/<agent-slug>/` に出荷します。これはフレームワーク出荷側の `<harness>/knowledge/` ツリーへ投影され、そのエージェントがステージを主導またはサポートするときに読み込まれます。ただし **ドメイン / チームナレッジ**（`aidlc/spaces/<space>/knowledge/`）は初期化時に空の利用者ランタイム状態であり、プラグインからは出荷しません。[チームナレッジ](/harness-engineering/team-knowledge) を参照してください。
@@ -181,13 +181,17 @@ codex plugin add test-pro@<marketplace>                      # Codex
 ```bash
 # git pull your plugin repo, copy the Kiro projection into the project:
 cp -r dist/plugins/<name>/kiro/. <project>/
-# run the composer explicitly (the one working invocation today):
+# preferred when aidlc is on PATH:
+AIDLC_PLUGIN_ROOT="<plugin-root>" AIDLC_PROJECT_DIR="<project>" \
+  AIDLC_HARNESS_DIR=.kiro aidlc plugin sync
+
+# fallback: run the composer explicitly:
 AIDLC_PLUGIN_ROOT="<plugin-root>" AIDLC_PROJECT_DIR="<project>" \
   AIDLC_HARNESS_DIR=.kiro bun "<plugin-root>/hooks/compose.ts"
 # open in Kiro IDE or kiro-cli chat → /aidlc
 ```
 
-> **まだ接続されていません。** 初回入力で自動的にコンポーザーを起動する `.kiro.hook` と、`aidlc plugin compose` のラッパー CLI は設計済みですが未実装です。出力される `.kiro.hook` は今のところ不活性で、キーロ CLI は `.kiro.hook` を読まず、`${PLUGIN_ROOT}` を設定するキーロホストも存在しません。実装されるまでは、上の明示的な `bun compose.ts` 呼び出しを使ってください。延期項目の全一覧は 18 章 §8「ステータス」を参照してください。
+> **キーロに関する注意。** 出力される `.kiro.hook` は、依然としてプラグインルート環境変数に対するホスト側の対応に依存します。バイナリが使える場合は `AIDLC_PLUGIN_ROOT` を付けた `aidlc plugin sync` を、使えない場合はフォールバックとして上の明示的な `bun compose.ts` 呼び出しを使ってください。
 
 <a id="trust"></a>
 ### 信頼

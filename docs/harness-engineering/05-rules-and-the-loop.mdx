@@ -67,12 +67,12 @@ org → team → project → phase → stage
 <a id="where-a-kept-learning-lands"></a>
 ### 残した学習事項はどこへ着地するか
 
-確認済みの学習事項は、そのままプラクティスです。プラクティス検出が確認するのと同じスペースメモリーファイル、`aidlc/spaces/<space>/memory/team.md` と `memory/project.md` に着地します。別の `*-learnings.md` 保存先はありません。ゲートは話題別の見出しに基づいて振り分けます。
+確認済みの学習事項は、そのままプラクティスです。プラクティス検出が確認するのと同じスペースメモリーファイル、`aidlc/spaces/<active-space>/memory/team.md` と `memory/project.md` に着地します。別の `*-learnings.md` 保存先はありません。ゲートは話題別の見出しに基づいて振り分けます。
 
 | ゲートでの見出し | 着地先 | 監査イベント |
 |---|---|---|
-| `Interpretation / Deviation / Tradeoff`（解釈 / 差異 / トレードオフ） | `aidlc/spaces/<space>/memory/project.md`（既定） | `RULE_LEARNED` |
-| 同じものを 1 クリックで昇格 | `aidlc/spaces/<space>/memory/team.md` | `RULE_LEARNED` |
+| `Interpretation / Deviation / Tradeoff`（解釈 / 差異 / トレードオフ） | `aidlc/spaces/<active-space>/memory/project.md`（既定） | `RULE_LEARNED` |
+| 同じものを 1 クリックで昇格 | `aidlc/spaces/<active-space>/memory/team.md` | `RULE_LEARNED` |
 | `Open question`（未解決の疑問） | どこにも書かれない。調査項目は昇格されない | — |
 
 既定のスコープは**プロジェクト**です。もっとも狭いスコープです。学びがこのプロジェクトを超えて役立つ場合は、1 クリックの "promote to team" 操作により `memory/team.md` へ広げられます。組織へ広げる経路はありません。組織のプラクティスはフレームワーク出荷時または組織によって著述され、別の手続きを通るべきものだからです。既定を狭くしておくことで、1 つのプロジェクトだけの予想外の出来事が、誤って組織全体のルールになるのを防ぎます。学習ループとプラクティス検出は、異なるライフサイクルを通じて同じファイルに書き込みます。ループは日付付き項目を 1 件ずつ追記し、プラクティス検出は区画全体を確認します。解決器が並べる順序は、明快な整数チェーンの組織 → チーム → プロジェクト → フェーズです。

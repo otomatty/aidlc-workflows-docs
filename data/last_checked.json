@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "cf48b73ee647c25611f23971ae602875fb7b5430",
-	"last_checked_commit_date": "2026-07-18 17:21:04 +1000",
-	"last_checked_commit_message": "feat: opencode harness support (2.4.6) (#571)",
-	"checked_at": "2026-07-19",
-	"site_version": "2.4.6"
+	"last_checked_commit_sha": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
+	"last_checked_commit_date": "2026-07-21 09:15:11 +0200",
+	"last_checked_commit_message": "feat: /aidlc --doctor --export — redacted diagnostic bundle (2.5.2) (#576)",
+	"checked_at": "2026-07-21",
+	"site_version": "2.5.2"
 }

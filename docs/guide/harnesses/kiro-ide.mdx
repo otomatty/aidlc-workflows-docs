@@ -79,7 +79,7 @@ IDE はフックの文脈を **環境変数 `USER_PROMPT`** で渡します（st
 | フック登録 | `settings.json` の `hooks` ブロック | `.kiro/hooks/*.kiro.hook` ファイル（Agent Hooks パネルに表示） |
 | ゲートと質問 | `AskUserQuestion` ウィジェット | 番号付きの文章による選択肢（番号で回答）。`[Answer]:` タグを持つ質問ファイルが正本のまま残る |
 | ステータスライン | 現在のステージ + モデル + コンテキスト % | 利用不可。`/aidlc --status` と、各ゲートで表示される進捗行を使う |
-| サブエージェント用ステージ（2.1、3.5） | `Task` ツール | Kiro の `subagent` ツール -> `aidlc-developer-agent` / `aidlc-architect-agent`。IDE は委譲先エージェントのツール許可をエージェント `.md` のフロントマター `tools:` から読み取るため、パッケージ時に注入される。agent-v1 JSON は CLI 専用 |
+| ディスパッチ型ステージ（2.1 pipeline、2.2 subagent、2.4 mob、3.5 subagent） | `Task` ツール | Kiro の `subagent` ツール -> 各エージェント設定（全 14 ペルソナ）。IDE は委譲先エージェントのツール許可をエージェント `.md` のフロントマター `tools:` から読み取るため、パッケージ時に注入される。agent-v1 JSON は CLI 専用 |
 | 構築スウォーム | 並列 `Task` フロア、任意の ultracode Workflow | サブエージェントのファンアウトのみ。`AIDLC_USE_SWARM=1` は無効（no-op）と通知される |
 | セッション監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | `SESSION_STARTED` / `SESSION_ENDED`（コンパクション前イベントはない） |
 | MCP サーバー | 5 個を同梱（`.mcp.json`: `context7` + 4 つの AWS サーバー） | 同梱なし |

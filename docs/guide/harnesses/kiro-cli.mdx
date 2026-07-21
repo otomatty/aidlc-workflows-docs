@@ -47,7 +47,7 @@ Claude Code ハーネスと同一です。`/aidlc <description>` でワークフ
 |------|-------------|----------|
 | ゲートと質問 | `AskUserQuestion` ウィジェット | 番号付きの文章による選択肢（番号で回答）。`[Answer]:` タグを持つ質問ファイルが正本のまま残る |
 | ステータスライン | 現在のステージ + モデル + コンテキスト % | 利用不可。`/aidlc --status` と、各ゲートで表示される進捗行を使う |
-| サブエージェント用ステージ（2.1、3.5） | `Task` ツール | Kiro の `subagent` ツール -> `aidlc-developer-agent` / `aidlc-architect-agent` 設定 |
+| ディスパッチ型ステージ（2.1 pipeline、2.2 subagent、2.4 mob、3.5 subagent） | `Task` ツール | Kiro の `subagent` ツール -> 各エージェント設定（全 14 ペルソナが設定を同梱） |
 | 構築スウォーム | 並列 `Task` フロア、任意の ultracode Workflow | サブエージェントのファンアウトのみ。`AIDLC_USE_SWARM=1` は無効（no-op）と通知される |
 | セッション監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | `SESSION_STARTED` のみ（Kiro にはセッション終了 / コンパクション前のフックがない） |
 | 転送ループ強制（Stop フック） | 対話・無人の両セッション | 対話セッションのみ。`--no-interactive` 実行では Stop フックによるブロックが効かない |
