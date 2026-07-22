@@ -85,22 +85,23 @@ stateDiagram-v2
 
 監査証跡はインテントの記録ディレクトリ内、`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/audit/` にあります。これは **クローンごとのシャード**（`<host>-<clone>.md`）として書かれる追記専用のイベントログです。各クローンは自分自身のシャードにしか追記しないため、並行するワークツリーからの同時追記でも git の競合が起きません。読み手は `audit/*.md` をグロブで集めて ISO タイムスタンプ順にマージソートし、判断とイベントの完全な時系列履歴を復元します。
 
-<a id="68-event-taxonomy"></a>
-### 68 種類のイベント分類
+<a id="74-event-taxonomy"></a>
+### 74 種類のイベント分類
 
-イベントは 18 のカテゴリに整理されています。
+イベントは 19 のカテゴリに整理されています。
 
 | カテゴリ | 件数 | イベント |
 |----------|------:|--------|
 | **ワークフローのライフサイクル** | 4 | `WORKFLOW_STARTED`, `WORKFLOW_COMPLETED`, `WORKFLOW_PARKED`, `WORKFLOW_UNPARKED` |
 | **フェーズのライフサイクル** | 4 | `PHASE_STARTED`, `PHASE_COMPLETED`, `PHASE_VERIFIED`, `PHASE_SKIPPED` |
 | **ステージのライフサイクル** | 6 | `STAGE_STARTED`, `STAGE_AWAITING_APPROVAL`, `STAGE_REVISING`, `STAGE_COMPLETED`, `STAGE_SKIPPED`, `STAGE_JUMPED` |
-| **セッション** | 4 | `SESSION_STARTED`, `SESSION_RESUMED`, `SESSION_COMPACTED`, `SESSION_ENDED`（フックが出力） |
+| **セッション** | 5 | `SESSION_STARTED`, `SESSION_RESUMED`, `SESSION_COMPACTED`, `SESSION_ENDED`, `HUMAN_TURN`（フックが出力） |
 | **初期化** | 3 | `WORKSPACE_SCAFFOLDED`, `WORKSPACE_SCANNED`, `WORKSPACE_INITIALISED` |
-| **移動** | 4 | `SCOPE_CHANGED`, `SCOPE_DETECTED`, `DEPTH_CHANGED`, `TEST_STRATEGY_CHANGED` |
-| **対話** | 4 | `DECISION_RECORDED`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED` |
+| **移動** | 6 | `SCOPE_CHANGED`, `SCOPE_DETECTED`, `DEPTH_CHANGED`, `TEST_STRATEGY_CHANGED`, `RECOMPOSED`, `PLUGIN_SELECTION_CHANGED` |
+| **対話** | 6 | `DECISION_RECORDED`, `GATE_APPROVED`, `GATE_REJECTED`, `QUESTION_ANSWERED`, `REVIEW_REQUESTED`, `REVIEW_COMPLETED` |
 | **成果物** | 3 | `ARTIFACT_CREATED`, `ARTIFACT_UPDATED`（audit-logger フック）、`ARTIFACT_REUSED` |
 | **サブエージェント** | 1 | `SUBAGENT_COMPLETED`（log-subagent フック） |
+| **レビュアースコープ** | 1 | `REVIEWER_SCOPE_BLOCKED`（reviewer-scope フック） |
 | **ユーティリティ** | 1 | `HEALTH_CHECKED` |
 | **エラー／回復** | 2 | `ERROR_LOGGED`, `RECOVERY_COMPLETED` |
 | **構築ボルト（Construction Bolt）** | 4 | `BOLT_STARTED`, `BOLT_COMPLETED`, `BOLT_FAILED`, `AUTONOMY_MODE_SET` |
@@ -127,7 +128,7 @@ stateDiagram-v2
 各エントリは次のフィールドを持つ構造化形式です。
 
 - **タイムスタンプ（Timestamp）** — ISO 8601 形式の日時
-- **イベント（Event）** — 68 種類のイベント種別のいずれか
+- **イベント（Event）** — 74 種類のイベント種別のいずれか
 - **詳細（Details）** — イベントごとのデータ（ステージ名、判断内容、成果物のパスなど）
 
 エントリは時系列順に追記されます。特定のステージの履歴を見たいなら、その `STAGE_STARTED` と `STAGE_COMPLETED` のエントリを探し、その間にあるものを見てください。

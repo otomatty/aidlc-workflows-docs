@@ -295,8 +295,8 @@ report awaiting-approval  →  [?] AwaitingApproval
 <a id="audit-event-taxonomy"></a>
 ## 監査イベント分類
 
-以下では **72 イベント**を 17 カテゴリに分類します（正規レジストリ
-`audit-format.md` では同じ 72 イベントを 19 カテゴリに分けます。分類は表現上のもので、
+以下では **74 イベント**を 17 カテゴリに分類します（正規レジストリ
+`audit-format.md` では同じ 74 イベントを 19 カテゴリに分けます。分類は表現上のもので、
 イベント集合が不変条件です）。今後のリリース向けに事前登録されたイベントを除き、
 各イベントにはツールまたはフックのエミッターがちょうど 1 つあります。エミッター欄が
 `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` の
@@ -351,6 +351,8 @@ report awaiting-approval  →  [?] AwaitingApproval
 |---|---|---|
 | `DECISION_RECORDED` | `tools/aidlc-log.ts` | 選択肢を記録するため `AskUserQuestion` の前に出力 |
 | `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | ユーザーの応答後に出力 |
+| `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | コンダクターが §12a レビュアーサブエージェントをディスパッチしたときに出力 |
+| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` のレビュアー判定を読み取ったときに出力。完了系のすべての状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在のワークフロー試行の、かつ宣言済み成果物への最新の関連書き込みより後の一致する受領記録を要求する。ユニット単位のステージは該当ユニットごとに 1 件を要求し、成果物変更による無効化をそのユニットに限定する。自律スウォームの確定は加えて、各設定済みユニットの Bolt 開始後の受領記録を要求する。 |
 
 <a id="scope-and-configuration"></a>
 ### スコープと構成
@@ -506,7 +508,7 @@ FALLBACK。
 状態を持ちません。`prepare` はユニット単位のワークツリーをフォークして
 `SWARM_STARTED` を出力し（コンダクターが明確なダウングレードを報告すると、ウェーブ 4
 マイルストーン 16 で本番化した `SWARM_DEGRADED` も出力）、`finalize` はコンダクターが
-収束を主張した集合を再検証し、ユニット単位の対、失敗ユニット単位のバトン行、バッチ集計を
+収束を主張した集合を、各設定済みユニットの Bolt 後終端レビュアー受領記録を含めて再検証し、ユニット単位の対、失敗ユニット単位のバトン行、バッチ集計を
 出力します。`check` サブコマンドは助言のみで何も出力しません。エンジンは読み取り専用で、
 コンダクターは監査イベントを出力しないため、決定的ツールがスウォーム分類全体を所有します。
 これらの行は、依存関係で結ばれたユニットのバッチのライフサイクルを追跡します。バッチ開始時の
@@ -519,8 +521,8 @@ FALLBACK。
 | イベント | エミッター | トリガー |
 |---|---|---|
 | `SWARM_STARTED` | `tools/aidlc-swarm.ts` | スウォーム審判の `prepare` が依存関係で結ばれたユニットのバッチをフォーク |
-| `SWARM_UNIT_CONVERGED` | `tools/aidlc-swarm.ts` | スウォームユニットが `finalize` ゲートで再検証に合格（かつ改ざんなし）し、マージバックされた（マージバックに失敗した収束ユニットは、再試行の `finalize` がマージするまで行なし） |
-| `SWARM_UNIT_FAILED` | `tools/aidlc-swarm.ts` | スウォームユニットが `finalize` 再検証に失敗（未主張、主張したが不合格、または改ざん） |
+| `SWARM_UNIT_CONVERGED` | `tools/aidlc-swarm.ts` | スウォームユニットが再検証で緑・改ざんなしとなり、設定された Bolt 後レビュアー受領記録が存在した上でマージバックされた（マージバックに失敗した収束ユニットは、再試行の `finalize` がマージするまで行なし） |
+| `SWARM_UNIT_FAILED` | `tools/aidlc-swarm.ts` | スウォームユニットが `finalize` 再検証に失敗（未主張、主張したが不合格、改ざん、または設定されたレビュアー受領記録の欠落） |
 | `SWARM_BATON_RETURNED` | `tools/aidlc-swarm.ts` | スウォームユニットがオーケストレーター仲介の調整のため、コンダクターへバトンを返却 |
 | `SWARM_COMPLETED` | `tools/aidlc-swarm.ts` | バッチ内の全ユニットが終了（収束または失敗）。バッチ閉鎖 |
 | `SWARM_DEGRADED` | `tools/aidlc-swarm.ts` | `AIDLC_USE_SWARM=1` が要求されたが `Workflow` ツールが利用不可。コンダクターがサブエージェント下限で実行 |

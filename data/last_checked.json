@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-	"last_checked_commit_date": "2026-07-21 09:15:11 +0200",
-	"last_checked_commit_message": "feat: /aidlc --doctor --export — redacted diagnostic bundle (2.5.2) (#576)",
-	"checked_at": "2026-07-21",
-	"site_version": "2.5.2"
+	"last_checked_commit_sha": "f122f193f527604415deb546903f861ee8963343",
+	"last_checked_commit_date": "2026-07-22 17:02:23 +1000",
+	"last_checked_commit_message": "feat(reviewer): enforce the §12a reviewer step on every completion route (2.5.5) (#569)",
+	"checked_at": "2026-07-22",
+	"site_version": "2.5.5"
 }
