@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "f122f193f527604415deb546903f861ee8963343",
-	"last_checked_commit_date": "2026-07-22 17:02:23 +1000",
-	"last_checked_commit_message": "feat(reviewer): enforce the §12a reviewer step on every completion route (2.5.5) (#569)",
-	"checked_at": "2026-07-22",
-	"site_version": "2.5.5"
+	"last_checked_commit_sha": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+	"last_checked_commit_date": "2026-07-23 19:23:33 +1000",
+	"last_checked_commit_message": "fix(kiro-ide): never read stdin in adapter entry paths (2.5.7) (#639)",
+	"checked_at": "2026-07-23",
+	"site_version": "2.5.7"
 }

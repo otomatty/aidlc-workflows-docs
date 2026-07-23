@@ -215,7 +215,7 @@ flowchart TD
 
 ---
 
-<a id="aidlc---doctor-health-check"></a>
+<a id="aidlc-doctor-health-check"></a>
 ### `/aidlc --doctor` — 健全性チェック
 
 この実装に必要な前提条件、設定、ステージグラフ整合性がすべて揃っているかを検証します。完全に成功すれば終了コード 0、何か失敗すれば 1 を返します。どちらの場合も完全なレポートを標準出力へ書くため、オーケストレーターはそのまま表示できます。`--doctor` は**読み取り専用**です。まだインテントが存在しない新しい実行環境（`audit/` シャードがない状態）ではファイルを作らないため、最初のインテント作成前でも安全に実行できます。インテントが存在するようになった後は、`HEALTH_CHECKED` 監査行を記録します。
@@ -284,7 +284,7 @@ flowchart TD
 
 ---
 
-<a id="aidlc---doctor---export--write-a-diagnostic-report"></a>
+<a id="aidlc-doctor-export-write-a-diagnostic-report"></a>
 ### `/aidlc --doctor --export` — 診断レポートを書き出す
 
 `--doctor` に `--export` を付けると、小さく秘匿化された診断レポートを書き出し、プロジェクトディレクトリ全体を共有しなくても不調なワークフローをデバッグできるようにします。まず**新規の** doctor 実行を行い（レポートがキャッシュ済みの診断を反映することはありません）、その後にレポートを書き出します。レポートの書き出しが doctor の終了コードを変えることはありません。

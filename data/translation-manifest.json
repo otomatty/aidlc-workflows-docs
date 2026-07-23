@@ -39,8 +39,8 @@
 		{
 			"sourcePath": "docs/guide/06-agents.md",
 			"translationPath": "docs/guide/06-agents.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "dd0e8b8a59a4371c97b3a3afba36d11031d9552b4ff09f18fdd7a6a477dccaf2",
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "ca5386ca01a1c000a7b73f2ba7179aed697879ad22a841100a9ce09fccba613d",
 			"route": "/guide/agents-overview"
 		},
 		{
@@ -82,8 +82,8 @@
 		{
 			"sourcePath": "docs/guide/13-customization.md",
 			"translationPath": "docs/guide/13-customization.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "739392782aee25eaf131e1e35a21097701f97870f8c27754b70370b0ab2d58b5"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "b925aab896af827962adfabc91751ee85da6e195bf0971b5c39bf5e4dbca973b"
 		},
 		{
 			"sourcePath": "docs/guide/14-artifacts-reference.md",
@@ -94,8 +94,8 @@
 		{
 			"sourcePath": "docs/guide/15-troubleshooting.md",
 			"translationPath": "docs/guide/15-troubleshooting.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "b1459a83c8bd161032e4c8fcd67311bf5d62289c43df8ed07edc445c5bcb26d6"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "1cc6fbc1621f1cf1c4a03ae828ab44f969a09bc2f70292d3e4c3ded2f965d8f3"
 		},
 		{
 			"sourcePath": "docs/guide/16-worked-examples.md",
@@ -112,8 +112,8 @@
 		{
 			"sourcePath": "docs/guide/agents/architect-agent.md",
 			"translationPath": "docs/guide/agents/architect-agent.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "49b5bc4178854ba823b4f493918268e4fdc04c18660d1cb4589363dbb8110f16"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "9dab849d08f651572134d95c27d88a120a8b763c0a784a9404baaeaf792ad542"
 		},
 		{
 			"sourcePath": "docs/guide/agents/aws-platform-agent.md",
@@ -196,8 +196,8 @@
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-cli.md",
 			"translationPath": "docs/guide/harnesses/kiro-cli.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "ff84e3b40ac44b580fa5d4d71a9f1b5d9372ea95f00e145a5d140a921f32692d"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "216d353ecda3d8f3701cc1aaa6b5b87a384c89f840426013f4801f8e1f327414"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-ide.md",
@@ -232,20 +232,20 @@
 		{
 			"sourcePath": "docs/harness-engineering/01-anatomy-of-a-stage.md",
 			"translationPath": "docs/harness-engineering/01-anatomy-of-a-stage.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "a17adfa77077d404beaadaebd521cf966b5f4104f6986022fb2b3f3c1991adff"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "d68c07740e7dfcd59a03f0cb3572a966a62bcd50c0c612ffc221e0d5fc183e60"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/02-adding-a-stage.md",
 			"translationPath": "docs/harness-engineering/02-adding-a-stage.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "59a3524e4f97e75b41d4f98dca32ea6cd34665867fe96a4eeac85730507eb0b6"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "e74ca843195f879ea41458e07fa7f41aca776397ce06a64586212f76f197a247"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/03-adding-an-agent.md",
 			"translationPath": "docs/harness-engineering/03-adding-an-agent.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "d2d367fe85da8a5ccba2206226b343d824c38b05abcb9ce35c71e5a413895a35"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "2ed438afa7006538b22856be8f77f61c7186144c5b0a55c48731d6b629b5bd58"
 		},
 		{
 			"sourcePath": "docs/harness-engineering/04-scopes.md",
@@ -358,8 +358,8 @@
 		{
 			"sourcePath": "docs/reference/05-agent-system.md",
 			"translationPath": "docs/reference/05-agent-system.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "e876e343a5ce5a0e96f4f273a50289ede13d0f4b23154dcdc42b609d355d8351"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "cd7701d55b2c300f0a9c9e3b29f623124d4aaad7d28dcbb40daf904971e5da97"
 		},
 		{
 			"sourcePath": "docs/reference/06-hooks-and-tools.md",
@@ -412,8 +412,8 @@
 		{
 			"sourcePath": "docs/reference/14-claude-features.md",
 			"translationPath": "docs/reference/14-claude-features.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "ab5997a0f014ff7215493b1ebb39af82aaec9fe63afc562fd4cebf92f13f709b"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "29c8f60b0a029defa76dac69bbafd12bfbdc96023fa507dfa2662072a6620fcc"
 		},
 		{
 			"sourcePath": "docs/reference/15-stage-definition.md",
@@ -508,8 +508,8 @@
 		{
 			"sourcePath": "docs/reference/agents/README.md",
 			"translationPath": "docs/reference/agents/index.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "5ea690f907fc28e41e4f31d9abab29cb8a3a493346c57b0c81380e570f89fcf3"
+			"sourceCommit": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
+			"sourceHash": "04affaecb23c243d2021d2c2475a30121d1111115ab7cb93af43e552f4ffb871"
 		},
 		{
 			"sourcePath": "docs/reference/diagrams.md",

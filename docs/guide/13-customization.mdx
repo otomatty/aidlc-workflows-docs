@@ -28,9 +28,9 @@ cp .claude/settings.local.json.example .claude/settings.local.json
 <a id="agent-models-and-effort-tiers"></a>
 ## エージェントのモデルと推論量（階層）
 
-同梱されるエージェントには `tier:`（`judgment` | `balanced` | `templated`）が記述されており、ビルド時に各ハーネス固有のモデルと推論量のキーへ投影されます。`judgment` エージェントはセッションのモデルと推論量を継承し、`balanced` エージェントは中規模モデルに固定され、`templated` エージェントは推論量がさらに抑えられます。完全な投影表は [エージェントシステム](/reference/agent-system) を参照してください。
+同梱されるエージェントには `tier:`（`judgment` | `balanced` | `templated`）が記述されており、ビルド時に各ハーネス固有のモデルと推論量のキーへ投影されます。`judgment` エージェントはセッションのモデルと推論量を継承し、`balanced` エージェントは中規模モデルに固定され（Claude Code、Codex、opencode の場合。Kiro では全ティアがセッションのモデルを継承します）、`templated` エージェントはそれら非 Kiro ハーネスで推論量がさらに抑えられます。完全な投影表は [エージェントシステム](/reference/agent-system) を参照してください。
 
-インストール済みコピー内で **1 つのエージェント**の挙動だけ変えたい場合は、投影済みの値を直接編集します。たとえば Claude エージェントの `.claude/agents/aidlc-*-agent.md` フロントマターで `model: opus` にするか、Kiro エージェント JSON の `"model"` を変更します。この編集は `dist/<harness>/` の実行環境を再コピーするまで残ります。ソースから独自の配布物をビルドする際に **すべてのエージェント**へ上限を設けたい場合は、`core/memory/org.md` / `project.md` のフロントマターに `tier_cap:` を設定するか、`AIDLC_TIER_CAP=<tier>` を付けてパッケージャーを実行します。どちらも実行時設定ではなく、`bun scripts/package.ts` に対するパッケージ作成時の調整値です。
+インストール済みコピー内で **1 つのエージェント**の挙動だけ変えたい場合は、投影済みの値を直接編集します。たとえば Claude エージェントの `.claude/agents/aidlc-*-agent.md` フロントマターで `model: opus` にします。Kiro では設定面がハーネスによって異なります。Kiro CLI ではエージェントの `.kiro/agents/aidlc-*-agent.json` に `"model"` フィールドを追加し、Kiro IDE ではエージェントの `.kiro/agents/aidlc-*-agent.md` フロントマターに `model:` 行を設定します（エージェント JSON ファイルは CLI 専用で、IDE はスポーン時に `.md` フロントマターを読みます）。どちらの場合も、あなたのインストールで有効なモデル ID を使ってください。Kiro のエージェントはモデル固定なしで出荷されるため、既定ではセッションのモデルを継承します。この編集は `dist/<harness>/` の実行環境を再コピーするまで残ります。ソースから独自の配布物をビルドする際に **すべてのエージェント**へ上限を設けたい場合は、`core/memory/org.md` / `project.md` のフロントマターに `tier_cap:` を設定するか、`AIDLC_TIER_CAP=<tier>` を付けてパッケージャーを実行します。どちらも実行時設定ではなく、`bun scripts/package.ts` に対するパッケージ作成時の調整値です。
 
 ---
 
@@ -77,7 +77,7 @@ cp .claude/settings.local.json.example .claude/settings.local.json
 <a id="scope-configuration"></a>
 ## スコープ設定
 
-スコープは、どのステージをどの深さとテスト戦略で実行するかを制御します。AI-DLC には 9 個の名前付きスコープがあり、完全な表（EXECUTE / 全ステージ数、既定の深さ、テスト戦略、各用途）は [スコープ、深さ、テスト戦略 § 9 個のスコープ](/guide/scopes-and-depth#the-9-scopes) が唯一の正本です。この節では、その*設定*と上書きを扱います。
+スコープは、どのステージをどの深さとテスト戦略で実行するかを制御します。AI-DLC には 9 個の名前付きスコープがあり、完全な表（EXECUTE / 全ステージ数、既定の深さ、テスト戦略、各用途）は [スコープ、深さ、テスト戦略 § 9 個のスコープ](/guide/scopes-and-depth#the-9-core-scopes) が唯一の正本です。この節では、その*設定*と上書きを扱います。
 
 <a id="choosing-a-scope"></a>
 ### スコープを選ぶ

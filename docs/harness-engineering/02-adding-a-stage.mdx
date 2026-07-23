@@ -55,7 +55,7 @@ core/aidlc-common/stages/
 | `mode` | `inline`、`subagent`、`pipeline`、`mob`、または予約済みの `agent-team` |
 | `for_each` | 任意。実体ごとの反復を駆動する成果物名 |
 
-本文は `## Steps` から始まります。主担当エージェントが従う命令形の文章です。その後ろに `## Sensors` と `## Learn` の区画が続きます。フィールド一覧の完全版、型、制約については [フィールドリファレンス — 使用条件](/reference/stage-definition#field-reference--when-to-use) を参照してください。
+本文は `## Steps` から始まります。主担当エージェントが従う命令形の文章です。その後ろに `## Sensors` と `## Learn` の区画が続きます。フィールド一覧の完全版、型、制約については [フィールドリファレンス — 使用条件](/reference/stage-definition#field-reference-when-to-use) を参照してください。
 
 <a id="3-wire-the-dependency-edges-so-the-graph-places-it"></a>
 ### 3. グラフがそのステージを正しい位置に置けるよう依存関係の辺を結ぶ
@@ -66,9 +66,9 @@ core/aidlc-common/stages/
 - **`consumes`** は、そのステージが読む成果物を列挙します。各項目は `required` 真偽値を持ちますが、その意味は *有効な計画に対して* 解釈されます。`required: true` は「このスコープで生成元ステージが走るなら、この受け取り条件を満たす必要がある」であって、「生成元は常に走る」ではありません。既存開発でのみ必要な受け取り条件には `conditional_on: brownfield` を付けます。無条件の受け取りではフィールド自体を省略します（`always` という値はありません）。
 - **`produces`** は順方向の辺の一覧です。下流ステージが「成果物 Z を生成するのは誰か」と尋ねたとき、グラフは `producersOf()` を通して答えます。つまり `produces: [Z]` を宣言したステージが上流に結ばれます。
 
-この 3 つが整合していれば、コンパイラーがステージを自動的に正しい位置に置きます。位置合わせのために `stage-graph.json` を手で編集することはありません。`requires_stage`、`consumes[].required`、`consumes[].conditional_on`、`for_each` の細かな意味（集約が宣言ではなく推論されることも含む）は [フィールドリファレンス — 使用条件](/reference/stage-definition#field-reference--when-to-use) を参照してください。
+この 3 つが整合していれば、コンパイラーがステージを自動的に正しい位置に置きます。位置合わせのために `stage-graph.json` を手で編集することはありません。`requires_stage`、`consumes[].required`、`consumes[].conditional_on`、`for_each` の細かな意味（集約が宣言ではなく推論されることも含む）は [フィールドリファレンス — 使用条件](/reference/stage-definition#field-reference-when-to-use) を参照してください。
 
-<a id="4-compile-so-stage-graphjson-regenerates"></a>
+<a id="4-regenerate-the-harnesses-so-stage-graphjson-recompiles"></a>
 ### 4. ハーネスを再生成して `stage-graph.json` を再コンパイルする
 
 今 `core/` の下に著述した YAML が正本です。パッケージャーを実行して、`core/` からすべての `dist/<harness>/` ツリーを再生成します。これにより新しいステージファイルがコピーされ、グラフも再コンパイルされます。
