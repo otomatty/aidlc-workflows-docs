@@ -22,18 +22,29 @@ bun は *非対話* シェルから見える `PATH` 上になければなりま�
 <a id="install"></a>
 ## インストール
 
+以下でコピーする配布物は、[aidlc-workflows](https://github.com/awslabs/aidlc-workflows) リポジトリの clone（`v2` ブランチ）から取得したものです。
+
 ```bash
-cp -r dist/kiro-ide/.kiro your-project/.kiro
-cp -r dist/kiro-ide/aidlc your-project/aidlc        # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
+
+```bash
+mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro-ide/.kiro/. your-project/.kiro/
+cp -R dist/kiro-ide/aidlc/. your-project/aidlc/     # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
 cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 ```
+
+`cp -R <src>/. <dst>/` の形式はツリーの**中身**をコピーします。`your-project/.kiro` が既に存在する場合（アップグレード）でも、存在しない場合（新規インストール）でも同じように動作します。単純な `cp -r dist/kiro-ide/.kiro your-project/.kiro` は、既存の `.kiro/` の内側に 2 つ目の `.kiro` を入れ子にしてしまい、IDE は新しいファイルを一切認識しません。
 
 `aidlc/` ディレクトリはワークスペースシェルです。エンジンが読む事前構築済みの `aidlc/spaces/default/memory/` メソッドツリーを含みます。これは `.kiro/` の **兄弟ディレクトリ** であり、その内側ではないため、別々にコピーしてください（または `dist/kiro-ide/` ツリー全体をまとめてコピーしても構いません）。これがないと、`/aidlc --doctor` の "workspace shell ready" 判定は失敗します。
 
 `your-project/` を Kiro IDE で開きます。このインストールには次が含まれます。
 
 - `.kiro/skills/aidlc/SKILL.md` - `/aidlc` を呼び出したときに読み込まれるコンダクターです。同梱の `.kiro/settings/cli.json` と agent-v1 JSON ファイルは CLI 専用の互換サーフェスであり、IDE の既定エージェントを選択するものではありません。
-- `.kiro/hooks/*.kiro.hook` - IDE ネイティブのフック形式で登録されるフレームワークフックです。IDE の Agent Hooks パネルに表示されます。
+- `.kiro/hooks/aidlc-*.json` - IDE ネイティブの v2 フック形式で登録されるフレームワークフックです。IDE の Agent Hooks パネルに表示されます。（Kiro IDE 1.x は、このハーネスが以前出荷していたレガシーの `.kiro.hook` 形式を実行しなくなりました。それらのビルドでは、レガシーフックは何の表示もなく無効のままになります。）
 
 チャットパネルで `/aidlc --doctor` を実行してセットアップを確認し、その後 `/aidlc <description>` でワークフローを開始します。
 
@@ -45,21 +56,24 @@ Claude Code ハーネスと同一です。`/aidlc <description>` でワークフ
 <a id="how-hooks-work-on-kiro-ide"></a>
 ## Kiro IDE でフックはどう動くか
 
-Kiro IDE は `.kiro/hooks/` 配下の `.kiro.hook` ファイルを通じてフックを登録します（`hooks` ブロックをエージェント JSON の中で読む Kiro CLI とは異なる仕組みです）。各 `.kiro.hook` はコマンドを実行し、それが共有の `aidlc-kiro-adapter.ts` シムを経由して IDE のフックイベントを、バイト共有のコアフックが期待する形へ正規化します。
+Kiro IDE は `.kiro/hooks/` 配下の v2 フック JSON ファイル（`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`、トリガーは PascalCase）を通じてフックを登録します（`hooks` ブロックをエージェント JSON の中で読む Kiro CLI とは異なる仕組みです）。各フックはコマンドを実行し、それが共有の `aidlc-kiro-adapter.ts` シムを経由して IDE のフックイベントを、バイト共有のコアフックが期待する形へ正規化します。
 
-IDE はフックの文脈を **環境変数 `USER_PROMPT`** で渡します（stdin ではありません。IDE は stdin を開きますが書き込みません）。`USER_PROMPT` は JSON 文字列 `{ toolName, toolArgs, toolResult, toolSuccess }` です。IDE は `toolArgs` を空のままにするため、アダプターは `toolResult` のテキストから書き込まれたファイルパスを復元し、ペイロードを持たないフック（`runtime-compile`、`sync-statusline`）はツールのペイロードではなく監査証跡を基準に動かします。
+アダプターはフックの文脈を **環境変数 `USER_PROMPT`**（1.0 より前のチャネル）から読み取ります。コンテキストが stdin で届き `USER_PROMPT` が空になる IDE 1.x では、ペイロードに依存する 2 つのターゲット（`audit-and-sensors`、`log-subagent`）は発火するものの、可視のフックドロップを記録して何もしません。残りのフックはペイロードに依存せず、どちらの世代の IDE でも動作します。stdin コンテキストチャネルへの対応は、後続の拡張として予定されています。
 
-| フック | IDE イベント | 目的 |
-|------|-----------|---------|
-| `aidlc-session-start` | `promptSubmit` | ワークフローの再開コンテキストを注入する |
-| `aidlc-mint` | `promptSubmit` | プロンプトごとに人間ターンのイベントを記録する（human-presence ゲート） |
-| `aidlc-session-end` | `agentStop` | `SESSION_ENDED` を出力する（可観測性） |
-| `aidlc-stop` | `agentStop` | 転送ループの継続 |
-| `aidlc-block` | `preToolUse` | 承認ゲートが開いたままで、その後に人間が操作していない間はツール呼び出しを強制ブロックする（human-presence フロア） |
-| `aidlc-audit-logger` | `postToolUse`（write） | 成果物の作成 / 更新を記録する（パスは `toolResult` から取得） |
-| `aidlc-sensor-fire` | `postToolUse`（write） | 該当するセンサーを起動する（パスは `toolResult` から取得） |
-| `aidlc-runtime-compile` | `postToolUse`（shell） | 実行時グラフを再コンパイルする（監査末尾を条件に実行） |
-| `aidlc-sync-statusline` | `postToolUse`（shell） | 監査内の最新 `STAGE_STARTED` から `Current Stage` を前進方向にのみ同期する（IDE では `spec` イベントが発火しない） |
+1.0 より前のビルドでは、`USER_PROMPT` は JSON 文字列 `{ toolName, toolArgs, toolResult, toolSuccess }` です。IDE は `toolArgs` を空のままにするため、アダプターは `toolResult` のテキストから書き込まれたファイルパスを復元し、ペイロードを持たないフック（`runtime-compile`、`sync-statusline`）はツールのペイロードではなく監査証跡を基準に動かします。
+
+| フック | トリガー（マッチャー） | 目的 |
+|------|-------------------|---------|
+| `aidlc-session-start` | `SessionStart` | セッションごとに 1 回、ワークフローの再開コンテキストを注入する（レガシーの 1.0 より前のファイルはプロンプトごとの `promptSubmit` に接続されたまま。その世代にはセッション開始トリガーがない） |
+| `aidlc-mint` | `UserPromptSubmit` | プロンプトごとに人間ターンのイベントを記録する（human-presence ゲート） |
+| `aidlc-stop` | `Stop` | 転送ループの監査（勧告のみ。IDE では Stop トリガーはブロックできず、強制はコンダクター自身の Stop プロトコルに依存する） |
+| `aidlc-block` | `PreToolUse` | 承認ゲートが開いたままで、その後に人間が操作していない間はツール呼び出しを強制ブロックする（human-presence フロア） |
+| `aidlc-audit-logger` | `PostToolUse`（`fs_write\|str_replace\|fs_append`） | 成果物の作成 / 更新を記録し、続けて該当するセンサーを起動する（パスはツール結果から取得） |
+| `aidlc-log-subagent` | `PostToolUse`（`invoke_sub_agent`） | 委譲先の識別情報とともに `SUBAGENT_COMPLETED` を記録する |
+| `aidlc-runtime-compile` | `PostToolUse`（`execute_bash`） | 実行時グラフを再コンパイルする（監査末尾を条件に実行） |
+| `aidlc-sync-statusline` | `PostToolUse`（`execute_bash`） | 監査内の最新 `STAGE_STARTED` から `Current Stage` を前進方向にのみ同期する（IDE は解析可能なタスクペイロードを渡さない） |
+
+`aidlc-session-end` には **v2 の登録がありません**。IDE の `Stop` トリガーは会話の終了時ではなくアシスタントの各ターンの終わりに発火するため、登録すると同一セッション内のプロンプト間に誤った `SESSION_ENDED` が追記されてしまいます。IDE が本物のセッション終了イベントを公開するまではレガシー専用（`agentStop`、1.0 より前のビルド）のままであり、IDE 1.x では `SESSION_ENDED` は記録されません。
 
 フックが発火するたびに、チャットには "Run Command Hook" 行が表示されます。
 
@@ -76,12 +90,12 @@ IDE はフックの文脈を **環境変数 `USER_PROMPT`** で渡します（st
 
 | 項目 | Claude Code | Kiro IDE |
 |------|-------------|----------|
-| フック登録 | `settings.json` の `hooks` ブロック | `.kiro/hooks/*.kiro.hook` ファイル（Agent Hooks パネルに表示） |
+| フック登録 | `settings.json` の `hooks` ブロック | `.kiro/hooks/aidlc-*.json` の v2 フックファイル（IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook` のレガシーファイル（1.0 より前）。両方を同梱し、二重発火はしない |
 | ゲートと質問 | `AskUserQuestion` ウィジェット | 番号付きの文章による選択肢（番号で回答）。`[Answer]:` タグを持つ質問ファイルが正本のまま残る |
 | ステータスライン | 現在のステージ + モデル + コンテキスト % | 利用不可。`/aidlc --status` と、各ゲートで表示される進捗行を使う |
 | ディスパッチ型ステージ（2.1 pipeline、2.2 subagent、2.4 mob、3.5 subagent） | `Task` ツール | Kiro の `subagent` ツール -> 各エージェント設定（全 14 ペルソナ）。IDE は委譲先エージェントのツール許可をエージェント `.md` のフロントマター `tools:` から読み取るため、パッケージ時に注入される。agent-v1 JSON は CLI 専用 |
 | 構築スウォーム | 並列 `Task` フロア、任意の ultracode Workflow | サブエージェントのファンアウトのみ。`AIDLC_USE_SWARM=1` は無効（no-op）と通知される |
-| セッション監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | `SESSION_STARTED` / `SESSION_ENDED`（コンパクション前イベントはない） |
+| セッション監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | IDE 1.x では `SESSION_STARTED` のみ（本物のセッション終了トリガーがなく、`SESSION_ENDED` を記録するのは 1.0 より前のビルドのレガシーフックだけ。コンパクション前イベントもない） |
 | MCP サーバー | 5 個を同梱（`.mcp.json`: `context7` + 4 つの AWS サーバー） | 同梱なし |
 
 それ以外、つまり状態機械、インテントごとの記録ディレクトリ（`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`）配下の監査証跡と成果物、学習ループ、センサー、スコープ、深度 / テスト戦略は同一に動作します。なぜなら本当に同一であり、同じツールが `.kiro/tools/` から実行されるからです。
@@ -91,9 +105,9 @@ IDE はフックの文脈を **環境変数 `USER_PROMPT`** で渡します（st
 <a id="for-framework-developers"></a>
 ## フレームワーク開発者向け
 
-`dist/kiro-ide` は `core/` と `harness/kiro-ide/` から `bun scripts/package.ts kiro-ide` で **生成** されます（コアの複製に対して `{{HARNESS_DIR}}` トークンを `.kiro` に置換し、`rules/` を `steering/` へ改名します）。`bun scripts/package.ts --check` は差分監視であり、CI で実行されます。手書きの Kiro IDE 側ソースは `harness/kiro-ide/` にあり、オーケストレータースキル（`skills/aidlc/`）、CLI 互換のエージェント JSON 群（`agents/`）、フックアダプターと `.kiro.hook` ファイル（`hooks/`）、CLI 専用の `settings/cli.json`、`AGENTS.md` を含みます。編集するのはそれら（または `core/`）であり、生成物の `dist/kiro-ide` ではありません。
+`dist/kiro-ide` は `core/` と `harness/kiro-ide/` から `bun scripts/package.ts kiro-ide` で **生成** されます（コアの複製に対して `{{HARNESS_DIR}}` トークンを `.kiro` に置換し、`rules/` を `steering/` へ改名します）。`bun scripts/package.ts --check` は差分監視であり、CI で実行されます。手書きの Kiro IDE 側ソースは `harness/kiro-ide/` にあり、オーケストレータースキル（`skills/aidlc/`）、CLI 互換のエージェント JSON 群（`agents/`）、フックアダプターと v2 フック JSON ファイル（`hooks/`）、CLI 専用の `settings/cli.json`、`AGENTS.md` を含みます。編集するのはそれら（または `core/`）であり、生成物の `dist/kiro-ide` ではありません。
 
-IDE ハーネスが CLI ハーネス（`harness/kiro/`）と異なるのは 3 点です。コンダクターが `settings/cli.json` で選択されるエージェントではなく `/aidlc` スキルであること、`.kiro.hook` ファイルを同梱すること（CLI はエージェント JSON の `hooks` ブロックに依存し、IDE はそれを無視します）、そして委譲先エージェントの `.md` ファイルに `tools:` フロントマター許可をマニフェストが注入することです（`frontmatterAdditions`）。IDE は委譲先サブエージェントのツールを agent-v1 JSON ではなく `.md` フロントマターから解決するため、この許可がないと IDE 側の委譲先エージェントはツールを持たないまま実行されます。なお、このフロントマター許可は無制限であり（IDE には `allowedCommands` / `allowedPaths` 相当がないため）、CLI の JSON サンドボックスより広い許可になります。詳細は [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) を参照してください。
+IDE ハーネスが CLI ハーネス（`harness/kiro/`）と異なるのは 3 点です。コンダクターが `settings/cli.json` で選択されるエージェントではなく `/aidlc` スキルであること、v2 フック JSON ファイルを同梱すること（CLI はエージェント JSON の `hooks` ブロックに依存し、IDE はそれを無視します）、そして委譲先エージェントの `.md` ファイルに `tools:` フロントマター許可をマニフェストが注入することです（`frontmatterAdditions`）。IDE は委譲先サブエージェントのツールを agent-v1 JSON ではなく `.md` フロントマターから解決するため、この許可がないと IDE 側の委譲先エージェントはツールを持たないまま実行されます。なお、このフロントマター許可は無制限であり（IDE には `allowedCommands` / `allowedPaths` 相当がないため）、CLI の JSON サンドボックスより広い許可になります。詳細は [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) を参照してください。
 
 <a id="next-steps"></a>
 ## 次のステップ

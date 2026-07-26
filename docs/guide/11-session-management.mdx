@@ -4,7 +4,7 @@ description: 複数セッションにまたがる再開、やり直し、ジャ�
 ---
 1 つのワークフローは複数のハーネスセッションにまたがる場合があります。AI-DLC はすべての進捗をディスクに保存するため、いつでも再開、やり直し、ジャンプ、または新規開始ができます。
 
-> **ハーネスに関する注記:** セッション再開はすべてのハーネスで機能します。状態はハーネスではなくインテントの記録ディレクトリに保存されるためです。ただし、セッションの *ライフサイクルイベント* は異なります。Claude Code は `SESSION_STARTED/RESUMED/ENDED` と `SESSION_COMPACTED` を出力し、Kiro は `SESSION_STARTED` だけを出力します。Codex は `SESSION_ENDED` を推定し、コンテキスト圧縮後にミッションを再注入します。[他のハーネスでの実行](/guide/harnesses) を参照してください。
+> **ハーネスに関する注記:** セッション再開はすべてのハーネスで機能します。状態はハーネスではなくインテントの記録ディレクトリに保存されるためです。ただし、セッションの *ライフサイクルイベント* は異なります。Claude Code は `SESSION_STARTED/RESUMED/ENDED` と `SESSION_COMPACTED` を出力し、Kiro は `SESSION_STARTED` だけを出力します。Codex は `SESSION_ENDED` を推定し、その後 compact ソースの `SessionStart` を通じてミッションを再注入します。[他のハーネスでの実行](/guide/harnesses) を参照してください。
 
 ---
 

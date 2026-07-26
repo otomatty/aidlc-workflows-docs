@@ -17,10 +17,19 @@ Kiro CLI で AI-DLC を使う場合は、**Claude Opus 4.8** が最も適して�
 <a id="install"></a>
 ## インストール
 
+以下でコピーする配布物は、[aidlc-workflows](https://github.com/awslabs/aidlc-workflows) リポジトリの clone（`v2` ブランチ）から取得したものです。
+
 ```bash
-cp -r dist/kiro/.kiro your-project/.kiro
-cp -r dist/kiro/aidlc your-project/aidlc       # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
-cp dist/kiro/AGENTS.md your-project/AGENTS.md   # merge if you already have one
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
+
+```bash
+mkdir -p your-project/.kiro your-project/aidlc
+cp -R dist/kiro/.kiro/. your-project/.kiro/
+cp -R dist/kiro/aidlc/. your-project/aidlc/    # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
+cp dist/kiro/AGENTS.md your-project/AGENTS.md  # merge if you already have one
 ```
 
 `aidlc/` ディレクトリはワークスペースシェルです。エンジンが読む事前構築済みの `aidlc/spaces/default/memory/` メソッドツリーを含みます。これは `.kiro/` の **兄弟ディレクトリ** であり、その内側ではないため、別々にコピーする必要があります（または `dist/kiro/` ツリー全体をまとめてコピーしても構いません）。これがないと、`/aidlc --doctor` の "workspace shell ready" 判定は失敗します。
@@ -28,7 +37,7 @@ cp dist/kiro/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 その後、プロジェクトでセッションを開始します。
 
 ```bash
-kiro-cli chat
+cd your-project && kiro-cli chat
 ```
 
 このインストールには `.kiro/settings/cli.json` が含まれており、`chat.defaultAgent: "aidlc"` が設定されています。そのため AI-DLC のコンダクターエージェントが既定で有効になり、`/aidlc` がそのまま使えます。**このワークスペース設定は、あなたが設定しているグローバルな既定エージェントより優先されます**。自分の既定エージェントを優先したい場合は、この設定を削除して `kiro-cli chat --agent aidlc` を使ってください。

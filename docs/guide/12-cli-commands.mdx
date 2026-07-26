@@ -547,7 +547,7 @@ bun .claude/tools/aidlc-utility.ts select-plugins aidlc,test-pro
 | `describe <id>` | 1 つのセンサーの完全なマニフェスト（コマンド、既定の重大度、`matches` グロブ、タイムアウト）を表示する |
 | `fire <id> --stage <slug> --output-path <path>` | ファイルに対してセンサーを実行し、`SENSOR_FIRED` 行と対応する結果行を出す |
 
-手動発火では、まず `SENSOR_FIRED` 監査行を出し、その後ちょうど 1 行の端末出力として `SENSOR_PASSED`、`SENSOR_FAILED`、`SENSOR_BUDGET_OVERRIDE` のいずれかを出します。失敗した場合、詳細ファイルはインテントの記録ディレクトリ内にある `<record>/.aidlc-sensors/<stage>/` へ書きます。センサーは助言用なので、失敗してもツールの失敗にはならず、コマンドは終了コード 0 を返します。フレームワークに同梱される 4 つのセンサーは `required-sections`、`upstream-coverage`、`linter`、`type-check` です。
+手動発火では、まず `SENSOR_FIRED` 監査行を出し、その後ちょうど 1 行の端末出力として `SENSOR_PASSED`、`SENSOR_FAILED`、`SENSOR_BUDGET_OVERRIDE` のいずれかを出します。失敗した場合、詳細ファイルはインテントの記録ディレクトリ内にある `<record>/.aidlc-sensors/<stage>/` へ書きます。センサーは助言用なので、失敗してもツールの失敗にはならず、コマンドは終了コード 0 を返します。フレームワークに同梱される 5 つのセンサーは `claim-sources`、`required-sections`、`upstream-coverage`、`linter`、`type-check` です。
 
 ```
 bun .claude/tools/aidlc-sensor.ts list

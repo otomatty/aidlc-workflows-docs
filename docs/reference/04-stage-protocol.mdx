@@ -84,9 +84,9 @@ AI-DLC ワークフローのステージが実行されます。 5つのフェ�
 | # |チェック |
 |---|------|
 | 1 |承認ゲートで、`bun .claude/tools/aidlc-orchestrate.ts report --stage <slug> --result awaiting-approval` を呼び出します。エンジンは状態を `[-]` から `[?]` 承認待ち に切り替え、`STAGE_AWAITING_APPROVAL` をアトミックに発行するため、プロンプトが開いている間、ステータスには保留されたゲートが表示されます。 (`STAGE_STARTED` / `[-]` トランジションは、ステージがアクティブになった時点で発行されています。) |
-| 2 | `audit/` シャードに手書きではなく、`bun .claude/tools/aidlc-log.ts decision` 経由で `AskUserQuestion` を呼び出す前にオプションをログに記録します。
-| 3 |ユーザーが応答した後、`bun .claude/tools/aidlc-log.ts answer` を介して正確な選択を記録し、承認には `aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` を、要求の変更には `aidlc-orchestrate.ts report --stage <slug> --result rejected --user-input "<feedback>"` を使用します。改訂作業の後は、ゲートを再提示する前に `--result revised` を報告します。 |
-| 4 |ユーザー入力を決して要約しないでください。正確なオプション ラベルをログ ツールに渡します。自動ステージの場合は `N/A -- [reason]` | を使用します。
+| 2 |ゲート以外の質問については、`audit/` シャードに手書きではなく、`bun .claude/tools/aidlc-log.ts decision` 経由で `AskUserQuestion` を呼び出す前にオプションをログに記録し、その後 `aidlc-log.ts answer` を介して正確な応答をログに記録します。 |
+| 3 |承認ゲートの応答後、承認には `aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` を、要求の変更には `aidlc-orchestrate.ts report --stage <slug> --result rejected --user-input "<feedback>"` を呼び出します。ゲートに対しては `aidlc-log.ts decision` や `aidlc-log.ts answer` を決して呼び出さないでください。改訂作業の後は、ゲートを再提示する前に `--result revised` を報告します。 |
+| 4 |ユーザー入力を決して要約しないでください。正確なオプション ラベルを担当のログ ツールまたはレポート ツールに渡します。自動ステージの場合は `N/A -- [reason]` を使用します。 |
 | 5 |インタラクションごとに 1 つの監査エントリ -- ログ/状態ツールは単一イベントの発行を強制します。複数のイベントを 1 つの呼び出しにマージしないでください。
 | 6 |ステージ終了時に、`aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` (ゲートステージ) または `report --stage <slug> --result completed` (初期化) を呼び出します。エンジンは `[?]`/`[-]` を `[x]` に反転し、ゲートされると `GATE_APPROVED` を放出し、状態ツール | を介してアトミックに `STAGE_COMPLETED` を放出します。
 | 7 |作業を開始する前に、前のステージのタスク `completed` と現在のステージのタスク `in_progress` を `activeForm` でマークします (`sync-statusline` フックは状態の同期を処理します)。
@@ -175,8 +175,7 @@ AskUserQuestion({
 ```mermaid
 flowchart TD
     COMPLETE["ステージ作業完了"]
-    REPORT_AWAITING["awaiting-approval を報告:\nエンジンが証拠を検証しゲートを開く"]
-    AUDIT_PRE["このクローンの監査シャードに追加:\nステージ概要 + オプション\n(最新の ISO タイムスタンプ)"]
+    REPORT_AWAITING["awaiting-approval を報告:\nエンジンが証拠を検証しゲートを開く\n(STAGE_AWAITING_APPROVAL を発行)"]
     ASK["ユーザーに質問する:\n承認ゲート"]
 
     APPROVE["承認する"]
@@ -184,16 +183,11 @@ flowchart TD
     ACCEPT["そのまま受け入れる\n(避難用ハッチ)"]
     ADD_STAGE["スキップされたステージを追加\n(アイデア/インセプションのみ)"]
 
-    AUDIT_POST_A["ログ: ユーザーが承認しました\n(最新のタイムスタンプ)"]
-    AUDIT_POST_C["ログ: ユーザーが変更を要求しました\n(最新のタイムスタンプ)"]
-    AUDIT_POST_ACC["ログ: ユーザーはそのまま受け入れられました\n(最新のタイムスタンプ)"]
-    AUDIT_POST_ADD["ログ: ユーザーがステージを追加しました\n(新しいタイムスタンプ)"]
-
     REVISION_COUNT{"リビジョン\nサイクル >= 3?"}
     NOTE_2ND["2 回目の改訂後:\n脱出ハッチが\n次のサイクルをアクティブ化することに注意してください"]
 
-    REPORT_APPROVED["approved を報告:\nエンジンが完了しルーティング"]
-    REPORT_REJECTED["rejected を報告:\nエンジンがフィードバックと改訂状態を記録"]
+    REPORT_APPROVED["正確な選択とともに approved を報告:\nエンジンが GATE_APPROVED を発行し、\n完了しルーティング"]
+    REPORT_REJECTED["フィードバックとともに rejected を報告:\nエンジンが GATE_REJECTED を発行し、\n改訂状態を記録"]
     REPORT_REVISED["revised を報告:\nエンジンが証拠を検証しゲートを再度開く"]
     PROGRESS["進捗ラインを表示:\n全体の N/合計"]
     NEXT_STAGE["次のステージに進む"]
@@ -201,22 +195,22 @@ flowchart TD
     REVISE["ユーザー フィードバックを\nステージ アーティファクトに適用します"]
     RE_PRESENT["再提示完了\nメッセージ"]
 
-    ADD_EXEC["スキップされたステージ\nワークフローに挿入"]
+    ADD_EXEC["スキップされたステージをワークフローに挿入\n(スコープツールが変更を記録)"]
 
-    COMPLETE --> REPORT_AWAITING --> AUDIT_PRE --> ASK
+    COMPLETE --> REPORT_AWAITING --> ASK
     ASK --> APPROVE
     ASK --> CHANGES
     ASK --> ACCEPT
     ASK --> ADD_STAGE
 
-    APPROVE --> AUDIT_POST_A --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
-    ACCEPT --> AUDIT_POST_ACC --> REPORT_APPROVED
+    APPROVE --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
+    ACCEPT --> REPORT_APPROVED
 
-    CHANGES --> AUDIT_POST_C --> REPORT_REJECTED --> REVISION_COUNT
-    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> REPORT_REVISED --> RE_PRESENT --> AUDIT_PRE
+    CHANGES --> REPORT_REJECTED --> REVISION_COUNT
+    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> REPORT_REVISED --> RE_PRESENT --> ASK
     REVISION_COUNT -->|">= 3"| REVISE
 
-    ADD_STAGE --> AUDIT_POST_ADD --> ADD_EXEC
+    ADD_STAGE --> ADD_EXEC
 
     style COMPLETE fill:#e8f5e9,stroke:#388e3c
     style REPORT_AWAITING fill:#e3f2fd,stroke:#1565c0
@@ -242,9 +236,9 @@ flowchart TD
 <a id="part-0-audit-logging"></a>
 ### パート 0: 監査ログ
 
-完了メッセージを表示する前に:
-1. `<record>/audit/` (クローンシャードごと) に追加: ステージ名、作業概要、アーティファクト
-2. 承認応答を受信した後、ユーザーの選択に新しいタイムスタンプを追加します
+ゲートの監査証跡は report が所有します:
+1. ゲートを提示する前に、`report --result awaiting-approval` が保留中のゲートを記録します (`STAGE_AWAITING_APPROVAL`)
+2. 応答後、`report --result approved|rejected --user-input "<exact choice>"` がユーザーの選択を記録します (`GATE_APPROVED`/`GATE_REJECTED`)。ゲートのプロンプトや選択に対して個別のログ エントリは追加されません
 
 <a id="part-1-announcement"></a>
 ### パート 1: お知らせ
@@ -569,12 +563,13 @@ AskUserQuestion({
 `PostToolUse` フックはファイルの書き込みを自動ログします。会話イベントをログに記録する必要がある
 手動で（最も一般的に見逃されるステップ）。
 
-**各承認ゲートで:** (1) BEFORE `AskUserQuestion` -- オプションを追加します
-新しいタイムスタンプ。 (2) 応答後 -- ユーザーの選択を新しいものに追加します
-タイムスタンプ。
+**各承認ゲートで:** (1) `AskUserQuestion` の前に -- `awaiting-approval` を報告します。
+(2) 応答後 -- 正確なユーザー入力とともに `approved` または `rejected` を報告します。
+report が所有するライフサイクル イベントがゲートの完全な監査記録です。
+`aidlc-log.ts decision` や `aidlc-log.ts answer` は呼び出さないでください。
 
-**各質問の対話時:** 回答を受け取った後 -- Q&A を追加
-まとめ。
+**ゲート以外の各質問の対話時:** 回答を受け取った後 -- `aidlc-log.ts answer` を
+通じて Q&A の概要を追加します。
 
 ---
 

@@ -83,7 +83,7 @@ AI-DLC は、ステージ中にエージェントとやり取りする 3 つの�
 ```mermaid
 flowchart TD
     COMPLETE["ステージ作業が完了"]
-    AUDIT_PRE["このクローンの監査シャードに追記:\nステージ概要 + 選択肢\n(新しい ISO タイムスタンプ)"]
+    REPORT_AWAITING["承認待ちを報告:\nエンジンがゲートを開き\nSTAGE_AWAITING_APPROVAL を発行"]
     ASK["AskUserQuestion:\n承認ゲート"]
 
     APPROVE["承認"]
@@ -91,48 +91,48 @@ flowchart TD
     ACCEPT["現状のまま受け入れる\n(救済手段)"]
     ADD_STAGE["スキップしたステージを追加\n(Ideation/Inception のみ)"]
 
-    AUDIT_POST_A["記録: ユーザーが承認\n(新しいタイムスタンプ)"]
-    AUDIT_POST_C["記録: ユーザーが変更を依頼\n(新しいタイムスタンプ)"]
-    AUDIT_POST_ACC["記録: ユーザーが現状のまま受け入れ\n(新しいタイムスタンプ)"]
-    AUDIT_POST_ADD["記録: ユーザーがステージを追加\n(新しいタイムスタンプ)"]
-
     REVISION_COUNT{"修正サイクル\n>= 3?"}
     NOTE_2ND["2 回目の修正後:\n次サイクルで救済手段が\n有効になることを通知"]
 
-    REPORT_APPROVED["承認を報告:\nエンジンが完了処理とルーティング"]
+    REPORT_APPROVED["選択内容をそのまま添えて承認を報告:\nエンジンが GATE_APPROVED を発行し\n完了処理とルーティング"]
+    REPORT_REJECTED["フィードバックを添えて却下を報告:\nエンジンが GATE_REJECTED を発行し\n修正中の状態を記録"]
+    REPORT_REVISED["修正済みを報告:\nエンジンがゲートを再オープン"]
     PROGRESS["進捗行を表示:\n全体の N/総数"]
     NEXT_STAGE["次のステージへ進む"]
 
     REVISE["ユーザーのフィードバックを\nステージ成果物に反映"]
     RE_PRESENT["完了メッセージを\n再提示"]
 
-    ADD_EXEC["スキップしたステージを\nワークフローに挿入"]
+    ADD_EXEC["スキップしたステージをワークフローに挿入\n(スコープツーリングが変更を記録)"]
 
-    COMPLETE --> AUDIT_PRE --> ASK
+    COMPLETE --> REPORT_AWAITING --> ASK
     ASK --> APPROVE
     ASK --> CHANGES
     ASK --> ACCEPT
     ASK --> ADD_STAGE
 
-    APPROVE --> AUDIT_POST_A --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
-    ACCEPT --> AUDIT_POST_ACC --> REPORT_APPROVED
+    APPROVE --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
+    ACCEPT --> REPORT_APPROVED
 
-    CHANGES --> AUDIT_POST_C --> REVISION_COUNT
-    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> RE_PRESENT --> AUDIT_PRE
+    CHANGES --> REPORT_REJECTED --> REVISION_COUNT
+    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> REPORT_REVISED --> RE_PRESENT --> ASK
     REVISION_COUNT -->|">= 3"| REVISE
 
-    ADD_STAGE --> AUDIT_POST_ADD --> ADD_EXEC
+    ADD_STAGE --> ADD_EXEC
 
     style COMPLETE fill:#e8f5e9,stroke:#388e3c
+    style REPORT_AWAITING fill:#e3f2fd,stroke:#1565c0
     style ASK fill:#bbdefb,stroke:#1565c0
     style APPROVE fill:#a5d6a7,stroke:#2e7d32
     style CHANGES fill:#fff9c4,stroke:#f9a825
+    style REPORT_REJECTED fill:#fff3e0,stroke:#ef6c00
+    style REPORT_REVISED fill:#e3f2fd,stroke:#1565c0
     style ACCEPT fill:#ffccbc,stroke:#bf360c
     style ADD_STAGE fill:#e1bee7,stroke:#7b1fa2
     style NEXT_STAGE fill:#c8e6c9,stroke:#388e3c
 ```
 
-\{/* テキスト代替: ステージ作業が完了すると、audit log に選択肢が記録され、AskUserQuestion が承認ゲートを提示します。承認の場合は、応答を記録し、承認を報告してエンジンが完了処理とルーティングを行い、進捗を表示して次へ進みます。変更依頼の場合は、応答を記録して修正回数を確認します。3 回未満なら、まもなく救済手段が有効になることを知らせて修正・再提示します。3 回以上なら「現状のまま受け入れる」が選択可能になります。現状のまま受け入れた場合は記録して承認を報告します。スキップしたステージを追加した場合（Ideation／Inception のみ）は、記録して計画を再コンポーズします。 */\}
+\{/* テキスト代替: ステージ作業が完了すると、承認待ちの報告がゲートを開き（エンジンが STAGE_AWAITING_APPROVAL を記録）、AskUserQuestion が承認ゲートを提示します。承認の場合は、選択内容をそのまま添えて承認を報告し、エンジンが GATE_APPROVED を記録して完了処理とルーティングを行い、進捗を表示して次へ進みます。変更依頼の場合は、フィードバックを添えて却下を報告し（エンジンが GATE_REJECTED を記録）、修正回数を確認します。3 回未満なら、まもなく救済手段が有効になることを知らせて修正し、修正済みを報告してゲートを再オープンし、再提示します。3 回以上なら「現状のまま受け入れる」が選択可能になります。現状のまま受け入れた場合は承認を報告します。スキップしたステージを追加した場合（Ideation／Inception のみ）は、計画を再コンポーズします。ゲートの監査証跡は report 呼び出しが担うため、ゲートのプロンプトや選択に対する個別のログエントリは追加されません。 */\}
 
 ---
 

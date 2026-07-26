@@ -349,8 +349,8 @@ report awaiting-approval  →  [?] AwaitingApproval
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `DECISION_RECORDED` | `tools/aidlc-log.ts` | 選択肢を記録するため `AskUserQuestion` の前に出力 |
-| `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | ユーザーの応答後に出力 |
+| `DECISION_RECORDED` | `tools/aidlc-log.ts` | 選択肢を記録するため、ゲート以外の `AskUserQuestion` の前に出力 |
+| `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | ゲート以外の質問への応答後に出力。承認の選択は `report` が所有するライフサイクルイベント |
 | `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | コンダクターが §12a レビュアーサブエージェントをディスパッチしたときに出力 |
 | `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` のレビュアー判定を読み取ったときに出力。完了系のすべての状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在のワークフロー試行の、かつ宣言済み成果物への最新の関連書き込みより後の一致する受領記録を要求する。ユニット単位のステージは該当ユニットごとに 1 件を要求し、成果物変更による無効化をそのユニットに限定する。自律スウォームの確定は加えて、各設定済みユニットの Bolt 開始後の受領記録を要求する。 |
 

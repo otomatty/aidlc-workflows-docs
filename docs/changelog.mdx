@@ -5,6 +5,32 @@ description: 旧ウォッチサイトから移行した 2.x 系の日本語変�
 このページは、旧 5 ページ構成の日本語ウォッチサイトに掲載していた `changelog.html` を Markdown へ移行した履歴アーカイブです。
 現在の Astro サイト本体は `awslabs/aidlc-workflows` の翻訳ドキュメントを表示し、この履歴は旧 v2 系サイトの要約記録を保存します。
 
+## 2.5.11
+- 日付: 2026-07-24（コミット 5cdcc63、7/26検知）
+- 種別: fix
+
+**Intent Capture の主張を根拠に接地**: 生成される意図とステークホルダーの主張が、ユーザーの記述・確認済み回答・ワークフローで選択されたスコープ・明示的に登録されたメモリのいずれかに接地されるようになった。裏付けの無い内容は事実として提示されず、省略・追加質問・人間所有の仮定（assumption）として明示のいずれかで扱われる。`intent-capture-questions.md` は `## Sources` レジスターを記録し、ステークホルダー・意思決定権限・コミュニケーション要件・ワークフロー選択スコープとプロダクト境界の一致を明示的に質問する。`intent-statement.md` と `stakeholder-map.md` はインラインのソースタグと `## Assumptions & Open Questions` を必須とし、選択されなかった回答選択肢が推測された要件や除外事項になることはない。保持された仮定は Product Lead レビューと承認ゲートの前に構造化された受諾オプションの正確な一致を要求し、受諾後も下流で仮定ラベルを維持する。新設の助言型 `claim-sources` センサーは、ステージ書き込みごとに既存の Intent Capture 成果物全体を検査し、タグ無し/未解決の主張、権威ある状態やステージ読込済みメモリ（`org.md`・`team.md`・`project.md`）と食い違うソースレジスター値、隠しコメント/フェンス内ソース、仮定の置き場所違反、非正確な仮定確認、ソースレジスター欠落を拒否する（レビュアーが追加した `## Review` 内容は除外）。Approval & Handoff は `stakeholder-map` を必須消費成果物として宣言し、依存関係がグラフ・上流カバレッジ検査から見えるようになった。**アップグレード: `dist/<harness>/` シェルの再コピーが必要（更新されたステージ・Product Lead レビュアー契約・`claim-sources` センサーが入る）。**
+
+前日7/24には CI に v2 PR ゲート（契約チェック + スモーク/ユニットテスト + changelog ガード、コミット 26130dc）と、Windows チェックアウトでドリフトガードを通すための LF 固定 `.gitattributes`（コミット c38ba24）も追加された。また翌7/25のコミット 257b43a では、Quickstart と各ハーネスガイドに clone + v2 チェックアウトの手順が追記されている（リリースなしの docs 変更）。
+
+## 2.5.10
+- 日付: 2026-07-23（コミット 17686ce、7/26検知）
+- 種別: fix
+
+**Kiro IDE >=1.0.1xx でのフック発火を復旧**: IDE がハーネス同梱のレガシー `.kiro.hook` 形式を黙って実行しなくなった問題（1.0.165 で実地確認: `HUMAN_TURN` 未発行、`SESSION_STARTED` 無し、成果物監査行無し、センサー不発火）への対応として、9つの Kiro IDE フックのうち8つがレガシー形式（pre-1.0 IDE 用）と IDE の v2 フックスキーマ（1.x+ 用、`.kiro/hooks/aidlc-*.json`）の両形式で出荷されるようになった。共存は安全で、pre-1.0 では v2 ファイルが無視され、1.x+ では v2 のみが発火する（二重発火はどの世代でも観測されず）。`session-end` のみ v2 登録を持たない: IDE の `Stop` トリガーは会話終了ではなく毎アシスタントターン末に発火するため、v2 登録すると同一セッション内のプロンプト間に偽の `SESSION_ENDED` が挟まってしまう（IDE が真のセッション終了イベントを公開するまでレガシーのみ）。1.x では `SESSION_STARTED` は発行されるが `SESSION_ENDED` は発行されない。既知の境界として、1.x はツールペイロードを stdin で渡すため `audit-and-sensors` と `log-subagent` は発火するが no-op になる（アダプターは 0.12 の `USER_PROMPT` 環境変数チャネルのみ読む。stdin 対応は後続予定）。`log-subagent` はペイロードが空の場合、従来の `Agent Type: unknown` 行の記録ではなく可視のフックドロップを記録するようになり、`--doctor` が劣化を検出できる。残る5フック（mint・block・session-start・runtime-compile・sync-statusline）はペイロード非依存で 1.x でも完全動作する。README とハーネスガイドの Kiro インストールコマンドは中身コピー方式（`mkdir -p` + `cp -R <src>/. <dst>/`）に修正された — 従来の `cp -r` 形式は既存ディレクトリ内に二重ネストを作り IDE が新フックを認識しない。**アップグレード: `mkdir -p your-project/.kiro && cp -R dist/kiro-ide/.kiro/. your-project/.kiro/` で中身をコピーすること。既存の `aidlc-*.kiro.hook` は削除しない（pre-1.0 用）。IDE の per-hook「Migrate」ボタンは押さない（v2 版は出荷済みで、IDE 生成の複製は二重発火の恐れ）。**
+
+## 2.5.9
+- 日付: 2026-07-23（コミット f32bad8、7/26検知）
+- 種別: fix
+
+**Codex のコンパクションエラーを修正**: 毎回のコンパクションで `error: hook returned invalid PostCompact hook JSON output` が出る問題を解消。Codex の PostCompact イベントはスキーマ上コンテキストを運べないため、Codex が拒否していた PostCompact フック登録を削除し、代わりにコンパクション由来の `SessionStart` イベントがスキーマでサポートされる `additionalContext` フィールド経由でワークフローコンテキストを復元する（重複した `SESSION_STARTED` 監査イベントは記録しない）。コンパクション由来の `SessionStart` 配信はアダプターの重複配信リプレイキャッシュをバイパスし、同一セッション内の2回目のコンパクションでも新鮮なワークフロー状態が再描画される。Codex CLI の最低バージョンは 0.145.0 になり（それ以前はターン途中の自動コンパクション後、次ターンまでフックが遅延して復元前の継続を1回許してしまう）、`/aidlc --doctor` がこれを強制する。**アップグレード: Codex CLI を >= 0.145.0 に更新してから `dist/codex/` を再コピー。`$CODEX_HOME/config.toml` に残る `post_compact` の trust エントリは無害で削除してもよい。**
+
+## 2.5.8
+- 日付: 2026-07-23（コミット 873cd9e、7/26検知）
+- 種別: fix
+
+**承認ゲートのデッドロックを解消**: コンダクターが人間の承認を冗長に `aidlc-log.ts answer` 経由で流してから報告する場合に、同一ターンの `answer && report` チェーンがデッドロックしていた問題を修正。ロガーは、対象ステージが既に承認待ち（`[?]`）で未解決の非ゲート質問が無い answer を認識すると、`QUESTION_ANSWERED` を発行せず `{"skipped":"QUESTION_ANSWERED",...,"reason":"approval-gate-report-owned"}` を返して正常終了し、本物の `HUMAN_TURN` を `report --result approved` のために温存する。通常のインタビュー回答は引き続きワークフロー全体の新鮮さ境界であり、1つの回答が同一ターン内の捏造された後続承認を許可することはない。ゲート後に記録された非ゲート質問への次の回答は、「Approve」等のゲート語で始まっても正確に記録される。承認ゲートの指示も更新され、`aidlc-log.ts decision` / `answer` は非ゲート質問専用、承認・却下はすべて `aidlc-orchestrate.ts report` 経由と明示された。**アップグレード: `dist/<harness>/` シェルの再コピーが必要。**
+
 ## 2.5.7
 - 日付: 2026-07-23（コミット ccf284b、7/23検知）
 - 種別: fix

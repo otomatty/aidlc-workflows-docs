@@ -145,6 +145,14 @@ export CONTEXT7_API_KEY=<your-key>
 
 AI-DLC のインストールは、使用するハーネス向けの配布物をプロジェクトにコピーする形で行います。以下の手順は **Claude Code**（`dist/claude/.claude/` ツリー）を対象としています。Kiro または Codex を使う場合は、それぞれ専用の配布物とインストール手順があるので、[Kiro IDE での実行](/guide/harnesses/kiro-ide) または [Codex CLI での実行](/guide/harnesses/codex-cli) を参照してください。Claude Code 実装は、プロジェクトにコピーする `.claude/` ディレクトリとして提供されます。
 
+以下の `cp` コマンドは、このリポジトリの `v2` ブランチをクローンした場所から実行します。
+
+```bash
+git clone https://github.com/awslabs/aidlc-workflows.git
+cd aidlc-workflows
+git checkout v2
+```
+
 <a id="step-1-copy-the-implementation"></a>
 ### 手順 1: 実装をコピーする
 
@@ -282,6 +290,7 @@ cd your-project
 command -v claude >/dev/null && echo "✓ Claude Code" || echo "✗ Claude Code"
 command -v bun    >/dev/null && echo "✓ bun"          || echo "✗ bun"
 
+# From your aidlc-workflows clone (v2 branch) - see Installation above
 # Install (engine + the workspace shell sibling)
 cp -r dist/claude/.claude/ your-project/.claude/
 cp -r dist/claude/aidlc/   your-project/aidlc/

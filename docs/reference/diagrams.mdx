@@ -487,12 +487,12 @@ sequenceDiagram
 <a id="11-approval-gate-flow"></a>
 ## 11. 承認ゲートフロー
 
-すべてのステージ（初期化の 3 ステージを除く）は承認ゲートで終わります。オーケストレーターは選択肢をユーザーに提示する前に監査証跡へ記録し、その後ユーザーの応答を記録します。3 回の改訂サイクル後には、「現状のまま受け入れる」というエスケープハッチが利用可能になります。アイデア創出と構想策定のステージには、以前にスキップしたステージを追加する条件付きの第三選択肢が含まれることもあります。
+すべてのステージ（初期化の 3 ステージを除く）は承認ゲートで終わります。ゲートの監査証跡は report が所有します。質問を提示する前に `report --result awaiting-approval` が保留中のゲートを記録し（`STAGE_AWAITING_APPROVAL`）、`report --result approved|rejected` が応答を逐語で記録します（`GATE_APPROVED`/`GATE_REJECTED`）。`aidlc-log.ts decision`/`answer` は決して使いません。3 回の改訂サイクル後には、「現状のまま受け入れる」というエスケープハッチが利用可能になります。アイデア創出と構想策定のステージには、以前にスキップしたステージを追加する条件付きの第三選択肢が含まれることもあります。
 
 ```mermaid
 flowchart TD
     COMPLETE["ステージ作業が完了"]
-    AUDIT_PRE["`audit.md` に追記:\nステージ要約 + 選択肢\n（新しい ISO タイムスタンプ）"]
+    REPORT_AWAITING["awaiting-approval を報告:\nエンジンがゲートを開き\nSTAGE_AWAITING_APPROVAL を発行"]
     ASK["`AskUserQuestion`:\n承認ゲート"]
 
     APPROVE["承認"]
@@ -500,42 +500,42 @@ flowchart TD
     ACCEPT["現状のまま受け入れる\n（エスケープハッチ）"]
     ADD_STAGE["スキップ済みステージを追加\n（アイデア創出/構想策定のみ）"]
 
-    AUDIT_POST_A["記録: ユーザーが承認\n（新しいタイムスタンプ）"]
-    AUDIT_POST_C["記録: ユーザーが変更を依頼\n（新しいタイムスタンプ）"]
-    AUDIT_POST_ACC["記録: ユーザーが現状のまま受け入れ\n（新しいタイムスタンプ）"]
-    AUDIT_POST_ADD["記録: ユーザーがステージを追加\n（新しいタイムスタンプ）"]
-
     REVISION_COUNT{"改訂サイクルが3回\n以上か?"}
     NOTE_2ND["2 回目の改訂後:\n次のサイクルでエスケープハッチが\n有効になることを通知"]
 
-    REPORT_APPROVED["承認を報告:\nエンジンが完了処理と\nルーティングを実行"]
+    REPORT_APPROVED["正確な選択とともに approved を報告:\nエンジンが GATE_APPROVED を発行し、\n完了処理とルーティングを実行"]
+    REPORT_REJECTED["フィードバックとともに rejected を報告:\nエンジンが GATE_REJECTED を発行し、\n改訂状態を記録"]
+    REPORT_REVISED["revised を報告:\nエンジンがゲートを再度開く"]
     PROGRESS["進捗行を表示:\n全体で N/総数"]
     NEXT_STAGE["次のステージへ進む"]
 
     REVISE["ユーザーフィードバックを\nステージ成果物へ適用"]
     RE_PRESENT["完了メッセージを\n再提示"]
 
-    ADD_EXEC["スキップ済みステージを\nワークフローへ挿入"]
+    ADD_EXEC["スキップ済みステージをワークフローへ挿入\n（スコープツールが変更を記録）"]
 
-    COMPLETE --> AUDIT_PRE --> ASK
+    COMPLETE --> REPORT_AWAITING --> ASK
     ASK --> APPROVE
     ASK --> CHANGES
     ASK --> ACCEPT
     ASK --> ADD_STAGE
 
-    APPROVE --> AUDIT_POST_A --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
-    ACCEPT --> AUDIT_POST_ACC --> REPORT_APPROVED
+    APPROVE --> REPORT_APPROVED --> PROGRESS --> NEXT_STAGE
+    ACCEPT --> REPORT_APPROVED
 
-    CHANGES --> AUDIT_POST_C --> REVISION_COUNT
-    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> RE_PRESENT --> AUDIT_PRE
+    CHANGES --> REPORT_REJECTED --> REVISION_COUNT
+    REVISION_COUNT -->|"< 3"| NOTE_2ND --> REVISE --> REPORT_REVISED --> RE_PRESENT --> ASK
     REVISION_COUNT -->|">= 3"| REVISE
 
-    ADD_STAGE --> AUDIT_POST_ADD --> ADD_EXEC
+    ADD_STAGE --> ADD_EXEC
 
     style COMPLETE fill:#e8f5e9,stroke:#388e3c
+    style REPORT_AWAITING fill:#e3f2fd,stroke:#1565c0
     style ASK fill:#bbdefb,stroke:#1565c0
     style APPROVE fill:#a5d6a7,stroke:#2e7d32
     style CHANGES fill:#fff9c4,stroke:#f9a825
+    style REPORT_REJECTED fill:#fff3e0,stroke:#ef6c00
+    style REPORT_REVISED fill:#e3f2fd,stroke:#1565c0
     style ACCEPT fill:#ffccbc,stroke:#bf360c
     style ADD_STAGE fill:#e1bee7,stroke:#7b1fa2
     style NEXT_STAGE fill:#c8e6c9,stroke:#388e3c

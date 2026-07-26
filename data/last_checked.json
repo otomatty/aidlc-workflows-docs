@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "ccf284b501591b90b4081a8e1c7b261cc6d2df46",
-	"last_checked_commit_date": "2026-07-23 19:23:33 +1000",
-	"last_checked_commit_message": "fix(kiro-ide): never read stdin in adapter entry paths (2.5.7) (#639)",
-	"checked_at": "2026-07-23",
-	"site_version": "2.5.7"
+	"last_checked_commit_sha": "257b43a3b7f8cda1f8b8901077c0423194bc53be",
+	"last_checked_commit_date": "2026-07-25 09:04:54 +1000",
+	"last_checked_commit_message": "docs: add the clone + v2 checkout step to the Quickstart and harness guides (#642)",
+	"checked_at": "2026-07-26",
+	"site_version": "2.5.11"
 }

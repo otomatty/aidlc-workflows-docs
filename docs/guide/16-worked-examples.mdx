@@ -209,18 +209,41 @@ aidlc/spaces/default/
 
 **ステージ 1.1 — 意図の取り込み**（aidlc-product-agent）
 
-aidlc-product-agent はインテントを取り込み、`intent-statement.md` と `stakeholder-map.md` を生成します。質問は対象利用者、通知経路、優先度に集中します。
+aidlc-product-agent はまず許可されたソースの全体を `intent-capture-questions.md` に記録し、そのうえで課題、対象利用者、ステークホルダー、意思決定権限、コミュニケーションニーズ、スコープについて質問します。
 
-```
-Q1: Which notification channels are in scope?
+```markdown
+## Sources
+
+- [desc] Initial description: "A notification service for our task management app..."
+- [scope] Workflow-selected scope: `feature`.
+
+## Q1. Which notification channels are in scope?
 A. In-app only
 B. In-app + email
 C. In-app + email + push
 D. In-app + email + push + SMS
 X. Other
+
+[Answer]: B. In-app + email
 ```
 
-利用者は B（アプリ内 + メール）と答えます。承認後、このステージは通知種別と利用者起点を対応付けた構造化インテント文を生成します。
+生成される成果物では、各主張がこのレジスターまたは確認済みの回答に紐付いたままになります。
+
+```markdown
+## Target Customer
+
+Task-management users receiving assignment, due-date, or comment events. [desc]
+
+## Notification Channels
+
+In-app notifications and optional email digests are in scope. [Q1]
+
+## Assumptions & Open Questions
+
+None.
+```
+
+ステークホルダーマップも同じタグを `Source` 列で使用します。裏付けのない内容は、フォローアップとして質問されるか、`## Assumptions & Open Questions` の下に残ります。保持された仮定（assumption）には利用者の明示的な受け入れが必要で、受け入れ後も仮定としてのラベルが維持されます。その後、通常の承認ゲートの前に aidlc-product-lead-agent がソース接地をレビューします。
 
 **ステージ 1.4 — スコープ定義**（aidlc-product-agent）
 
