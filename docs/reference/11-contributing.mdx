@@ -151,7 +151,7 @@ LLM 推論が不要なハンドラ向け（テキスト表示、ファイルの�
 
 7. **計画の一致を検証**（任意だが推奨） — `AIDLC_GRAPH_RESOLVE=1 bun .claude/tools/aidlc-graph.ts resolve hotfix --stdout` がそのスコープの計画を出力するので、EXECUTE 集合がタグ付けと一致するか目視する。
 
-8. **スコープ対応ドキュメントを更新** — `docs/guide/05-scopes-and-depth.md`（スコープ全体リファレンス）、`docs/guide/13-customization.md`（有効値一覧とスコープ表）、`docs/reference/03-orchestrator.md`（スコープからステージへの対応）はいずれもスコープを明示列挙しています。本章末尾のドキュメント方針どおり、同じ PR で更新する。
+8. **スコープ対応ドキュメントを更新** — `docs/guide/05-scopes-and-depth.md`（スコープ全体リファレンス。ステージ×スコープ・マトリクスを含み、そのセルはコンパイル済み `scope-grid.json` に対して `tests/unit/t244-scope-matrix-doc-sync.test.ts` でドリフトガードされています）、`docs/guide/13-customization.md`（有効値一覧とスコープ表）、`docs/reference/03-orchestrator.md`（スコープからステージへの対応）はいずれもスコープを明示列挙しています。本章末尾のドキュメント方針どおり、同じ PR で更新する。
 
 9. **スコープルーティングのワークフローテストを追加** — 既存スコープと異なる振る舞い（新しいフェーズスキップパターン、新しい深さの組み合わせ）がある場合、`tests/e2e/t53.test.ts`（SDK スコープルーティング）または `tests/e2e/t-tui-t50-bugfix-scope.serial.test.ts`（TUI スコープ通し実行）をモデルにしたルーティング旅程テストを追加する。
 
@@ -187,7 +187,7 @@ LLM 推論が不要なハンドラ向け（テキスト表示、ファイルの�
 
 4. **ステージのルーティングを検証** — そのステージを含むスコープのワークフローで `bun .claude/tools/aidlc-orchestrate.ts next` を駆動し、エンジンが解決済み `lead_agent`、ゲート、`consumes`、`produces` 付きでスラッグを名指しする `run-stage` ディレクティブを出すことを確認。
 
-5. **スコープ対応・ステージ対応ドキュメントを更新** — 新ステージはステージ数とスコープごとの計画を変えます。`docs/reference/16-artifact-vocabulary.md`（初期化以外のステージ数）、ハーネスエンジニアガイドのステージ章、計画を列挙するスコープリファレンスを更新。本章末尾のドキュメント方針どおり、同じ PR で行う。
+5. **スコープ対応・ステージ対応ドキュメントを更新** — 新ステージはステージ数とスコープごとの計画を変えます。`docs/guide/05-scopes-and-depth.md`（ステージ×スコープ・マトリクス。セルは `tests/unit/t244-scope-matrix-doc-sync.test.ts` でドリフトガードされています）、`docs/reference/16-artifact-vocabulary.md`（初期化以外のステージ数）、ハーネスエンジニアガイドのステージ章、計画を列挙するスコープリファレンスを更新。本章末尾のドキュメント方針どおり、同じ PR で行う。
 
 6. **テストを追加しカバレッジを更新** — ステージの振る舞いに対する `t*.test.ts` を著述する（スイートは発見ベースなので、適切なレベルディレクトリにファイルを置くだけでよく、レジストリ行の追加は不要）。次に `bun tests/gen-coverage-registry.ts` でカバレッジ索引を再生成し、`bun tests/gen-coverage-registry.ts --check` がクリーンであることを確認。ステージランナードリフトガード `tests/unit/t129-stage-runner-drift.test.ts` は生成ランナー集合がコンパイル済みステージ集合と等しいことを検証し、`tests/integration/t55-test-suite-drift.test.ts` は古いパスとマーカーを掃引します。
 

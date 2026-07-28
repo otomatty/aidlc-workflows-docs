@@ -132,7 +132,7 @@ flowchart TD
 | 1.6 | ラフモックアップ | aidlc-design-agent | aidlc-product-agent | ワイヤーフレーム、ユーザーフロー、コンセプト資料 | CONDITIONAL |
 | 1.7 | 承認と引き継ぎ | aidlc-delivery-agent | aidlc-product-agent | 取り組み概要書、意思決定ログ | ALWAYS |
 
-**ステージの色:** 緑 = ALWAYS（すべてのスコープで実行）。黄 = CONDITIONAL（一部のスコープではスキップ）。
+**ステージの色:** 緑 = ALWAYS（選択したスコープに含まれていれば必ず実行）。黄 = CONDITIONAL（スコープ、プロジェクト種別、プランに応じてスキップされることがある）。スコープごとの正確なステージ構成は[ステージ×スコープ・マトリクス](/guide/scopes-and-depth#stage-by-scope-matrix)を参照してください。
 
 意図の取り込み（Intent Capture）は、最初の説明、ワークフローが選択したスコープ、使用したメモリルールを質問ファイルに記録します。インテント文書とステークホルダーマップ内の主張にはインラインのソースタグが付き、どちらの成果物も前提と未解決の疑問点を明示します。保持された前提は、プロダクトリードのレビュアーと承認ゲートが実行される前に、明示的な確認を必要とします。
 
@@ -427,7 +427,7 @@ flowchart TD
 <a id="next-steps"></a>
 ## 次のステップ
 
-- [スコープ、深度、テスト戦略](/guide/scopes-and-depth) — スコープがどのステージを実行するかをどう制御するか
+- [スコープ、深度、テスト戦略](/guide/scopes-and-depth) — スコープがどのステージを実行するかをどう制御するか（完全な[ステージ×スコープ・マトリクス](/guide/scopes-and-depth#stage-by-scope-matrix)を含む）
 - [エージェント](/guide/agents-overview) — 11 のエージェントとその役割
 - [最初のワークフロー](/guide/your-first-workflow) — 注釈付きウォークスルー
 - [用語集](/guide/glossary) — 用語リファレンス

@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "257b43a3b7f8cda1f8b8901077c0423194bc53be",
-	"last_checked_commit_date": "2026-07-25 09:04:54 +1000",
-	"last_checked_commit_message": "docs: add the clone + v2 checkout step to the Quickstart and harness guides (#642)",
-	"checked_at": "2026-07-26",
+	"last_checked_commit_sha": "9f9145442429440ccd93f22e27186aa428007e5a",
+	"last_checked_commit_date": "2026-07-27 10:40:19 +0100",
+	"last_checked_commit_message": "docs: add stage-by-scope matrix to the scopes guide (guarded by t244) (#596)",
+	"checked_at": "2026-07-28",
 	"site_version": "2.5.11"
 }

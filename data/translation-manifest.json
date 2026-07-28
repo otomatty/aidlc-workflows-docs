@@ -27,14 +27,14 @@
 		{
 			"sourcePath": "docs/guide/04-phases-and-stages.md",
 			"translationPath": "docs/guide/04-phases-and-stages.mdx",
-			"sourceCommit": "257b43a3b7f8cda1f8b8901077c0423194bc53be",
-			"sourceHash": "ad5961ca706c9b6339d71a08dd1e34b678c2b5404d3efe63743f466cf580e292"
+			"sourceCommit": "9f9145442429440ccd93f22e27186aa428007e5a",
+			"sourceHash": "07a66e7c789080ddcda5ca4369b0add43dc90c431a8cddf572dcf24aa6e76a8f"
 		},
 		{
 			"sourcePath": "docs/guide/05-scopes-and-depth.md",
 			"translationPath": "docs/guide/05-scopes-and-depth.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "72698c396543912d8c87ecddc960e4718e8dfe8f226f9feb434ba19630bf9183"
+			"sourceCommit": "9f9145442429440ccd93f22e27186aa428007e5a",
+			"sourceHash": "95f1e09d4b33c73f63fbf842fd6841acaeaf7604cbd55ab16af4a48a8b39d264"
 		},
 		{
 			"sourcePath": "docs/guide/06-agents.md",
@@ -394,8 +394,8 @@
 		{
 			"sourcePath": "docs/reference/11-contributing.md",
 			"translationPath": "docs/reference/11-contributing.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "6045c77f45b3bca795ec486d8ab9e5b736e32e155a8e58def0bd595f0a1dc345"
+			"sourceCommit": "9f9145442429440ccd93f22e27186aa428007e5a",
+			"sourceHash": "6ddbd904a677e0ef939f73819b743ec4ef907ad9fc7e7488c8f241e4dfea1831"
 		},
 		{
 			"sourcePath": "docs/reference/12-state-machine.md",
