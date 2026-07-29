@@ -15,8 +15,8 @@
 		{
 			"sourcePath": "docs/guide/02-your-first-workflow.md",
 			"translationPath": "docs/guide/02-your-first-workflow.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "a82d41741be5d9b9e66cbb96306e7cb3c6f3c0838841690f90dafcd79c65e853"
+			"sourceCommit": "207db2ea65352ca89717d5970bef97825114bddf",
+			"sourceHash": "d031a137f2a804e30841daa2149f275fbc6fc8a579977607bd4cbea9d956123b"
 		},
 		{
 			"sourcePath": "docs/guide/03-spaces-and-intents.md",
@@ -304,8 +304,8 @@
 		{
 			"sourcePath": "docs/reference/01-architecture.md",
 			"translationPath": "docs/reference/01-architecture.mdx",
-			"sourceCommit": "f122f193f527604415deb546903f861ee8963343",
-			"sourceHash": "b60f0b712bc1c3a9a477685c1adbd7f587c3f1a78f87a6ab304965f74c9112d8"
+			"sourceCommit": "207db2ea65352ca89717d5970bef97825114bddf",
+			"sourceHash": "e46dab5a540973606cbc6eff9f553b5a35cf27704f56081bfe91c35a4412ae5b"
 		},
 		{
 			"sourcePath": "docs/reference/02-plane-architecture.md",
@@ -316,8 +316,8 @@
 		{
 			"sourcePath": "docs/reference/03-orchestrator.md",
 			"translationPath": "docs/reference/03-orchestrator.mdx",
-			"sourceCommit": "12c4d826b2b1380deef8a61ff418e303de3a53b3",
-			"sourceHash": "ef5ba985f8703d0325203b754c119d160bd7902aecc0f0b12e80ab4343f12994"
+			"sourceCommit": "207db2ea65352ca89717d5970bef97825114bddf",
+			"sourceHash": "209cf2ea0f3741a4623c006970adef1a4e7135c5a76f01d585fb543a80fd2964"
 		},
 		{
 			"sourcePath": "docs/reference/04-stage-protocol.md",

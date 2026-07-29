@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "9f9145442429440ccd93f22e27186aa428007e5a",
-	"last_checked_commit_date": "2026-07-27 10:40:19 +0100",
-	"last_checked_commit_message": "docs: add stage-by-scope matrix to the scopes guide (guarded by t244) (#596)",
-	"checked_at": "2026-07-28",
+	"last_checked_commit_sha": "207db2ea65352ca89717d5970bef97825114bddf",
+	"last_checked_commit_date": "2026-07-28 19:43:20 -0400",
+	"last_checked_commit_message": "docs: fix Mermaid parse errors from semicolons in sequence diagrams (#651)",
+	"checked_at": "2026-07-29",
 	"site_version": "2.5.11"
 }

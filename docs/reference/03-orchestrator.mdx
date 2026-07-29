@@ -471,7 +471,7 @@ sequenceDiagram
     U->>O: ウォーキングスケルトンゲートを承認
     O->>U: はしごプロンプト（1 回だけ発火）
     U->>O: "Continue autonomously"
-    O->>O: `Construction Autonomy Mode: autonomous` を書き込み; AUTONOMY_MODE_SET を発行
+    O->>O: `Construction Autonomy Mode: autonomous` を書き込み — AUTONOMY_MODE_SET を発行
 
     Note over O,T: ボルト B + C が並列バッチの対象になる
     O->>T: 1 つのメッセージで `Task`(B コード生成) + `Task`(C コード生成)
