@@ -302,12 +302,16 @@ bash tests/run-tests.sh       # POSIX compatibility wrapper
 
 # Output modifiers
 --verbose       # Write per-test logs to tests/logs/
+--no-llm        # Force all live-model gates closed while deterministic
+                # integration/e2e tests still run. Also via AIDLC_NO_LLM=1.
 --debug         # Implies --verbose; streams per-test output and writes SDK/TUI
                 # driver traces to tests/logs/
 --filter PAT    # Only run tests whose filename matches extended regex PAT
 --parallel N    # Run up to N test files concurrently within a tier (alias: -P N).
                 # Default: 1 (serial). Smoke and unit tiers are always serial.
 ```
+
+`--no-llm`（または `AIDLC_NO_LLM=1`）は、導出される Claude ゲートを閉じ、すべてのライブモデルのオプトイン（Claude TUI、Kiro ACP/TUI/IDE、Codex exec、opencode run）を強制的に `0` にします。これらのティアの決定論的テストは、トークン不要の TUI 基盤プリフライトを含めて引き続き実行されます。CLI がインストール済みでライブ変数が `1` のまま継承されていても、ライブモデルのコストやフレーキーさなしに、全ティアの決定論的プロファイルを CI に提供します。
 
 ライブ SDK / TUI ハーネスドライバーは既定でプロジェクト専用の Claude 設定ソースを使います。つまり、コピーされたテスト用 `.claude/` プロジェクト設定とフックは読む一方、開発者のユーザーレベルのフック / 設定は除外されます。これにより、インストール済みフレームワーク表面を再現しつつ、ローカル対話設定がテスト挙動へ影響するのを防ぎます。ドライバーオプションまたは `AIDLC_TUI_SETTING_SOURCES` は、その較正用の逃げ道です。
 

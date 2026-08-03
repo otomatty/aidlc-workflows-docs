@@ -26,7 +26,7 @@ AI-DLC の概念は不変であり、それを担うプリミティブがハー�
 | **オーケストレーター入口**（`/aidlc` + ランナー） | スキル（`/aidlc`） | スキル（`/aidlc`） | スキル（`/aidlc`） | スキル（`$aidlc`） | コマンド → スキル（`/aidlc`。スキルは `skills.paths` 経由で `.aidlc/skills` から） |
 | **エージェント・ペルソナ**（全 14） | `.claude/agents/*.md` | `.kiro/agents/*.json` + ペルソナ `.md` | ペルソナ `.md`。委譲先には IDE の `tools:` 許可を追加 | `.codex/agents/` TOML | `.opencode/agents/*.md`（サブエージェント）+ ペルソナ `.md` |
 | **自動化**（監査、状態、追跡） | `settings.json` 経由のフック | `agents/aidlc.json` 経由のフック | `.kiro/hooks/aidlc-*.json`（v2、IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook`（レガシー、pre-1.0） | `.codex/hooks.json` 経由のフック（1 アダプター） | アダプタープラグイン（`.opencode/plugin/`） |
-| **常設ルール**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @インポート・スタブ経由） | `aidlc/spaces/<active-space>/memory/`（Kiro リソース・グロブ経由） | `aidlc/spaces/<active-space>/memory/`（Kiro リソース・グロブ経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` グロブ経由） |
+| **常設ルール**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @インポート・スタブ経由） | `aidlc/spaces/<active-space>/memory/`（エージェントリソース経由） | `aidlc/spaces/<active-space>/memory/`（常時取り込みステアリングのライブ参照経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` グロブ経由） |
 | **プロジェクト・オンボーディング文書** | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
 | **権限 / 設定** | `.claude/settings.json` | `.kiro/settings/cli.json` + エージェント設定 | 委譲先のエージェント `.md` の `tools:` フロントマター | `.codex/config.toml`（+ Starlark `rules/`） | `opencode.json`（プロジェクトルート） |
 

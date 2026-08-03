@@ -233,7 +233,7 @@ flowchart TD
 | チェック | 検証内容 |
 |-------|-------------------|
 | 前提条件 | `bun` がインストールされ、PATH 上にある |
-| フックの存在 | `settings.json` が配線するすべてのフック（`hooks` ブロックと `statusLine` コマンドに含まれる 13 個のフレームワークフックすべて）が `.claude/hooks/` に存在する。配線済みなのに欠けているフックは明示的に失敗する。期待一覧を `settings.json` から取得するため、そこにフックを追加すると自動で検査対象になる |
+| フックの存在 | `settings.json` が配線するすべてのフック（`hooks` ブロックと `statusLine` コマンドに含まれる 14 個のフレームワークフックすべて）が `.claude/hooks/` に存在する。配線済みなのに欠けているフックは明示的に失敗する。期待一覧を `settings.json` から取得するため、そこにフックを追加すると自動で検査対象になる |
 | プロジェクト構造 | `.claude/settings.json` が存在する（内容検証はしない） |
 | ワークスペース環境 | `.claude/` と `aidlc/spaces/default/memory/` が存在する（出荷済み環境） |
 | サブモジュール | `.gitmodules` が存在する場合、宣言されたサブモジュールパス数と未初期化数を報告し、必要なら `git submodule update --init --recursive` を示す（助言のみ。失敗にはしない） |
@@ -507,6 +507,25 @@ bun .codex/tools/aidlc-utility.ts codekb-path --repo <repo>
 
 アクティブなスペースの決定論的な `aidlc/spaces/<space>/codekb/<repo>/` パスを表示します。`--json` を付けると `{space, repo, dir}` を出力します。このクエリは何も書き込まず、ディレクトリを作らず、監査イベントも発行しません。リバースエンジニアリングステージの本文がこれを直接呼び出すため、パスが手作業で導出されることはありません。
 
+<a id="aidlc-utility-codekb-scope-diff-check-the-code-knowledge-base-before-a-rerun"></a>
+### `aidlc-utility codekb-scope-diff` - 再実行前のコード知識ベース検査
+
+これは**ユーティリティの直接呼び出し**であり、`/aidlc codekb-scope-diff` コマンドではありません。
+
+```bash
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo <repo>
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo <repo> --compare <timestamp.md>
+bun .claude/tools/aidlc-utility.ts codekb-scope-diff --repo <repo> --mint --paths src/payments/,src/billing/
+```
+
+リバースエンジニアリングの再実行ガードです。codekb ストアはスペースレベルでインテント間に共有され、再実行はストアを置換するため、ステージはまず検査します。
+
+- **status モード**（既定）は、ストアの `reverse-engineering-timestamp.md` の Scope of Analysis ブロックを読み、解析済みパスに対するコンテンツフィンガープリントを再計算します。判定は `NO_STORE`（初回スキャン）、`CURRENT`（解析済みパスに変更なし — 再利用は安全）、`STALE`（解析済みパスに変更あり）、`UNVERIFIED`（フィンガープリントを計算できない — 例: git ワークツリーでない）、`UNKNOWN_SCOPE`（ストアがスコープ追跡導入前のもの）です。
+- **compare モード**（`--compare <着信 timestamp.md>`）は、着信ランのスコープがストアのスコープをカバーするかに答えます。`COVERS`、または `NARROWER` と、上書きが破棄する正確なパスとコンポーネントを返します。`kind: full` のスコープはリポジトリルート（`./`）を含む必要があり、full ストアを `NARROWER` 警告なしで置換できるのは別の full スコープだけです。
+- **mint モード**（`--mint --paths <a,b,...>`）は、アーキテクトが統合時にスコープブロックへ貼り付けるフィンガープリントを表示します（git ワークツリー外、または不正な pathspec では `unknown`）。
+
+`--json` を付けると構造化された形になります。常に終了コード 0 で判定を出力へ書きます（使用法エラーを除く）。何も書き込まず、監査イベントもありません。フィンガープリントは、解析済みパスに限定した一時インデックスに対する `git write-tree` で、ワークスペースルートがリポジトリルートのときはフレームワーク所有の `aidlc/` ツリーを除外します。ソースのワーキングツリー内容を追跡しつつ、codekb や state 成果物の書き込みで自身を無効化しません。履歴を書き換える rebase や squash に騙されず、編集を revert すれば元のフィンガープリントに戻ります。
+
 <a id="aidlc-utility-detect-read-only-workspace-scan"></a>
 ### `aidlc-utility detect` - 読み取り専用のワークスペース走査
 
@@ -530,6 +549,17 @@ bun .claude/tools/aidlc-utility.ts select-plugins aidlc,test-pro
 ### `aidlc-utility recompose` - 進行中プランの反転
 
 `bun .claude/tools/aidlc-utility.ts recompose --skip <slugs> --add <slugs>`（カンマ区切り）は、現在の状態ファイル上で、まだ PENDING かつカーソルより先にあるステージの計画後半を反転します。監査ロック下で実行し、残りのステージへ必要な入力が届かなくなる反転を拒否します。完了済みまたは進行中のステージ、カーソルより後ろのステージ、構築フェーズ最初の EXECUTE ステージであるワーキングスケルトンの基点を前後に動かす反転、`Status` が `Running` でないワークフローの再構成、自律構築中の再構成も拒否します。計画の再形成には人間のゲートが必要なため、まずゲート付きへ戻すか、群処理の完了を待ってください。派生状態フィールドを再構築し、`RECOMPOSED` を出力します。通常はワークフロー途中の `/aidlc compose` 経由で到達し、直接入力するものではありません。
+
+<a id="aidlc-graph-ars-deterministic-ars-scoring"></a>
+### `aidlc-graph ars` - 決定論的な ARS スコアリング
+
+`bun .claude/tools/aidlc-graph.ts ars --iae <s> --csu <s> --ve <s> --r <s> --ua <s> [--completed <csv>] [--project-type <t>]` は、アダプティブコンポーザーの Autonomy Risk Score 算術を計算します。バンドラベル付きの加重コンポジット、LOW/MED/HIGH のコンポーネントバンド、出荷されたコスト事前分布に対するステージ別期待値スクリーン、グリッド差分数による最近傍ストックスコープ、そして markdown で整形済みの 2 つのゲート表です。重み・バンド境界・ステージコスト事前分布・EV 閾値などすべての定数は `tools/data/ars-priors.json` から読まれるため、同じ 5 つのスコアは常に同じ数値を出します。コンポーザーは証拠からコンポーネントをスコアリングし、掛け算をする代わりにこの出力を転記します。`--completed`（カンマ区切りスラグ）は既に実行されたステージを派生グリッドで EXECUTE のまま保ち、`--project-type brownfield|greenfield` は、コンパイル済み `condition:` が他方のプロジェクト種別に制限するステージ（現在はブラウンフィールド限定のリバースエンジニアリング）をスクリーンから除外します。JSON 結果は標準出力へ出ます。範囲外のスコア、未知のステージスラグ、priors スキーマ違反では終了コード 1 で、silent fallback はありません。コンポジットはゲートの人間向けの**助言的**指標であり、決定論的な処理はこれに基づくルーティングをしません。
+
+```bash
+bun .claude/tools/aidlc-graph.ts ars --iae 0.55 --csu 0.75 --ve 0.65 --r 0.50 --ua 0.55
+bun .claude/tools/aidlc-graph.ts ars --iae 0.30 --csu 0.80 --ve 0.40 --r 0.20 --ua 0.10 \
+  --project-type greenfield --completed intent-capture,scope-definition
+```
 
 <a id="aidlc-graph-validate-grid-arbitrary-grid-dependency-check"></a>
 ### `aidlc-graph validate-grid` - 任意グリッドの依存関係チェック

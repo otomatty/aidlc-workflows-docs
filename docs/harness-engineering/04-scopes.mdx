@@ -31,7 +31,7 @@ skeleton: on
 Prose intent: why these stages, why skip those.
 ```
 
-フロントマターのフィールドは、1 つの必須フィールドと 3 つの任意設定に分かれます。
+スコープのフロントマターのフィールドは次のとおりです。
 
 | フィールド | 必須 | 役割 |
 |-------|----------|--------------|
@@ -41,8 +41,17 @@ Prose intent: why these stages, why skip those.
 | `keywords` | いいえ | `/aidlc <freeform text>` の自動検出に使う自然言語の引き金。空の一覧なら対象外です。 |
 | `description` | いいえ | `/aidlc --help` に表示される 1 行の説明です。（`SKILL.md` のコンパイル済みスコープ表には `Scope` / `Depth` / `TestStrategy` / `EXECUTE` / `Total` だけが出て、説明は出ません。） |
 | `skeleton` | いいえ | `on` を指定すると、プラクティスがスコープ依存の場合にワーキングスケルトンのセレモニーへオプトインします。`off` または未指定はオプトアウトです。 |
+| `runner` | いいえ | `true` を指定すると、既定で生成されるスコープランナー集合にそのスコープが含まれます。 |
+| `freeform_default` | いいえ | `true` を指定すると、優先されるコア既定（`feature` または `poc`）が有効でないときの、選択状況を考慮したフォールバックとしてこのスコープを指名します。 |
 
 ローダーはファイル間で重複するスコープ `name` の値を拒否し、エラーで両方のファイル名を示します。
+
+<a id="freeform-default"></a>
+### フリーフォームの既定値
+
+`freeform_default: true` を使うと、プラグイン選択の結果 `feature` や `poc` のような内部既定が利用できない場合に使うスコープを、インストールが指名できます。この指名は「唯一の有効プラグイン」フォールバックより先に検査されるため、複数スコープを持つプラグインは、アルファベット順で先頭のスコープを受け入れる代わりに、自身の軽量な既定を選べます。
+
+`freeform_default: true` を宣言できるのは、**有効な**スコープのうち最大 1 つです。選択されたコア／プラグイン集合に複数の主張者が含まれる場合、グラフコンパイルは失敗し、すべての主張者を名指しします。無効化されたプラグイン上の主張は、それらのプラグインが同時に有効化されるまで競合しません。このフィールドは明示的なタイポを修復しません。未知の `AWS_AIDLC_DEFAULT_SCOPE` の値は引き続き検証エラーになります。
 
 <a id="walking-skeleton-default"></a>
 ### ワーキングスケルトンの既定値
@@ -85,7 +94,7 @@ scopes:
 <a id="steps"></a>
 ### 手順
 
-1. **`core/scopes/aidlc-hotfix.md` を置く。** もっとも近い既存スコープである `aidlc-bugfix.md` をコピーし、フロントマターを編集します。`name: hotfix` を設定し、`depth` を選び、自由形式の自動検出に使いたい `keywords`（`[hotfix, urgent]` など）があれば加え、ヘルプ文用の `description` を書き、スコープ依存の構築フェーズのセレモニーの既定値として `skeleton: on|off` を設定し、`depth` と異なるときだけ `testStrategy` を追加します。本文には意図を短い文章で書きます。
+1. **`core/scopes/aidlc-hotfix.md` を置く。** もっとも近い既存スコープである `aidlc-bugfix.md` をコピーし、フロントマターを編集します。`name: hotfix` を設定し、`depth` を選び、自由形式の自動検出に使いたい `keywords`（`[hotfix, urgent]` など）があれば加え、ヘルプ文用の `description` を書き、スコープ依存の構築フェーズのセレモニーの既定値として `skeleton: on|off` を設定し、このスコープが選択中インストールの唯一のフォールバック指名である場合のみ `freeform_default: true` を設定し、`depth` と異なるときだけ `testStrategy` を追加します。本文には意図を短い文章で書きます。
 
 2. **`hotfix` で走らせたいステージにタグを付ける。** `EXECUTE` にしたい各ステージ（`core/aidlc-common/stages/<phase>/` の下）で、そのフロントマターの `scopes:` 一覧に `hotfix` を加えます。タグを付けなければそのスコープでは `SKIP` です。3 つの初期化ステージは必ず含めてください（常に走るため）。
 

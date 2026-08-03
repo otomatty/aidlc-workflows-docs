@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "207db2ea65352ca89717d5970bef97825114bddf",
-	"last_checked_commit_date": "2026-07-28 19:43:20 -0400",
-	"last_checked_commit_message": "docs: fix Mermaid parse errors from semicolons in sequence diagrams (#651)",
-	"checked_at": "2026-07-29",
-	"site_version": "2.5.11"
+	"last_checked_commit_sha": "68bffc8261e461d9d329506540ddc6943ceffe6a",
+	"last_checked_commit_date": "2026-08-03 17:56:55 +1000",
+	"last_checked_commit_message": "fix: guard the shared codekb against silent narrower-rerun overwrites (2.5.35) (#670)",
+	"checked_at": "2026-08-03",
+	"site_version": "2.5.35"
 }

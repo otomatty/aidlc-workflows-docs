@@ -40,7 +40,6 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
     approval-handoff/
 
   inception/                        # Phase 2 artifacts
-    reverse-engineering/            (conditional: brownfield)
     practices-discovery/            (conditional)
     requirements-analysis/
     user-stories/                   (conditional)
@@ -72,6 +71,8 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
     {ISO-date}-{stage-name}/
 ```
 
+**リバースエンジニアリングの 9 つの成果物は、記録ディレクトリの中にはありません。** これら（`architecture.md`、`code-structure.md`、`technology-stack.md`、…）は 1 段上のスペースレベルのリポジトリ別 CodeKB、つまり `aidlc/spaces/<space>/codekb/<repo>/` に置かれます。インテントごとのコピーではなく、リポジトリごとに 1 つのストアです。適用対象の各ブラウンフィールドインテントでは、ステージがまずストアの記録済みスコープとワーキングツリーのフィンガープリントを検査します。カバレッジがインテントに合致する検証済みで最新のストアは、人間の選択で再利用できます。そうでなければ、完全スキャンまたは焦点スキャンがこれら 9 ファイルを上書きします（`reverse-engineering-timestamp.md` が最後のスキャンの実行時刻とカバレッジを記録します）。したがってインテントは、自身の記録ディレクトリが作られた時点のスキャンではなく、そのリポジトリの最新スキャンを読みます。記録ディレクトリが受け取るのは、ステージ自身の `memory.md` 日誌だけです（ステージ実行時にオンデマンドで作成。下記の**ステージごとのメモリ日誌**を参照）。そのため、記録ディレクトリに `inception/reverse-engineering/` ディレクトリが現れることはありますが、そこにあるのは日誌だけです。codekb への書き込みは `codekb > <repo> > <name>` のパンくず付きで監査記録されるため、インテント単位のトレイルにも、何がいつ変わったかは残ります。
+
 **チームナレッジは記録ディレクトリの中にはありません。** 1 段上のスペース階層、つまり `aidlc/spaces/<space>/knowledge/`（`intents/` と同階層）に置かれます。これにより、1 つのインテントに閉じ込められず、スペース内のすべてのインテントをまたいで蓄積されます。エンジンは空の状態で作成し、チームは任意の `aidlc-shared/` とエージェントごとのサブディレクトリの下へ自由形式ファイルを追加します。[ナレッジ](/guide/knowledge) を参照してください。
 
 **ステージごとのメモリ日誌。** 実行された各ステージでは、成果物と同じ場所にコミット対象の `memory.md` も保持されます（例: `<record>/inception/requirements-analysis/memory.md`）。これはそのステージの観察日誌であり、ステージ開始時に雛形から自動作成され、進行中はオーケストレーターが更新し、§13 の学習手順が承認ゲートで読み取ります。手動では編集しません。日誌が学習ループへ入る仕組みは [ルールと学習ループ](/guide/rules-and-the-learning-loop) を参照してください。
@@ -102,7 +103,7 @@ flowchart LR
 
 \{/* テキスト代替: ステージが成果物を作成し、承認ゲートでレビューされ、バージョン管理へコミットされ、下流ステージで消費され、フェーズ境界で検証されます。 */\}
 
-1. **作成される** — 主担当エージェントがステージ実行中に成果物を生成し、インテントの記録ディレクトリ内の適切なサブディレクトリへ書き込む
+1. **作成される** — 主担当エージェントがステージ実行中に成果物を生成し、インテントの記録ディレクトリ内の適切なサブディレクトリへ書き込む（上記のスペースレベルの例外あり: リバースエンジニアリングはリポジトリ別 codekb ストアへ、チームナレッジは `knowledge/` へ書く）
 2. **レビューされる** — 承認ゲートで成果物を確認し、承認または修正依頼を行う
 3. **コミットされる** — 承認後、成果物はバージョン管理に載せる準備が整う（以下の Git 方針を参照）
 4. **利用される** — 下流ステージがその成果物を入力として読む（後述の入力表を参照）
@@ -142,7 +143,7 @@ flowchart LR
 
 | ステージ | 主要成果物 | 条件 |
 |-------|--------------|-----------|
-| 2.1 リバースエンジニアリング | `architecture.md`、`code-structure.md`、`technology-stack.md` を含む 9 ファイル | 既存システムのみ |
+| 2.1 リバースエンジニアリング | `architecture.md`、`code-structure.md`、`technology-stack.md` を含む 9 ファイル（スペースレベルの `aidlc/spaces/<active-space>/codekb/<repo>/` へ書き込み — リポジトリごとに 1 つの共有ストア。検証済みで最新なら再利用され、人間が選んだ再スキャンで置換される。インテント記録に入るのはステージの `memory.md` 日誌のみ） | 既存システムのみ |
 | 2.2 プラクティス発見 | `team-practices.md`、`discovered-rules.md`、`evidence.md`、`practices-discovery-timestamp.md`、および quality / developer / devsecops の各コントリビューションファイル（承認後に `aidlc/spaces/<active-space>/memory/team.md` と `project.md` へ昇格） | 条件付き |
 | 2.3 要件分析 | `requirements.md` | 常に実行 |
 | 2.4 ユーザーストーリー | `stories.md`、`personas.md` | ユーザー向け機能 |

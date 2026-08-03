@@ -49,6 +49,10 @@ cd your-project && kiro-cli chat
 
 Claude Code ハーネスと同一です。`/aidlc <description>` でワークフローを開始し、`/aidlc --status` で現在位置を確認でき、`--doctor`、`--stage`、`--phase`、`--depth`、`--test-strategy` もすべて使えます。ステージごとのランナー（`/aidlc-application-design`）とスコープごとのランナー（`/aidlc-feature`）もインストールされます。
 
+**セッションはプロジェクトルートから開始してください。** コンダクターのエンジン呼び出しは、プロジェクト相対の `bun .kiro/tools/<tool>.ts` コマンドとして事前承認されています。作業ディレクトリが別の場所にあるセッションでは、コンダクターが承認の必要なコマンド形式へ流れてしまいます。絶対パス、`KIRO_PROJECT_DIR` の展開、`cd <dir> && bun .kiro/tools/...` のチェーンは、意図的にゲートされたままです。パターンに一致するにはツールパスの形をしていれば十分で、信頼できる必要はありません。任意の `/.../.kiro/tools/*.ts` を事前承認すると、誰でも書き込めるディレクトリに仕込まれたファイルも事前承認してしまいますし、変数の値もチェーンされた作業ディレクトリも、パターンからは知り得ません。
+
+**承認者のいないセッションは、プロンプトを出さずに停止します。** 事前承認セットの外にあるものはすべて対話的な回答が必要です。`kiro-cli chat --no-interactive` では尋ねる相手がいないため、Kiro は `non-interactive mode (no user to approve)` でコマンドを即座に拒否します。ACP 経由では、クライアントが `session/request_permission` に回答する必要があります。これらの要求を無視するクライアントは、権限エラーと全く同じに見えます。`--trust-all-tools` は allow リストと deny リストの両方（再帰 `rm` と `git push` の拒否を含む）をバイパスします。無制限のシェルアクセスが許容できる使い捨てのサンドボックス内でのみ使ってください。
+
 <a id="whats-different-on-kiro"></a>
 ## Kiro で異なる点
 
@@ -60,7 +64,7 @@ Claude Code ハーネスと同一です。`/aidlc <description>` でワークフ
 | 構築スウォーム | 並列 `Task` フロア、任意の ultracode Workflow | サブエージェントのファンアウトのみ。`AIDLC_USE_SWARM=1` は無効（no-op）と通知される |
 | セッション監査イベント | `SESSION_STARTED/RESUMED/ENDED`、`SESSION_COMPACTED` | `SESSION_STARTED` のみ（Kiro にはセッション終了 / コンパクション前のフックがない） |
 | 転送ループ強制（Stop フック） | 対話・無人の両セッション | 対話セッションのみ。`--no-interactive` 実行では Stop フックによるブロックが効かない |
-| 権限 | `settings.json` の許可リスト | `aidlc` エージェント設定。事前承認されるのは `bun .kiro/tools/*` のみで、他のシェルコマンドは確認が出る |
+| 権限 | `settings.json` の許可リスト | `aidlc` エージェント設定。事前承認されるのはプロジェクト相対のフレームワーク `bun .kiro/tools/<tool>.ts` 呼び出しと `date -u` のみで、他のシェルコマンドは確認が出る |
 | ウェルカムメッセージ | `settings.json` の `companyAnnouncements` をセッション開始時に表示 | なし。Kiro にはウェルカム表示の相当機能がなく、セッション開始フックは再開コンテキストのみを注入する |
 | MCP サーバー | 5 個を同梱（`.mcp.json`: `context7` + 4 つの AWS サーバー） | 同梱なし。Kiro の MCP 設定方式は、ここではまだ文書化していないため、実運用上は現在 Claude 専用 |
 

@@ -1,75 +1,64 @@
 ---
 title: Kiro IDE フックペイロード — 実測リファレンス
-description: Kiro IDE が `runCommand` フックへ渡すコンテキストの実測結果（IDE 世代別のチャネル差を含む）
+description: Kiro IDE がコマンドフックへ渡すコンテキストの実測結果（IDE 世代別のチャネル差、イベント別キャプチャ、各フックへの帰結を含む）
 ---
-Kiro IDE が `runCommand` フックにコンテキストを渡す方法です。チャネルは IDE の世代によって異なります。
+Kiro IDE がコマンドフックへコンテキストを渡す方法です。**2 つの IDE 世代**でライブ実測しました。0.12 系（標準入力・引数配列・環境全体をダンプするプローブ用 `.kiro.hook` ファイル）と 1.0.165（プローブ用 v2 フック JSON ファイル。上流 #543/#555）です。これは `harness/kiro-ide/` アダプターの根拠となる証拠であり、CLI ハーネス（`harness/kiro/`）は別の kiro-cli 形の stdin 機構を使います。
 
-- **1.0 より前（0.12 系）:** コンテキストは **環境変数 `USER_PROMPT`**（camelCase の JSON）を通じて届きます。標準入力は開かれますが、書き込みもクローズもされないため、読み取るとハングします。
-- **IDE >= 1.0（1.x）:** コンテキストは **標準入力上の JSON**（snake_case: `{ tool_name, tool_input, tool_response }`）として届きます。`USER_PROMPT` は空です。
+<a id="the-channel-changed-across-ide-generations"></a>
+## チャネルは IDE 世代間で変わった
 
-**現在のアダプターの挙動:** 同梱アダプターが読み取るのは環境変数 `USER_PROMPT`（1.0 より前のチャネル）**のみ**で、標準入力は一切読みません。`USER_PROMPT` が空になる IDE 1.x では、ペイロードに依存する 2 つのターゲット（`audit-and-sensors`、`log-subagent`）は発火するものの、可視のフックドロップを記録して何もしません。残りのフックはペイロードに依存せず、どちらの世代でも動作します。stdin コンテキストチャネルへの対応は、後続の拡張として予定されています。
+| | Kiro IDE 0.12 | Kiro IDE 1.x（>= 1.0.1xx） |
+|---|---|---|
+| フック登録 | `.kiro/hooks/*.kiro.hook`（`{"version":"1.0.0","when":{...},"then":{...}}`） | `.kiro/hooks/*.json` v2 スキーマ（`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`、PascalCase トリガー）。レガシーの `.kiro.hook` ファイルは**何の表示もなく無効** — 決して実行されない。 |
+| コンテキストチャネル | 環境変数 `USER_PROMPT`（JSON 文字列） | **stdin**（JSON。書き込まれてクローズされる）。`USER_PROMPT` は空で届く。 |
+| stdin の挙動 | 開かれるが書き込みもクローズもされない — 素の読み取りはハングする | 書き込まれてクローズされる — 読み取りは速やかに解決する |
+| フィールド命名 | camelCase: `{ toolName, toolArgs, toolResult, toolSuccess }` | snake_case: `{ session_id, hook_event_name, cwd, tool_name, tool_input, tool_response }` — **成功フラグなし** |
 
-<a id="pre-10-channel-user_prompt-env-var"></a>
-## 1.0 より前のチャネル: 環境変数 `USER_PROMPT`
-
-標準入力・引数配列・環境全体をダンプするプローブ用 `.kiro.hook` ファイルを登録し、Kiro IDE 0.12 系で実測した結果です。
-
-- **標準入力**は開かれますが、書き込みもクローズもされないため、`Bun.stdin.text()` はハングします。
-- **`USER_PROMPT`** は次の形式の JSON 文字列です。
-  ```json
-  { "toolName": "fs_write", "toolArgs": {}, "toolResult": "Created the /abs/path/file.md file.", "toolSuccess": true }
-  ```
-
-<a id="ide-1x-channel-stdin-snake_case"></a>
-## IDE 1.x のチャネル: 標準入力（snake_case）
-
-Kiro IDE 1.0.165 で実測しました。標準入力ペイロードの形は次のとおりです（プローブで得たフィールドをそのまま記載）。
+1.0.165 でライブ捕捉した PostToolUse の、フィールドそのままの例:
 
 ```json
-{ "session_id": "sess_...", "hook_event_name": "PostToolUse", "cwd": "/path/to/project", "tool_name": "execute_bash", "tool_input": {}, "tool_response": "Output:\n...\nExit Code: 0" }
+{"session_id":"sess_…","hook_event_name":"PostToolUse","cwd":"/path/to/project","tool_name":"execute_bash","tool_input":{},"tool_response":"Output:\n…\nExit Code: 0"}
 ```
 
-- 1.x では `USER_PROMPT` は空です。
-- `toolSuccess` / `tool_success` フィールドはありません。#417 の書き込み失敗ガードを起動するのは明示的な `false`（1.x が送ることはありません）のみで、フィールド自体が無い場合は素通りします。
-- `tool_input` はどちらの世代でも常に `{}` です。IDE がツール入力を渡すことはありません。
+アダプターは、空でない `USER_PROMPT` を即座に使います（0.12 チャネル。その stdin は決してクローズされません）。この変数が空の場合は、broken-channel タイムアウトと競わせながら 1.x チャネルの stdin を読みます。本番の既定は 2 秒で、正の `AIDLC_IDE_STDIN_TIMEOUT_MS` の値が、診断や決定論的なレイテンシテストのためにこの上限をミリ秒単位で上書きします。両方のフィールド綴りが受け入れられます。取得はペイロード依存の 2 つのターゲット（`audit-and-sensors`、`log-subagent`）に限定され、それ以外のすべてのターゲット（ツール呼び出しごとの `block` フロアを含む）はどちらのチャネルにも触れず、ゼロレイテンシの経路を保ちます。
 
-:::note
-アダプターはまだ 1.x の stdin チャネルを消費していません。この節は、後続実装のために観測されたペイロードの形を記録するものです。
-:::
-
-`VSCODE_IPC_HOOK` / `VSCODE_PID` も IDE には存在します（CLI にはありません）が、アダプターはコンテキストチャネルとして `USER_PROMPT` を使用します。
+`VSCODE_IPC_HOOK` / `VSCODE_PID` も IDE には存在します（CLI にはありません）が、アダプターは上記のペイロードチャネルをキーにします。
 
 <a id="per-event-captures"></a>
-## イベント別のキャプチャ結果
+## イベント別キャプチャ
 
-| イベント | `toolName` | `toolArgs` | `toolResult` | 復元可能か |
-|-------|-----------|-----------|-------------|--------------|
-| ツール使用後（書き込み） — 作成 | `fs_write` | `{}`（空） | `Created the <ABS_PATH> file.` | パス: `toolResult` の文面からのみ |
-| ツール使用後（書き込み） — 編集 | `str_replace` | `{}`（空） | `Replaced text in <ABS_PATH>` | パス: `toolResult` の文面からのみ |
-| ツール使用後（書き込み） — 追記 | `fs_append` | `{}`（空） | `Appended the text to the <ABS_PATH> file.` | パス: `toolResult` の文面からのみ |
-| ツール使用後（シェル） | `execute_bash` | `{}`（空） | `Output:\n<stdout>\n\nExit Code: 0` | コマンド: **復元不可**（標準出力のみ） |
+結果の文言は両チャネルで同一です（0.12 では `toolResult`、1.x では `tool_response`）。
+
+| イベント | ツール名 | ツール入力 | 結果の文言 | 復元可能か |
+|-------|-----------|-------------|--------------|--------------|
+| PostToolUse（書き込み）— 作成 | `fs_write` | `{}`（空） | `Created the <PATH> file.` | パス: 結果の文言からのみ |
+| PostToolUse（書き込み）— 編集 | `str_replace` | `{}`（空） | `Replaced text in <PATH>` | パス: 結果の文言からのみ |
+| PostToolUse（書き込み）— 追記 | `fs_append` | `{}`（空） | `Appended the text to the <PATH> file.` | パス: 結果の文言からのみ |
+| PostToolUse（シェル） | `execute_bash` | `{}`（空） | `Output:\n<stdout>\n\nExit Code: 0` | コマンド: 復元**不可**（stdout のみ） |
 
 <a id="critical-limitations"></a>
-### 重大な制約
+### 重要な制約
 
-1. **`toolArgs` は常に `{}` です。** IDE はツール入力を渡しません。そのため、書き込み先ファイルパスは `toolResult` の文面から抽出する必要があり、シェルコマンド自体は存在しません（標準出力と終了コードのみ）。
-2. **現在のアダプターは標準入力を読みません。** 1.0 より前では標準入力はハングし（書き込みもクローズもされないため）、1.x ではペイロードを運びますが、アダプターはまだそれを消費しません。アダプターが読むのは `process.env.USER_PROMPT` のみです。
-3. **`toolResult` 内のパスはワークスペース相対です**が、コアフックは絶対レコードルートと比較します。そのため、アダプターは転送前に絶対パスへ解決します。
+1. **PostToolUse の書き込み／シェルのキャプチャは、両チャネルともツール入力が空**です。したがって書き込まれたパスは結果の文言からパースする必要があり、シェルコマンドは存在しません（stdout と終了コードのみ）。これは IDE の普遍的なルールではありません。後期の 1.x ビルドは一部の PreToolUse 入力と委譲入力を埋めます（#543）。
+2. **1.x は成功フラグを運びません。** 整形式の書き込みを監査から落とすのは 0.12 チャネルの明示的なブール値 `toolSuccess: false` だけです（#417）。フィールドが無い 1.x ペイロードはパス検査へフォールスルーし、既知のパターンに一致しないエラー文言は可視のフックドロップを記録します。存在する非 null のペイロードフィールドが実行時型として不正な場合は malformed として扱われます。助言的フックは正常終了し、可視のドロップを記録し、監査イベントもサブエージェントイベントも転送しません。`null` はフィールド不在と同様に扱われ、チャネル既存の absent-value 契約に一致します。
+3. **結果の文言中のパスはワークスペース相対**ですが、コアフックは絶対のレコードルートと比較するため、アダプターは転送前に絶対パスへ解決します。
 
 <a id="consequences-for-each-hook"></a>
-## 各フックへの影響
+## 各フックへの帰結
 
-- **監査ロガー / センサー発火** — 1.0 より前では復元可能です。`toolResult` からファイルパスを抽出して絶対パスへ解決し、Claude 形式の `{tool_input:{file_path}}` をコアフックに渡します。既知のパターンに一致しない文面の書き込み系ツールでは、可視のフックドロップを記録します（暗黙の何もしない処理にはしません）。IDE 1.x では、これらのターゲットは何もしません（`USER_PROMPT` が空で、標準入力は読まれないため）。
-- **ランタイムコンパイル** — シェルコマンドは復元できないため、IDE パスではコマンドフィルターを外し、監査末尾のみをゲートにします。更新時刻の冪等性ガードにより、`WORKFLOW_COMPLETED` 後などの残留遷移で、その後の各シェルコマンドごとに再コンパイルされることを防ぎます。
-- **ステータスライン同期** — IDE はタスクペイロードを渡さないため、監査末尾の最新 `STAGE_STARTED` から現在のステージを導出します。これは**前方のみ**のミラーです。`Current Stage` を完了またはスキップ済みのステージに巻き戻すことはなく、ワークフローが `Running` でない場合は実行されません（完了済みワークフローの復活を防止）。`shell` イベントに接続されます。`spec` イベントは IDE では発火しません。
-- **セッション開始 / 停止** — ペイロードを必要としないため、変更ありません。（`session-end` には v2 の登録がありません。理由はハーネスガイドを参照してください。）
-- **サブエージェント記録** — 1.0 より前では、委譲先の識別情報を `toolResult` から復元します。IDE 1.x では、可視のフックドロップを記録して何もしません（`USER_PROMPT` が空で、標準入力は読まれないため）。
+- **audit-logger / sensor-fire** — 復元可能: 結果の文言からファイルパスを抽出し、絶対パスへ解決し、Claude 形の `{tool_input:{file_path}}` をコアフックへ渡します。文言が既知のパターンに一致しない書き込み系ツールは、可視のフックドロップを記録します（黙った no-op には決してなりません）。
+- **runtime-compile** — シェルコマンドは復元不能なので、IDE 経路はコマンドフィルターを捨て、監査末尾だけでゲートします（mtime による冪等ガード付き。たとえば `WORKFLOW_COMPLETED` 後に残った遷移が、以後のシェルコマンドのたびに再コンパイルを起こさないように）。
+- **sync-statusline** — IDE はタスクペイロードを渡さないため、監査末尾の最新の `STAGE_STARTED` から現在ステージを導出します。これは**前進のみ**のミラーです。`Current Stage` を完了済み／スキップ済みステージへ巻き戻すことはなく、ワークフローが `Running` でないときは発火しません（完了したワークフローの蘇生を防ぎます）。IDE には sync がパースできるタスクイベントが無いため、`execute_bash` にマッチさせています。
+- **log-subagent** — ペイロード依存。IDE 0.12 は `invoke_sub_agent` を送り、1.x（1.0.89〜1.0.138）は代わりに `subagent_<agent>` を送りました。いずれも空の `subagent_response` シェル（`"Response recorded."`）が先行します。そのため登録マッチャーは広く（`^(subagent_.+\|invoke_sub_agent)$`）取られ、すべての委譲名がアダプターへ届きます。アダプターは `subagent_response` を落とします — このシェルは文言を運ぶものの身元を持たず、転送すれば `Agent Type: unknown` の `SUBAGENT_COMPLETED` 行を捏造してしまいます。身元は構造化された 1.x の `subagent_<agent>` ツール名を優先します（#543） — プラットフォーム提供のため、エージェントが書いた結果文言が監査行を誤帰属できません — 。フォールバックは #459 の `**Reviewer:**` / `**Agent:**` 結果マーカーで、これは 0.12 の `invoke_sub_agent` 形における唯一の身元信号です。
+- **session-start / session-end / stop / mint / block** — ペイロード不要。stdin を決して読みません。
 
 <a id="toolresult-path-extraction-patterns"></a>
-## `toolResult` のパス抽出パターン
+## toolResult のパス抽出パターン
 
-| `toolName` | 文面 | 正規ツール |
+| toolName | 文言 | 正規ツール |
 |----------|---------|----------------|
 | `fs_write` | `Created the <PATH> file.` | Write |
-| `str_replace` | `Replaced text in <PATH>`（末尾に ` (N occurrences)` が付く場合あり） | Edit |
+| `str_replace` | `Replaced text in <PATH>`（末尾に ` (N occurrences)` が付くことがある） | Edit |
 | `fs_append` | `Appended the text to the <PATH> file.` | Edit |
+
+抽出器はマッチ前に末尾の空白／改行をトリムし、`str_replace` 形からは末尾の括弧書きを取り除きます。`fs_write` は `Write` に対応します。`str_replace`／`fs_append` は `Edit` に対応します（どちらも既存ファイルが対象 → コアの audit-logger は `ARTIFACT_UPDATED` を記録します）。
