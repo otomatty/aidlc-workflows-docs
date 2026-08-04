@@ -9,20 +9,20 @@
 		{
 			"sourcePath": "docs/guide/01-getting-started.md",
 			"translationPath": "docs/guide/01-getting-started.mdx",
-			"sourceCommit": "68bffc8261e461d9d329506540ddc6943ceffe6a",
-			"sourceHash": "1a6c2e2ab4662a4bc23a98b5c8c6e9345050c65e6c491ae88d5370183f93f084"
+			"sourceCommit": "c73ee984972e95d0576679d0485bf2a45a673ab3",
+			"sourceHash": "e241e0762f522e0bc3590778242360733175bdf34a09d29f34f8721d9ed0ba0c"
 		},
 		{
 			"sourcePath": "docs/guide/02-your-first-workflow.md",
 			"translationPath": "docs/guide/02-your-first-workflow.mdx",
-			"sourceCommit": "207db2ea65352ca89717d5970bef97825114bddf",
-			"sourceHash": "d031a137f2a804e30841daa2149f275fbc6fc8a579977607bd4cbea9d956123b"
+			"sourceCommit": "c73ee984972e95d0576679d0485bf2a45a673ab3",
+			"sourceHash": "acda2ea53857f45686a8dc296fea58f1fba12a3f66cfb3fc0c59ae4108b63058"
 		},
 		{
 			"sourcePath": "docs/guide/03-spaces-and-intents.md",
 			"translationPath": "docs/guide/03-spaces-and-intents.mdx",
-			"sourceCommit": "68bffc8261e461d9d329506540ddc6943ceffe6a",
-			"sourceHash": "2c9f2f13fbd37bf212f600b28039ec77eeb5010102773b2a6cf7d2e9692dc36d"
+			"sourceCommit": "c73ee984972e95d0576679d0485bf2a45a673ab3",
+			"sourceHash": "662e489b94988a45e704252ba33b8ca7ed074a58bd2ea4c3fafb2363a295f839"
 		},
 		{
 			"sourcePath": "docs/guide/04-phases-and-stages.md",
@@ -76,8 +76,8 @@
 		{
 			"sourcePath": "docs/guide/12-cli-commands.md",
 			"translationPath": "docs/guide/12-cli-commands.mdx",
-			"sourceCommit": "68bffc8261e461d9d329506540ddc6943ceffe6a",
-			"sourceHash": "29c45e1fcb9bda96438f884ab6c15ca92c4a4e866e14360943be52c42c5981f7"
+			"sourceCommit": "c73ee984972e95d0576679d0485bf2a45a673ab3",
+			"sourceHash": "0f34875847dcb5aa130177cd33cf959d205683bd1c7f6cd6d6c6ea864c0ee09e"
 		},
 		{
 			"sourcePath": "docs/guide/13-customization.md",
@@ -94,8 +94,8 @@
 		{
 			"sourcePath": "docs/guide/15-troubleshooting.md",
 			"translationPath": "docs/guide/15-troubleshooting.mdx",
-			"sourceCommit": "68bffc8261e461d9d329506540ddc6943ceffe6a",
-			"sourceHash": "52904e92ae36d918e82f1f7ad4bbebd85871372f09b3d93f5696029cc40c9c0b"
+			"sourceCommit": "c73ee984972e95d0576679d0485bf2a45a673ab3",
+			"sourceHash": "ea238cb45636bfb825ab5ddea58ff99fa6240773e941ab9f98260039516cfeae"
 		},
 		{
 			"sourcePath": "docs/guide/16-worked-examples.md",

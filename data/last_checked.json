@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "68bffc8261e461d9d329506540ddc6943ceffe6a",
-	"last_checked_commit_date": "2026-08-03 17:56:55 +1000",
-	"last_checked_commit_message": "fix: guard the shared codekb against silent narrower-rerun overwrites (2.5.35) (#670)",
-	"checked_at": "2026-08-03",
-	"site_version": "2.5.35"
+	"last_checked_commit_sha": "c73ee984972e95d0576679d0485bf2a45a673ab3",
+	"last_checked_commit_date": "2026-08-04 19:32:02 +1000",
+	"last_checked_commit_message": "fix(question-rendering): forbid echoing the question fence as literal chat text (2.5.37)",
+	"checked_at": "2026-08-04",
+	"site_version": "2.5.37"
 }
