@@ -15,7 +15,7 @@ description: 前提条件、開発ワークフロー、テスト、変更の提�
 ## 前提条件
 
 - **Claude Code** -- ネイティブインストール（推奨、自動更新）: マックOS / リナックス / WSL では `curl -fsSL https://claude.ai/install.sh | bash`; Windows PowerShell では `irm https://claude.ai/install.ps1 | iex`。または `brew install --cask claude-code`。（[Claude Code のドキュメント](https://code.claude.com/docs/en/quickstart) を参照）
-- **`bun`** -- すべての CLI ツールと 14 本のフックに必須。`curl -fsSL https://bun.sh/install | bash` でインストール。Windows では `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルの PATH に通すこと（ゼットシェルは `~/.zshenv`、`Bash` / Windows の Git `Bash` は `~/.bashrc`）。
+- **`bun`** -- すべての CLI ツールと 16 本のフックに必須。`curl -fsSL https://bun.sh/install | bash` でインストール。Windows では `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 | iex"`。非対話シェルの PATH に通すこと（ゼットシェルは `~/.zshenv`、`Bash` / Windows の Git `Bash` は `~/.bashrc`）。
 - **`timeout`**（GNU コアユーティリティ）-- テストスイートの LLM タイムアウト（L2/L3）に必須。リナックスには標準で入っています。マックOS: `brew install coreutils` のあと GNU 版コマンドパスを PATH に追加: `export PATH="/opt/homebrew/opt/coreutils/libexec/gnubin:$PATH"`（`~/.zshenv` または `~/.zshrc`）。
 - **`Bash`** -- POSIX 互換ラッパー（`tests/run-tests.sh`）用の任意依存。主テストランナーは `bun tests/run-tests.ts`。実行時、配布フックはどれも `Bash` を必要としません。
 - **Bedrock アクセス** -- ライブ統合テストと `e2e` テスト（L2/L3）の実行に必須。L1 プロトコルテストには不要です。

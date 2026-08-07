@@ -22,7 +22,7 @@ description: この実装のインストール、環境確認、最初のワー�
 | 前提条件 | 目的 | インストール |
 |-------------|---------|---------|
 | **Claude Code** | この実装は Claude Code のコマンドとして動作します。オーケストレーター、エージェント、フックはすべて Claude Code の中で実行されます。 | ネイティブインストール（推奨、自動更新あり）: macOS/Linux/WSL `curl -fsSL https://claude.ai/install.sh \| bash`; Windows PowerShell `irm https://claude.ai/install.ps1 \| iex`。または `brew install --cask claude-code`。([ドキュメント](https://code.claude.com/docs/en/quickstart)) |
-| **bun** | すべての CLI ツールと 14 個すべてのフック（状態管理、監査ログ、センサーディスパッチ、ランタイムグラフのコンパイル、ループ強制、正確なディスパッチルール配信、状態遷移およびレビュアースコープの強制、ステータスライン、ヒューマンターンの発行）に必要です。すべて TypeScript で書かれており、bun 経由で実行されます（起動は約 20ms）。追加の依存関係はなく、macOS、Linux、ネイティブの Windows PowerShell で同一に動作します。 | `curl -fsSL https://bun.sh/install \| bash` ([ドキュメント](https://bun.sh))。Windows では `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 \| iex"` |
+| **bun** | すべての CLI ツールと 17 個すべてのフック（状態管理、監査ログ、センサーディスパッチ、ランタイムグラフのコンパイル、ループ強制、正確なディスパッチルール配信、状態遷移・レビュアースコープ・レビューフリーズ・プラン承認の強制、ステータスライン、ヒューマンターンの発行、トークン使用量の集約）に必要です。すべて TypeScript で書かれており、bun 経由で実行されます（起動は約 20ms）。追加の依存関係はなく、macOS、Linux、ネイティブの Windows PowerShell で同一に動作します。 | `curl -fsSL https://bun.sh/install \| bash` ([ドキュメント](https://bun.sh))。Windows では `npm install -g bun` または `powershell -c "irm bun.sh/install.ps1 \| iex"` |
 
 > **重要**: `bun` は非対話シェルから見える `PATH` 上になければなりません。Claude Code はシェルを非対話で実行するため、`~/.zshrc` ではなく `~/.zshenv`（zsh）または `~/.bashrc`（bash）が読み込まれます。Windows で Git Bash を使う場合は `~/.bashrc` が正しいファイルです。Claude Code 内で `which bun` が失敗する場合は、bun の PATH 設定をその適切なファイルに追加してください。
 
@@ -282,7 +282,7 @@ cd your-project
 | チェック | 検証内容 |
 |-------|-------------------|
 | 前提条件 | `bun` がインストールされ、`$PATH` 上にあること |
-| フックの存在 | `settings.json` が配線しているすべてのフック（その `hooks` ブロックと `statusLine` コマンド、つまりフレームワークの 14 フック全体）が `.claude/hooks/` に存在すること。配線済みなのに欠けているフックは明確に失敗します。期待される一覧を `settings.json` から取るため、そこにフックを追加すれば自動的にチェック対象になります |
+| フックの存在 | `settings.json` が配線しているすべてのフック（その `hooks` ブロックと `statusLine` コマンド、つまりフレームワークの 16 フック全体）が `.claude/hooks/` に存在すること。配線済みなのに欠けているフックは明確に失敗します。期待される一覧を `settings.json` から取るため、そこにフックを追加すれば自動的にチェック対象になります |
 | プロジェクト構造 | `.claude/settings.json` があり、期待どおりの設定であること |
 | ワークスペースシェル | `.claude/` と `aidlc/spaces/default/memory/` が存在すること（出荷済みシェル） |
 | 状態ファイル | アクティブインテントの `aidlc-state.md` がその監査証跡と一致していること（ずれがないこと） |

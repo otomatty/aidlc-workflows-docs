@@ -39,7 +39,7 @@ description: エンジンとコンダクターに分かれた AI-DLC オーケ�
 
 引数が既知の 9 つのスコープ（`enterprise`, `feature`, `mvp`, `poc`, `bugfix`, `refactor`, `infra`, `security-patch`, `workshop`）のいずれかに一致する場合:
 
-新しいワークスペース（まだインテントがない、つまり `aidlc/spaces/*/intents/*/` 配下に `aidlc-state.md` がない状態）で明示的にスコープを指定すると、**最初のインテントが誕生します**。エンジンの `next` は、実行後に継続する `print` ディレクティブを出力し、`aidlc-utility.ts intent-birth --scope <scope>` を指名します（`--depth` / `--test-strategy` フラグがあれば、そのままそのコマンドへ渡します）。コンダクターはそれを実行し、最初のステージへ着地するために `next` を再実行します。裸の位置引数（`/aidlc bugfix`）でも明示フラグ（`/aidlc --scope bugfix`）でも、出力される誕生用の表示は同一です。何を作るかを説明する形（`/aidlc "build the auth service"`）でも誕生します。スコープ名も説明もない裸の `/aidlc` は誕生しません（環境変数や既定値で解決されたスコープは誕生の合図ではありません）。代わりに、何を作るかを説明するかスコープを名指しするよう促す、状態未作成エラーを出します。
+新しいワークスペース（まだインテントがない、つまり `aidlc/spaces/*/intents/*/` 配下に `aidlc-state.md` がない状態）で明示的にスコープを指定すると、**最初のインテントが誕生します**。エンジンの `next` は、実行後に継続する `print` ディレクティブを出力し、`aidlc-utility.ts intent-birth --scope <scope>` を指名します（`--depth` / `--test-strategy` / `--review` フラグがあれば、そのままそのコマンドへ渡します）。コンダクターはそれを実行し、最初のステージへ着地するために `next` を再実行します。裸の位置引数（`/aidlc bugfix`）でも明示フラグ（`/aidlc --scope bugfix`）でも、出力される誕生用の表示は同一です。何を作るかを説明する形（`/aidlc "build the auth service"`）でも誕生します。スコープ名も説明もない裸の `/aidlc` は誕生しません（環境変数や既定値で解決されたスコープは誕生の合図ではありません）。代わりに、何を作るかを説明するかスコープを名指しするよう促す、状態未作成エラーを出します。
 
 1. `aidlc/spaces/<active-space>/memory/` からガードレールを読み込みます。
 2. ユーザーへ "What would you like to build?" と尋ねます。

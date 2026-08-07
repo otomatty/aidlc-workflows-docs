@@ -192,8 +192,8 @@ my-project/
 
 | Git 追跡対象外（ユーザー別、ローカルマシンのみ） | 理由 |
 |---|---|
-| `aidlc/active-space`、`…/intents/active-intent` | カーソル、つまり「今どこにいるか」です。これをコミットすると、`/aidlc` のたびにツリーが汚れ、切り替えるたびにチームメイトがカーソルを奪い合うことになります |
-| `…/intents/<id>/runtime-graph.json`、`.aidlc-*`、`aidlc/.aidlc-sessions/` | 派生物であり、マシンローカルな実行時状態です |
+| `aidlc/active-space`、`…/intents/active-intent` | カーソル、つまり「今どこにいるか」です。これをコミットすると、ユーザー個人のナビゲーション状態がリポジトリ共有の状態になってしまい、インテントの誕生やカーソル切り替えのたびにチームメイトが奪い合うことになります |
+| `…/intents/<id>/runtime-graph.json`、`.aidlc-*`、`aidlc/.aidlc-sessions/`、`aidlc/.aidlc-active-space-*.tmp` | 派生物であり、マシンローカルな実行時状態です |
 
 スペースの下にあるそれ以外、つまり `memory/**`、`knowledge/**`、`codekb/**`、`intents.json`、各記録の `aidlc-state.md`、`audit/` シャード、成果物はすべてコミットされます。経験則としては、**カーソルと実行時の一時ファイルはローカル、共有すべき作業はコミット** です。
 

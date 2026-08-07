@@ -295,8 +295,8 @@ report awaiting-approval  →  [?] AwaitingApproval
 <a id="audit-event-taxonomy"></a>
 ## 監査イベント分類
 
-以下では **74 イベント**を 17 カテゴリに分類します（正規レジストリ
-`audit-format.md` では同じ 74 イベントを 19 カテゴリに分けます。分類は表現上のもので、
+以下では **82 イベント**を 18 カテゴリに分類します（正規レジストリ
+`audit-format.md` では同じ 82 イベントを 21 カテゴリに分けます。分類は表現上のもので、
 イベント集合が不変条件です）。今後のリリース向けに事前登録されたイベントを除き、
 各イベントにはツールまたはフックのエミッターがちょうど 1 つあります。エミッター欄が
 `Reserved (v0.4.0 PR N)`、`Reserved (v0.5.0 PR N)`、`Reserved (v0.6.0 PR N)` の
@@ -351,8 +351,19 @@ report awaiting-approval  →  [?] AwaitingApproval
 |---|---|---|
 | `DECISION_RECORDED` | `tools/aidlc-log.ts` | 選択肢を記録するため、ゲート以外の `AskUserQuestion` の前に出力 |
 | `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | ゲート以外の質問への応答後に出力。承認の選択は `report` が所有するライフサイクルイベント |
+| `SUMMARY_CONFIRMATION_RECORDED` | `tools/aidlc-log.ts` | 人間の裏付けを持つ統合サマリーの受領記録。質問ファイルのダイジェストに束縛され、公開監査 append からは予約されている |
 | `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | コンダクターが §12a レビュアーサブエージェントをディスパッチしたときに出力 |
-| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` のレビュアー判定を読み取ったときに出力。完了系のすべての状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在のワークフロー試行の、かつ宣言済み成果物への最新の関連書き込みより後の一致する受領記録を要求する。ユニット単位のステージは該当ユニットごとに 1 件を要求し、成果物変更による無効化をそのユニットに限定する。自律スウォームの確定は加えて、各設定済みユニットの Bolt 開始後の受領記録を要求する。 |
+| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` のレビュアー判定を読み取ったときに出力し、宣言された出力パスとバイト列に対する `Artifact Fingerprint` を記録する。完了系のすべての状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在のワークフロー試行の、かつフィンガープリントがなお一致する受領記録を要求する。ユニット単位のステージは該当ユニットごとに 1 件を要求し、無効化をそのユニットに限定する。自律スウォームの確定は加えて、各設定済みユニットの Bolt 開始後の一致する受領記録と、該当する必須成果物のすべてがその Bolt ワークツリー内にファイルとして存在することを要求する（存在しない任意出力は有効なフィンガープリントエントリのまま）。 |
+
+<a id="unit-lifecycle-inline-per-unit-construction-stages"></a>
+### ユニットのライフサイクル（インラインのユニット単位 Construction ステージ）
+
+| イベント | エミッター | 注記 |
+|---|---|---|
+| `UNIT_STARTED` | `tools/aidlc-state.ts` | `unit start` — エンジンが現在ルーティングしているステージ／ユニットの厳密な組、権威ある DAG 由来の安全なユニット識別子（安全なレガシー表記を含む）、そして他に開いているユニットが無いことを要求する |
+| `UNIT_PAUSED` | `tools/aidlc-state.ts` | `unit pause` — `--reason` と `--next-action` が必須。エンジンは一時停止中のユニットを最優先でルーティングし、明示的な再開までハードストップする |
+| `UNIT_RESUMED` | `tools/aidlc-state.ts` | `unit resume` — 現在一時停止中のユニットだけが再開できる |
+| `UNIT_COMPLETED` | `tools/aidlc-state.ts` | `unit complete` — 確定前にそのユニットの必須成果物が通常ファイルであることを検証する。4 つのライフサイクルイベントはいずれも、厳密な境界イベント／タイムスタンプ／序数からなる `Run floor`（またはフェイルクローズのシャード横断曖昧性トークン）を伴い、受領記録モードは試行をまたいで有効なまま、同一シャード内の追記順が確定を制御し、順序の無い同一秒のシャード横断ライフサイクル同点は一時停止などの非終端状態を保持する。したがって古い・曖昧な・再オープンされたユニットは、再度完了するまでゲートをブロックする |
 
 <a id="scope-and-configuration"></a>
 ### スコープと構成
@@ -364,6 +375,7 @@ report awaiting-approval  →  [?] AwaitingApproval
 | `PLUGIN_SELECTION_CHANGED` | `tools/aidlc-utility.ts` | `select-plugins` の設定モード。フィールド: `Previous Selection`、`New Selection` |
 | `DEPTH_CHANGED` | `tools/aidlc-utility.ts` | `config-change --depth` |
 | `TEST_STRATEGY_CHANGED` | `tools/aidlc-utility.ts` | `config-change --test-strategy` |
+| `REVIEW_CLASS_CHANGED` | `tools/aidlc-utility.ts` | `config set review <value>` / `config-change --review` / `scope-change --review` の組み合わせが実行単位のレビュー上書きを設定または解除したとき |
 | `RECOMPOSED` | `tools/aidlc-utility.ts` | `recompose` サブコマンド — 適応型コンポーザーが進行中の計画を再形成（監査ロック下で保留ステージ接尾辞を切り替え） |
 
 <a id="artifacts"></a>
@@ -397,6 +409,8 @@ report awaiting-approval  →  [?] AwaitingApproval
 | `HUMAN_TURN` | `hooks/aidlc-mint-presence.ts`（＋ハーネスごとのプロンプト送信アダプター） | 実際の人間プロンプトまたは回答済み質問ウィジェットごとに 1 件。承認 / インタビューゲートは、直前のゲート解決以降に 1 件を要求する |
 | `SUBAGENT_COMPLETED` | `hooks/aidlc-log-subagent.ts` | サブエージェント停止フック経由でサブエージェント完了を記録 |
 | `REVIEWER_SCOPE_BLOCKED` | `hooks/aidlc-reviewer-scope.ts` | ユニット単位レビュアーのツール呼び出しが、兄弟ユニットの `construction/` パスへ到達したため拒否された（§12a の読み取り範囲境界）。拒否ごとに 1 行 |
+| `REVIEW_FREEZE_BLOCKED` | `hooks/aidlc-review-freeze.ts` | ファイルツールまたはシェルによる `produces[]` への書き込みが、ゲート前に新鮮な READY レビュー受領記録を無効化するとして拒否された（§12a の終端受領記録の順序）。拒否ごとに 1 行 |
+| `PLAN_APPROVAL_BLOCKED` | `hooks/aidlc-plan-approval-guard.ts` | コード生成の開発者エージェントディスパッチが、対象ユニットに空でない明示承認済みの `code-generation-plan.md` が無いとして拒否された（ステージ手順 2〜3 は手順 4 に先立つ必要がある）。拒否ごとに 1 行 |
 
 <a id="diagnostics-and-workspace"></a>
 ### 診断とワークスペース
@@ -505,10 +519,12 @@ FALLBACK。
 
 バージョン 0.6.0 のマイルストーン 2 で事前登録。6 つのスウォームイベントはすべて、コンダクターが
 参照する決定的な判定面であるスウォーム審判 `aidlc-swarm.ts` から出力されます。審判は
-状態を持ちません。`prepare` はユニット単位のワークツリーをフォークして
-`SWARM_STARTED` を出力し（コンダクターが明確なダウングレードを報告すると、ウェーブ 4
-マイルストーン 16 で本番化した `SWARM_DEGRADED` も出力）、`finalize` はコンダクターが
-収束を主張した集合を、各設定済みユニットの Bolt 後終端レビュアー受領記録を含めて再検証し、ユニット単位の対、失敗ユニット単位のバトン行、バッチ集計を
+状態を持ちません。`prepare` は厳密なステージ試行トークンを捕捉し、ユニット単位のワークツリーをフォークして
+スタンプ済みの `SWARM_STARTED` を出力し（コンダクターが明確なダウングレードを報告すると、ウェーブ 4
+マイルストーン 16 で本番化した `SWARM_DEGRADED` も出力）、`finalize` はまずその prepare 済みトークンが
+現在の試行と一致することを要求したうえで、コンダクターが
+収束を主張した集合を、各設定済みユニットの Bolt 後終端レビュアー受領記録を含めて再検証し、各収束行にトークンを保持します。
+古い `finalize` はマージ前に拒否されます。審判はユニット単位の対、失敗ユニット単位のバトン行、バッチ集計を
 出力します。`check` サブコマンドは助言のみで何も出力しません。エンジンは読み取り専用で、
 コンダクターは監査イベントを出力しないため、決定的ツールがスウォーム分類全体を所有します。
 これらの行は、依存関係で結ばれたユニットのバッチのライフサイクルを追跡します。バッチ開始時の
@@ -520,7 +536,7 @@ FALLBACK。
 
 | イベント | エミッター | トリガー |
 |---|---|---|
-| `SWARM_STARTED` | `tools/aidlc-swarm.ts` | スウォーム審判の `prepare` が依存関係で結ばれたユニットのバッチをフォーク |
+| `SWARM_STARTED` | `tools/aidlc-swarm.ts` | スウォーム審判の `prepare` が厳密な試行を捕捉し、依存関係で結ばれたユニットのバッチをフォーク |
 | `SWARM_UNIT_CONVERGED` | `tools/aidlc-swarm.ts` | スウォームユニットが再検証で緑・改ざんなしとなり、設定された Bolt 後レビュアー受領記録が存在した上でマージバックされた（マージバックに失敗した収束ユニットは、再試行の `finalize` がマージするまで行なし） |
 | `SWARM_UNIT_FAILED` | `tools/aidlc-swarm.ts` | スウォームユニットが `finalize` 再検証に失敗（未主張、主張したが不合格、改ざん、または設定されたレビュアー受領記録の欠落） |
 | `SWARM_BATON_RETURNED` | `tools/aidlc-swarm.ts` | スウォームユニットがオーケストレーター仲介の調整のため、コンダクターへバトンを返却 |
@@ -602,6 +618,8 @@ LLM の文章から監査イベントを出力してはいけません。次の�
   イベントはツールまたはフック内の `appendAuditEntry` からのみ来る
 - フックが書く自由形式の `## Artifact Update` 節 —
   正規の `ARTIFACT_CREATED` / `ARTIFACT_UPDATED` に置換
+
+公開 CLI はこの原則のうち最も鋭い一片を機械的に強制します。`append` / `append-batch` は、エンジンのガードが認可の証跡として読む権限付き受領記録（`HUMAN_TURN`、`GATE_APPROVED`、`GATE_REJECTED`、`QUESTION_ANSWERED`、`REVIEW_REQUESTED`、`REVIEW_COMPLETED`、`SWARM_STARTED`、`SWARM_UNIT_CONVERGED`、`AUTONOMY_MODE_SET`、および 4 つの `UNIT_*` ライフサイクル受領記録 — `aidlc-audit.ts` の `CLI_PROTECTED_EVENT_TYPES` 集合）を拒否します。すべてのフィールド名は印字可能な単一行ラベルの厳格な文法に一致する必要があり（`Event` は引き続き予約）、値の行終端はエスケープされ、`append-raw` は分類体系のイベント行や行を分断する見出しを拒否します。`Timestamp` は正当なフィールドのままです（park / unpark 行が持ちます）。エミッター自身の行が先に書かれるため、パーサーが呼び出し側の値を読むことはありません。所有側のツールとフックはライブラリのインポート（`appendAuditEntry`）経由で出力し、この下限は触れません。所有エミッターを模倣するテストフィクスチャは `AIDLC_ALLOW_DIRECT_AUDIT_EVENTS=1` を設定します。
 
 `tests/integration/t48-audit-event-emitters.test.ts` の乖離テストは、本章の表とコードの
 乖離を検出します。表の各イベントは、宣言されたエミッターファイル内の一致する

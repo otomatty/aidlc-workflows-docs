@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "c73ee984972e95d0576679d0485bf2a45a673ab3",
-	"last_checked_commit_date": "2026-08-04 19:32:02 +1000",
-	"last_checked_commit_message": "fix(question-rendering): forbid echoing the question fence as literal chat text (2.5.37)",
-	"checked_at": "2026-08-04",
-	"site_version": "2.5.37"
+	"last_checked_commit_sha": "01893096167530dd14b099867ab80b87b5763e35",
+	"last_checked_commit_date": "2026-08-07 15:02:50 +1000",
+	"last_checked_commit_message": "fix: harden human-authorization boundaries + unit-of-work lifecycle receipts (2.5.55)",
+	"checked_at": "2026-08-07",
+	"site_version": "2.5.55"
 }

@@ -31,14 +31,16 @@ AI-DLC のすべてのコマンドは、オーケストレーターの呼び出�
 | `/aidlc --scope <name>` | アクティブなスコープを変更する |
 | `/aidlc --depth <level>` | 深さレベル（minimal、standard、comprehensive）を上書きする |
 | `/aidlc --test-strategy <level>` | テスト戦略（minimal、standard、comprehensive）を上書きする |
-| `/aidlc config get <key>` | アクティブなワークフロー設定（`depth`、`test-strategy`）を表示する |
-| `/aidlc config set <key> <value>` | アクティブなワークフロー設定（`depth`、`test-strategy`）を変更する |
+| `/aidlc --review <class>` | この実行のステージレビューに上限を設ける（adversarial、advisory、none） |
+| `/aidlc config get <key>` | アクティブなワークフロー設定（`depth`、`test-strategy`、`review`）を表示する |
+| `/aidlc config set <key> <value>` | アクティブなワークフロー設定（`depth`、`test-strategy`、`review`）を変更する |
 | `/aidlc config list` | アクティブなワークフロー設定を一覧表示する（`--json` で構造化出力） |
+| `/aidlc plugin select [names]` | このインストールで有効なプラグイン一覧を表示または設定する |
 | `/aidlc plugin list` | インストール済みプラグインと有効状態を一覧表示する |
 | `/aidlc plugin sync` | インストール済みプラグインのルートを現在のインストールへ合成する |
 | `/aidlc --version` | フレームワークのバージョンを表示する |
 | `/aidlc --help` | 使用方法を表示する |
-| `bun .claude/tools/aidlc-utility.ts select-plugins [names]` | 直接呼び出し専用: このインストールで有効なプラグイン一覧を表示または設定する |
+| `bun .claude/tools/aidlc-utility.ts select-plugins [names]` | プラグイン選択の直接ユーティリティ形式 |
 
 ---
 
@@ -233,7 +235,7 @@ flowchart TD
 | チェック | 検証内容 |
 |-------|-------------------|
 | 前提条件 | `bun` がインストールされ、PATH 上にある |
-| フックの存在 | `settings.json` が配線するすべてのフック（`hooks` ブロックと `statusLine` コマンドに含まれる 14 個のフレームワークフックすべて）が `.claude/hooks/` に存在する。配線済みなのに欠けているフックは明示的に失敗する。期待一覧を `settings.json` から取得するため、そこにフックを追加すると自動で検査対象になる |
+| フックの存在 | `settings.json` が配線するすべてのフック（`hooks` ブロックと `statusLine` コマンドに含まれる 16 個のフレームワークフックすべて）が `.claude/hooks/` に存在する。配線済みなのに欠けているフックは明示的に失敗する。期待一覧を `settings.json` から取得するため、そこにフックを追加すると自動で検査対象になる |
 | プロジェクト構造 | `.claude/settings.json` が存在する（内容検証はしない） |
 | ワークスペース環境 | `.claude/` と `aidlc/spaces/default/memory/` が存在する（出荷済み環境） |
 | サブモジュール | `.gitmodules` が存在する場合、宣言されたサブモジュールパス数と未初期化数を報告し、必要なら `git submodule update --init --recursive` を示す（助言のみ。失敗にはしない） |
@@ -395,7 +397,7 @@ No source files or artifact bodies were included.
 /aidlc --scope enterprise
 ```
 
-**挙動:** `aidlc-state.md` のスコープ設定を更新し、実行またはスキップするステージを再計算して、`SCOPE_CHANGED` 監査イベントを記録します。`--depth` と組み合わせると、新しいスコープの既定の深さを上書きできます。
+**挙動:** `aidlc-state.md` のスコープ設定を更新し、実行またはスキップするステージを再計算して、`SCOPE_CHANGED` 監査イベントを記録します。`--depth`、`--test-strategy`、`--review` と組み合わせられ、指定された上書きはすべて同じ変更で適用されます。
 
 自律構築中（`Construction Autonomy Mode: autonomous`）は拒否されます。`recompose` と同じルールで、計画の再形成にはゲートで人間の判断が必要ですが、無人実行にはそれがありません。まずゲート付き構築へ切り替えてください（`aidlc-bolt set-autonomy --mode gated`）。または群処理の完了を待ってください。
 
@@ -460,6 +462,34 @@ No source files or artifact bodies were included.
 /aidlc --test-strategy minimal                         Minimal testing for active workflow
 /aidlc --depth standard --test-strategy minimal        Full artifacts, minimal tests
 /aidlc --scope bugfix --test-strategy comprehensive    Bugfix with thorough testing
+```
+
+---
+
+<a id="aidlc-review-class-cap-stage-reviews-for-this-run"></a>
+### `/aidlc --review <class>` — この実行のステージレビューに上限を設ける
+
+実行単位のレビュー上書き、つまりアクティブなワークフローで §12a のステージレビューを
+どれだけ重く走らせるかの上限を設定します。
+
+**構文:**
+
+```
+/aidlc --review adversarial
+/aidlc --review advisory
+/aidlc --review none
+```
+
+**挙動:** レビュアーを持つ各ステージは、フロントマターでレビュークラスを宣言します。`adversarial`（レビュアーが成果物を反証し、主担当が `reviewer_max_iterations` 回まで指摘事項を修正する）か、`advisory`（1 パスのみ。指摘事項は承認ゲートで逐語的に引用され、あなたが取捨選択する）です。ステージごとの実効クラスは、ステージの宣言・スコープの `review_cap`（bugfix、poc、workshop は `advisory` に制限）・この上書きのうち**最も低い**ものになります。したがって `--review advisory` は残っているアドバーサリアルのループをすべて 1 回の意思決定支援パスへ変え、`--review none` はレビュアーのディスパッチを丸ごと省略し、`--review adversarial` は上書きを解除します（ステージ宣言やスコープ上限より上へクラスを引き上げることはできません）。自律スウォームの構築は対象外です。Bolt 内ではレビュアーがマージ前の唯一の検証手段であるため、そこでは常に宣言クラスが適用されます。`aidlc-state.md` の `Review Override` フィールドを更新し、`REVIEW_CLASS_CHANGED` 監査イベントを記録します。ワークフローの誕生時や `--scope` と同時に指定でき、現在と同じスコープを指定した場合は、レビュー上書きが破棄されず設定変更として適用されます。
+
+**有効な値:** `adversarial`、`advisory`、`none`（大文字小文字を区別しない）。
+
+**例:**
+
+```
+/aidlc --review advisory              1 パスのレビュー、指摘事項はゲートで提示
+/aidlc --review none                  この実行ではステージレビューなし
+/aidlc --review adversarial           上書きを解除（ステージ既定が適用される）
 ```
 
 ---
@@ -557,7 +587,7 @@ bun .aidlc/tools/aidlc-workspace-sync.ts [--force]
 <a id="aidlc-utility-select-plugins-install-plugin-selection"></a>
 ### `aidlc-utility select-plugins` - インストールのプラグイン選択
 
-`/aidlc plugin list` は、インストール済みプラグイン名と各プラグインの有効状態を表示します。`select-plugins` は **直接ユーティリティ呼び出し** であり、`/aidlc select-plugins` というコマンドではありません。`bun .claude/tools/aidlc-utility.ts select-plugins` は、現在の選択（`plugins` キーがない場合は `all enabled (no selection)`）と既知のプラグイン名を表示します。カンマ区切りの一覧を渡すと設定できます。
+`/aidlc plugin list` は、インストール済みプラグイン名と各プラグインの有効状態を表示します。`/aidlc plugin select [names]` が公開コマンドです。`select-plugins` はその直接ユーティリティ形式であり、`/aidlc select-plugins` というコマンドではありません。`bun .claude/tools/aidlc-utility.ts select-plugins` は、現在の選択（`plugins` キーがない場合は `all enabled (no selection)`）と既知のプラグイン名を表示します。カンマ区切りの一覧を渡すと設定できます。
 
 ```bash
 bun .claude/tools/aidlc-utility.ts select-plugins test-pro

@@ -713,6 +713,9 @@ AIDLC コンプライアンスエージェントがデータレジデンシー�
    （`subagent_type="aidlc-developer-agent"`）へ委任します。
 
    **サブエージェントへ渡すコンテキスト:**
+   - プロンプト最初の 1 行として、正確な対象マーカー
+     `AIDLC-UNIT: <directive.unit>`（`unit` を持たない単一反復ディレクティブの
+     場合は現在のユニット名）。文脈上の依存関係に追加のマーカーは付けません。
    - `agents/aidlc-developer-agent.md` の主担当ペルソナと、
      `.claude/knowledge/aidlc-developer-agent/` のナレッジ（サブエージェントは
      会話履歴にアクセスできないためプロンプトに含める）

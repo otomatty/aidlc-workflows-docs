@@ -112,6 +112,16 @@ YAML が正です。JSON はビルド成果物です。継続的インテグレ�
 反復したあとに一度だけ実行され、集約された出力を消費します。明示的な
 `fan_in` や集約フィールドは不要であり、グラフ走査が判断します。
 
+<a id="summary_confirmation"></a>
+### `summary_confirmation`
+
+任意の列挙値で、ステージの質問フローに対する生成前の決定論的チェックポイントを制御します。
+
+- `required` は、すべての実行が質問ファイルを作成し、成果物生成の前に統合された **Looks correct** の確認を得なければならないことを意味します。
+- `if-present` は、条件付きの質問フローが質問ファイルを作成した場合にのみ同じ強制を適用します。
+
+受領記録は Markdown だけから推論されるものではありません。`aidlc-log.ts` は、一致するプロンプト記録とその後の人間ターンを経て、予約済みの `SUMMARY_CONFIRMATION_RECORDED` イベントを記録し、質問ファイルの SHA-256 に束縛します。完了処理は、受領記録の欠落や陳腐化、質問ファイルの変更、受領記録より後にネイティブな書き込みを伴わない宣言済み成果物を拒否します。ユニット単位のステージは該当ユニットごとに 1 件のユニットスコープ受領記録を要求し、隔離実行は `single-stage:<slug>` のワークフロー識別子で同じ検査を行います。
+
 <a id="workspace_requires"></a>
 ### `workspace_requires`
 
@@ -350,8 +360,8 @@ NOT-READY はリードだけを再度呼び出します。
 `.md` ファイルを `.claude/agents/` に置くことです。
 [貢献: エージェントの追加](/reference/contributing#adding-an-agent)を参照してください。
 
-<a id="reviewer-and-reviewer_max_iterations"></a>
-### `reviewer` と `reviewer_max_iterations`
+<a id="reviewer-reviewer_max_iterations-and-review_class"></a>
+### `reviewer`、`reviewer_max_iterations`、`review_class`
 
 任意です。`reviewer` は、ステージ本文が成果物を生成したあと、承認ゲートの前に
 呼ばれる品質ゲート・エージェントを名付けます（[ステージ・プロトコル](/reference/stage-protocol)
@@ -366,6 +376,8 @@ NOT-READY はリードだけを再度呼び出します。
 `reviewer` なしの `reviewer_max_iterations` を拒否します（スキーマエラー
 `reviewer_max_iterations requires a reviewer` がグラフコンパイルを失敗させる）ので、
 黙って無視されることはありません。
+
+`review_class` はレビュー契約を選びます。`adversarial`（上記の反証と修復のループ。`reviewer` がクラス無しで宣言されたときの既定）か、`advisory`（1 パスだけ実行し、その指摘事項を人間の承認ゲートで逐語的に引用する。修復ループなし、実効の反復予算は 1）です。出荷時の割り当ては、人間ゲート付きの Ideation / Inception の文章系 7 ステージが `advisory` を宣言し、Construction の設計・実装 5 ステージが既定の `adversarial` です。`none` は意図的にステージの値ではありません。レビューを不要とするステージは `reviewer:` 行を削除します。`none` はスコープの `review_cap` と実行単位の `--review` 上書きに存在し、ステージを編集せずに宣言済みレビュアーを黙らせられます。実行時の実効クラスは、ステージ宣言・アクティブなスコープの `review_cap`（出荷時の `bugfix`、`poc`、`workshop` は `advisory` に制限）・実行単位の上書きのうち**最も低い**ものです。上限や上書きはクラスを引き下げられますが、決して引き上げられません。自律スウォームのレビューは上限と上書きの対象外です。Bolt 内ではレビュアーがマージ前の唯一の検証手段であるため、そこでは常にステージ宣言のクラスが適用されます。上限と同様、`review_class` は `reviewer` を必要とします（スキーマエラー `review_class requires a reviewer`）。
 
 ---
 
