@@ -175,13 +175,13 @@ flowchart TD
 <a id="initialization-automatic-no-command"></a>
 ### 初期化 — 自動実行、専用コマンドなし
 
-足場作成コマンドはありません。配布される `dist/<harness>/` のワークスペース環境はあらかじめ構築済みで（`.claude/` エンジンと `aidlc/spaces/default/memory/` を含む）、最初の `/aidlc` 実行時（または作りたいものを説明したとき）にエンジンが最初のインテントを**自動作成**します。作成処理では、3 つの初期化ステージ（ワークスペース足場作成、ワークスペース検出、状態初期化）を 1 回の決定論的なツール呼び出しとして実行します。インテントの記録ディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成し（`audit/` シャードディレクトリ、各フェーズの成果物ディレクトリ、`verification/` を含む）、空のスペース単位 `aidlc/knowledge/` ディレクトリを作り、ルールベースでワークスペースを走査し、そのインテントの `aidlc-state.md` にスコープ計画を書き込みます。
+足場作成コマンドはありません。配布される `dist/<harness>/` のワークスペース環境はあらかじめ構築済みで（`.claude/` エンジンと `aidlc/spaces/default/memory/` を含む）、最初の `/aidlc` 実行時（または作りたいものを説明したとき）にエンジンが最初のインテントを**自動作成**します。作成処理では、3 つの初期化ステージ（ワークスペース足場作成、ワークスペース検出、状態初期化）を 1 回の決定論的なツール呼び出しとして実行します。インテントの記録ディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成し（`audit/` シャードディレクトリ、スコープが実行する各フェーズの成果物ディレクトリ、`verification/` を含む）、空のスペース単位 `aidlc/knowledge/` ディレクトリを作り、ルールベースでワークスペースを走査し、そのインテントの `aidlc-state.md` にスコープ計画を書き込みます。
 
 この処理では初期化イベント（`WORKFLOW_STARTED`、`WORKSPACE_SCAFFOLDED`、`WORKSPACE_SCANNED`、`WORKSPACE_INITIALISED` と、各ステージの `STAGE_STARTED` / `STAGE_COMPLETED`）を記録します。スコープ名を指定すると（`/aidlc --scope feature`）初期スコープとして使われます。指定がなければ `poc` が既定値です。最初の実行前にチームナレッジやガードレールを加えたい場合は、配布済みの `aidlc/spaces/default/memory/` ファイルを編集します。スペース単位の `aidlc/knowledge/` ディレクトリは最初のインテント作成後に空の状態で作られ、その後は自由形式のファイルを追加できます。
 
 歓迎メッセージは、セッション開始時に `settings.json` の `companyAnnouncements` エントリ経由で描画されます。
 
-**複数リポジトリのワークスペース。** ワークスペースルートに複数の同階層コードリポジトリ（直下の子ディレクトリで、それぞれに `.git` があるもの）が存在する場合、作成ステップはそのインテントが扱うリポジトリ集合を `intents.json` 行に記録します。既定ではすべての同階層リポジトリを**自動検出**します。特定の部分集合に限定したい場合、作成ツールは `--repos a,b`（リポジトリディレクトリ名のカンマ区切り）を受け付けます。これはエンジンが内部で実行する決定論的な `aidlc-utility intent-birth` ステップのフラグであり、利用者が直接入力する `/aidlc` フラグではありません。構築フェーズ中は、各 Git 操作（ワークツリー、群処理、Bolt）が 1 つのリポジトリを対象にします。コンダクターは対象を固定するため `--repo <name>` を渡します。インテントが複数リポジトリにまたがる場合だけ必須です。記録済みリポジトリを持たないインテントは単一リポジトリの既定ケースであり、Git はワークスペースまたはプロジェクトのディレクトリで実行されます。[成果物リファレンス](/guide/artifacts-reference) を参照してください。
+**複数リポジトリのワークスペース。** ワークスペースルートに複数の同階層コードリポジトリ（直下の子ディレクトリで、それぞれに `.git` があるもの）が存在する場合、作成ステップはそのインテントが扱うリポジトリ集合を `intents.json` 行に記録します。既定ではすべての同階層リポジトリを**自動検出**します。特定の部分集合に限定したい場合、作成ツールは `--repos a,b`（リポジトリディレクトリ名のカンマ区切り）を受け付けます。これはエンジンが内部で実行する決定論的な `aidlc-utility intent-create` ステップのフラグであり、利用者が直接入力する `/aidlc` フラグではありません。構築フェーズ中は、各 Git 操作（ワークツリー、群処理、Bolt）が 1 つのリポジトリを対象にします。コンダクターは対象を固定するため `--repo <name>` を渡します。インテントが複数リポジトリにまたがる場合だけ必須です。記録済みリポジトリを持たないインテントは単一リポジトリの既定ケースであり、Git はワークスペースまたはプロジェクトのディレクトリで実行されます。[成果物リファレンス](/guide/artifacts-reference) を参照してください。
 
 ---
 
@@ -261,8 +261,8 @@ flowchart TD
 
 ```
 ✓ bun installed (required for CLI tools and hooks)
-✓ aidlc-audit-logger.ts present
-✓ aidlc-sync-statusline.ts present
+✓ aidlc-write-audit-log.ts present
+✓ aidlc-sync-workflow-state.ts present
 ✓ aidlc-validate-state.ts present
 ✓ aidlc-log-subagent.ts present
 ✓ aidlc-session-start.ts present

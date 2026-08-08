@@ -115,7 +115,7 @@ checks have proven reliable.
 | `"1"` | インライン動的ワークフロー | コンダクターがユニット単位のパイプラインと反復上限を所有する `Workflow` を著述する |
 | `"1"` だがワークフローツールが使えない | 基盤への明示的フォールバック | コンダクターは基盤へフォールバックし、`--degraded-from ultracode` を渡してレフェリーに `SWARM_DEGRADED` を出させる |
 
-どちらのドライバーも、同じ 5 つのユニット単位ステージを走らせ、同じプロジェクト検証で収束判定します。違うのは並列作業の振り分け方法だけです。暴走防止の後ろ盾は、スウォームツール自体ではなくハーネスの **停止フック上限** にあります（`core/hooks/aidlc-stop.ts` の `blockCap()` / `defaultBlockCap()` の組で、`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` として公開されています）。この自律的コンストラクション経路では既定上限は **8 ブロック** です（対話実行の既定は 2。明示的な `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` があればどちらよりも優先されます）。ドライバーの継ぎ目に関する契約は [スキルシステム § 6](/reference/skill-system#6-the-swarm-referee-the-driver-seam-and-the-bolt-dag) にあります。
+どちらのドライバーも、同じ 5 つのユニット単位ステージを走らせ、同じプロジェクト検証で収束判定します。違うのは並列作業の振り分け方法だけです。暴走防止の後ろ盾は、スウォームツール自体ではなくハーネスの **停止フック上限** にあります（`core/hooks/aidlc-continue-workflow.ts` の `blockCap()` / `defaultBlockCap()` の組で、`CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` として公開されています）。この自律的コンストラクション経路では既定上限は **8 ブロック** です（対話実行の既定は 2。明示的な `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` があればどちらよりも優先されます）。ドライバーの継ぎ目に関する契約は [スキルシステム § 6](/reference/skill-system#6-the-swarm-referee-the-driver-seam-and-the-bolt-dag) にあります。
 
 ドライバーが変わっても動かない判断が 1 つあります。失敗した場合は **常に停止して人間を再び関与させる** ことです。自律性モードに関係なく、`aidlc-common/protocols/stage-protocol.md:125` の "Halt-and-ask on failure" に従います。レフェリーの `finalize` が `exit-2` の返却を出した時点で、コンダクターは判断を人間へ返します。手放しモードは正常系のゲートを外すだけで、失敗時の停止は大きく保ったままです。
 

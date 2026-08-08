@@ -44,7 +44,7 @@ AI-DLC が実際にどう動くかを示す 2 つの完全な実例を載せま�
 <a id="initialization-stages-01-03-auto-proceed"></a>
 ### 初期化（ステージ 0.1〜0.3）— 自動進行
 
-3 つの初期化ステージは、利用者の操作なしで 1 秒未満の単一かつ決定論的なツール呼び出し（`aidlc-utility init`）として実行されます。
+3 つの初期化ステージは、利用者の操作なしで 1 秒未満の単一かつ決定論的なツール呼び出し（`aidlc-utility intent-create`）として実行されます。
 
 - **0.1 ワークスペース足場作成** — 最初のインテントを自動作成し、その記録ディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成する（以下では `<record>/` と表記）。`<YYMMDD>` は記録が時系列で並ぶようにする短い UTC 日付接頭辞。`<label>` はコンダクターが要求内容から抽出した短いケバブケースの要約。正規 ID は UUIDv7 で、`intents.json` のレジストリ行に保持される
 - **0.2 ワークスペース検出** — ルールベース走査が Java 17、Spring Boot 3.2、Maven、既存プロジェクトを特定する
@@ -200,7 +200,7 @@ aidlc/spaces/default/
 <a id="initialization-stages-01-03-auto-proceed-1"></a>
 ### 初期化（ステージ 0.1〜0.3）— 自動進行
 
-3 つの初期化ステージは `aidlc-utility init` 内で自動実行されます。ワークスペース検出は、TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク / 利用者サービスを持つ既存プロジェクトを特定します。
+3 つの初期化ステージは `aidlc-utility intent-create` 内で自動実行されます。ワークスペース検出は、TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク / 利用者サービスを持つ既存プロジェクトを特定します。
 
 > 進捗: 全体 3/32 | スコープ: feature、深さ: Standard
 

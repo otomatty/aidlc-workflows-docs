@@ -34,7 +34,7 @@ description: よくある症状ごとの原因と対処方法をまとめてい�
 <a id="bun-not-installed-or-not-on-path"></a>
 ### `bun` がインストールされていない、または PATH にない
 
-16 個の TypeScript フック（`aidlc-mint-presence.ts`、`aidlc-dispatch-rules.ts`、`aidlc-state-transition-guard.ts`、`aidlc-reviewer-scope.ts`、`aidlc-review-freeze.ts`、`aidlc-audit-logger.ts`、`aidlc-sensor-fire.ts`、`aidlc-runtime-compile.ts`、`aidlc-fold-usage.ts`、`aidlc-log-subagent.ts`、`aidlc-stop.ts`、`aidlc-validate-state.ts`、`aidlc-sync-statusline.ts`、`aidlc-session-start.ts`、`aidlc-session-end.ts`、`aidlc-statusline.ts`）はすべて `bun` を必要とします。`bun` がない、または非対話シェルの PATH に載っていない場合、これらのフックは発火しません。
+17 個の TypeScript フック（`aidlc-record-human-turn.ts`、`aidlc-deliver-stage-rules.ts`、`aidlc-plan-approval-guard.ts`、`aidlc-state-transition-guard.ts`、`aidlc-reviewer-scope.ts`、`aidlc-review-freeze.ts`、`aidlc-write-audit-log.ts`、`aidlc-run-sensors.ts`、`aidlc-rebuild-stage-graph.ts`、`aidlc-fold-usage.ts`、`aidlc-log-subagent.ts`、`aidlc-continue-workflow.ts`、`aidlc-validate-state.ts`、`aidlc-sync-workflow-state.ts`、`aidlc-session-start.ts`、`aidlc-session-end.ts`、`aidlc-statusline.ts`）はすべて `bun` を必要とします。`bun` がない、または非対話シェルの PATH に載っていない場合、これらのフックは発火しません。
 
 ```bash
 # macOS / Linux
@@ -253,7 +253,7 @@ AI-DLC ワークフローが何も実行中でないときなら、いつ実行�
 /aidlc --doctor
 ```
 
-検証内容は、前提条件（`bun`）、フックの利用可否（`settings.json` が配線する 16 個のフレームワークフックが `.claude/hooks/` に存在すること。配線済みなのに欠けているフックは明示的に失敗する）、プロジェクト構造（`settings.json`）、ワークスペース環境の準備状態（`.claude/` + `aidlc/spaces/default/memory/`）、状態と監査の整合性、フックの生存確認、グラフの整合性（循環がなく、各グラフ項目にファイルがあること）、9 個すべてのスコープの検証、ステージスキーマとグラフ参照、スコープ間のキーワード重複です。常に成功扱いの助言行には、**ルールのずれ**、**対応センサーの網羅性**、ワークスペース記録の未コミット変更、そして `repos.json` が存在する場合の宣言リポジトリのずれと管理対象 `.gitignore` ブロックのずれが含まれます。**フックの処理落ち**は条件付きです。フックが静かに機能低下した場合（たとえばプラグイン合成が追加内容を適用できなかった場合や、再コンパイルが失敗した場合）、`<hooks-health>/<hook>.drops` に重大度付きで記録されます。`[degraded]` の処理落ちは**健全性検査を失敗**させ、半適用のプラグインを CI ゲートで検出できるようにします。一方 `[advisory]` の処理落ちは成功行です。プラグイン合成フックは実行ごとに処理落ちファイルを書き直すため、原因を直して再合成すれば自動的に解消します。完全成功なら終了コード 0、何か失敗すれば 1 を返します。どちらの場合もレポートは標準出力へ出ます。`--doctor` は**読み取り専用**で、インテントがまだない新しい実行環境では何も作成しません。異常を感じたとき最初に試す操作として安全です。インテントが存在するようになった後は、`HEALTH_CHECKED`（および `GUARDRAIL_LOADED`）監査行を記録します。
+検証内容は、前提条件（`bun`）、フックの利用可否（`settings.json` が配線する 17 個のフレームワークフックが `.claude/hooks/` に存在すること。配線済みなのに欠けているフックは明示的に失敗する）、プロジェクト構造（`settings.json`）、ワークスペース環境の準備状態（`.claude/` + `aidlc/spaces/default/memory/`）、状態と監査の整合性、フックの生存確認、グラフの整合性（循環がなく、各グラフ項目にファイルがあること）、9 個すべてのスコープの検証、ステージスキーマとグラフ参照、スコープ間のキーワード重複です。常に成功扱いの助言行には、**ルールのずれ**、**対応センサーの網羅性**、ワークスペース記録の未コミット変更、そして `repos.json` が存在する場合の宣言リポジトリのずれと管理対象 `.gitignore` ブロックのずれが含まれます。**フックの処理落ち**は条件付きです。フックが静かに機能低下した場合（たとえばプラグイン合成が追加内容を適用できなかった場合や、再コンパイルが失敗した場合）、`<hooks-health>/<hook>.drops` に重大度付きで記録されます。`[degraded]` の処理落ちは**健全性検査を失敗**させ、半適用のプラグインを CI ゲートで検出できるようにします。一方 `[advisory]` の処理落ちは成功行です。プラグイン合成フックは実行ごとに処理落ちファイルを書き直すため、原因を直して再合成すれば自動的に解消します。完全成功なら終了コード 0、何か失敗すれば 1 を返します。どちらの場合もレポートは標準出力へ出ます。`--doctor` は**読み取り専用**で、インテントがまだない新しい実行環境では何も作成しません。異常を感じたとき最初に試す操作として安全です。インテントが存在するようになった後は、`HEALTH_CHECKED`（および `GUARDRAIL_LOADED`）監査行を記録します。
 
 ワークフローに問題があるときは、`--doctor` は **ワークフロー診断** セクションも表示し、構造化された指摘（未解決のゲート、古い・欠落した実行時グラフ、休止状態のフックなど「先に進まない」原因）を一覧します。これは `--doctor --export` がレポートに書き出すものと同じ分析です。
 

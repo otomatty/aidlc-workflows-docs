@@ -5,13 +5,13 @@ description: AI-DLC ワークフローにおける初期化フェーズのステ
 <a id="phase-overview"></a>
 ## フェーズの概要
 
-初期化フェーズは、AI-DLC ワークフローの全 5 フェーズの最初のフェーズです。ステージ 0.1 から 0.3 を実行し、**インテントを誕生させます**。つまり、状態ファイル、ディレクトリのスキャフォールディング、ワークスペースの分類、ルーティング設定を含むレコードディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（以下では `<record>/` と表記）に作成します。スキャフォールド専用コマンドはありません。ワークスペースシェルは `dist/<harness>/` にあらかじめ組み込まれており、最初の `/aidlc` 実行時（または構築するものを説明したとき）にエンジンが最初のインテントを自動で誕生させます。
+初期化フェーズは、AI-DLC ワークフローの全 5 フェーズの最初のフェーズです。ステージ 0.1 から 0.3 を実行し、**インテントを誕生させます**。つまり、状態ファイル、スコープ対象フェーズごとに 1 つのディレクトリ、ワークスペースの分類、ルーティング設定を含むレコードディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/`（以下では `<record>/` と表記）に作成します。スキャフォールド専用コマンドはありません。ワークスペースシェルは `dist/<harness>/` にあらかじめ組み込まれており、最初の `/aidlc` 実行時（または構築するものを説明したとき）にエンジンが最初のインテントを自動で誕生させます。
 
 このフェーズの 3 ステージは、すべてのスコープで実行されます。条件付きステージはありません。すべてのステージは承認ゲートなしで自動進行します。
 
 ウェルカムメッセージは、セッション開始時に `settings.json` の `companyAnnouncements` エントリを通じて表示されます。これはステージではありません。ステージファイル、監査イベント、チェックボックスはいずれもありません。
 
-3 つのステージはすべて、1 秒を大幅に下回る時間で完了する単一の決定的な `bun .claude/tools/aidlc-utility.ts intent-birth --scope <scope>` 呼び出し内で実行されます。コンダクターは可観測性のためにサイドバーに 3 つのタスク（ワークスペースのスキャフォールディング、ワークスペースの検出、状態の初期化）を作成し、ツールが戻るとすべてを完了としてマークします。
+3 つのステージはすべて、1 秒を大幅に下回る時間で完了する単一の決定的な `bun .claude/tools/aidlc-utility.ts intent-create --scope <scope>` 呼び出し内で実行されます。コンダクターは可観測性のためにサイドバーに 3 つのタスク（ワークスペースのスキャフォールディング、ワークスペースの検出、状態の初期化）を作成し、ツールが戻るとすべてを完了としてマークします。
 
 <a id="scope-driven-stage-inclusion"></a>
 ## スコープに応じたステージの含有
@@ -55,7 +55,7 @@ description: AI-DLC ワークフローにおける初期化フェーズのステ
 <a id="steps"></a>
 ### 手順
 1. 必要に応じて `<record>/` ディレクトリを作成する
-2. 全 5 フェーズのステージ成果物ディレクトリと `<record>/verification/` を作成する
+2. スコープが実行する各フェーズにつき成果物ディレクトリを 1 つ、加えて `<record>/verification/` を作成する
 3. 空のスペースレベル `aidlc/knowledge/` ディレクトリを作成する（自由形式。エージェントごとのサブディレクトリおよび README は作成しない）
 4. インテントの `audit/` シャードディレクトリヘッダーを作成し、`WORKFLOW_STARTED` を出力する
 5. `STAGE_STARTED`、`WORKSPACE_SCAFFOLDED`、`STAGE_COMPLETED` イベントを追記する
@@ -66,15 +66,15 @@ description: AI-DLC ワークフローにおける初期化フェーズのステ
 
 <a id="outputs"></a>
 ### 出力
-- ステージサブディレクトリを含む `<record>/initialization/`、`ideation/`、`inception/`、`construction/`、`operation/`
-- `<record>/verification/`
+- スコープが実行するフェーズごとに成果物ディレクトリを 1 つ: `<record>/initialization/` と、EXECUTE ステージを少なくとも 1 つ持つ `ideation/`、`inception/`、`construction/`、`operation/` の各ディレクトリ。スコープが除外するフェーズにはディレクトリが作られません（bugfix のレコードには `ideation/` も `operation/` もありません）。ステージ単位のサブディレクトリはここでは作られず、そのステージが最初に成果物を書き込んだときに現れます
+- `<record>/verification/`（すべてのスコープで作成されます）
 - 空のスペースレベル `aidlc/knowledge/` ディレクトリ（スペースの `intents/` と同階層）
 - インテントの `audit/` シャードディレクトリ（ヘッダー、セッション、スキャフォールドイベント）
 
 <a id="notes"></a>
 ### 注記
 - 冪等です。すでに存在するディレクトリとファイルはスキップします
-- LLM 経由ではなく、`aidlc-utility intent-birth` 内で実行されます
+- LLM 経由ではなく、`aidlc-utility intent-create` 内で実行されます
 
 ---
 
@@ -113,7 +113,7 @@ description: AI-DLC ワークフローにおける初期化フェーズのステ
 
 <a id="notes-1"></a>
 ### 注記
-- `aidlc-utility intent-birth` 内で決定的なスキャナーとして実行されます。LLM サブエージェントはディスパッチしません。
+- `aidlc-utility intent-create` 内で決定的なスキャナーとして実行されます。LLM サブエージェントはディスパッチしません。
 - シンボリックリンクは追跡しません（`lstatSync` による循環保護）
 - `.claude/`、`<record>/`、`node_modules/`、`.git/`、`dist/`、`build/`、`.next/`、`target/`、`vendor/` を除外します
 - `devDependencies` しかない `package.json` はツール／スキャフォールディングとして扱われ、それだけで既存プロジェクトに分類されることはありません

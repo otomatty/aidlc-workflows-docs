@@ -62,7 +62,7 @@ stateDiagram-v2
 **状態値：** `Running`、`Completed`。
 
 ワークフローは最初のインテントが生成されたとき（最初の `/aidlc` で自動実行されるか、
-`/aidlc-init` による `aidlc-utility intent-birth`）に始まり、対象範囲に含まれる最後の
+`/aidlc-init` による `aidlc-utility intent-create`）に始まり、対象範囲に含まれる最後の
 ステージの承認ゲートが閉じると終わります。`Paused` や `Waiting for Approval` 状態は
 ありません。承認はステージレベルの関心事であり、停止に UX はありません。
 
@@ -72,7 +72,7 @@ stateDiagram-v2
 
 | 遷移 | トリガー | エミッター |
 |---|---|---|
-| `[*] → Running` | `aidlc-utility init` | `tools/aidlc-utility.ts` |
+| `[*] → Running` | `aidlc-utility intent-create` | `tools/aidlc-utility.ts` |
 | `Running → Completed` | 最終ステージの結果を `aidlc-orchestrate.ts report` で報告 | `tools/aidlc-state.ts`（内部エミッター） |
 
 ---
@@ -110,7 +110,7 @@ Stage Progress のチェックボックスを読み、`/aidlc --status` はフ�
 
 | 遷移 | トリガー | エミッター |
 |---|---|---|
-| 初期設定（`Verified`/`Active`/`Pending`/`Skipped`） | `aidlc-utility intent-birth` | `tools/aidlc-utility.ts` |
+| 初期設定（`Verified`/`Active`/`Pending`/`Skipped`） | `aidlc-utility intent-create` | `tools/aidlc-utility.ts` |
 | `Active -> Verified` | フェーズ境界で `aidlc-orchestrate.ts` を通じて報告されたステージの完了/スキップ。前方への `aidlc-jump execute` | `tools/aidlc-state.ts`（内部エミッター）、`tools/aidlc-jump.ts` |
 | `Pending -> Active`（境界） | 報告された結果の後にエンジンがルーティング、または `aidlc-jump execute` | `tools/aidlc-state.ts`（内部エミッター）、`tools/aidlc-jump.ts` |
 | `Pending -> Skipped`（飛び越え） | フェーズ全体を飛び越える前方への `aidlc-jump execute` | `tools/aidlc-jump.ts` |
@@ -118,7 +118,7 @@ Stage Progress のチェックボックスを読み、`/aidlc --status` はフ�
 | `Pending <-> Skipped` 再導出 | `aidlc-utility scope-change` / `recompose`（未到達の行のみ） | `tools/aidlc-utility.ts` |
 
 初期化後への引き継ぎ時には、最終初期化ステージの後で
-`aidlc-utility intent-birth` 自体が
+`aidlc-utility intent-create` 自体が
 `PHASE_COMPLETED + PHASE_VERIFIED + PHASE_STARTED + STAGE_STARTED` を出力します。
 これにより、生成から最初の `advance` まで監査証跡が途切れず、遷移を記録できます。
 
@@ -383,8 +383,8 @@ report awaiting-approval  →  [?] AwaitingApproval
 
 | イベント | エミッター | 注記 |
 |---|---|---|
-| `ARTIFACT_CREATED` | `hooks/aidlc-audit-logger.ts` | 新規パスへの書き込み — `mtimeMs == birthtimeMs` の統計検査で `ARTIFACT_UPDATED` と区別 |
-| `ARTIFACT_UPDATED` | `hooks/aidlc-audit-logger.ts` | 既存ファイルを上書きする `Edit` ツールまたは `Write` |
+| `ARTIFACT_CREATED` | `hooks/aidlc-write-audit-log.ts` | 新規パスへの書き込み — `mtimeMs == birthtimeMs` の統計検査で `ARTIFACT_UPDATED` と区別 |
+| `ARTIFACT_UPDATED` | `hooks/aidlc-write-audit-log.ts` | 既存ファイルを上書きする `Edit` ツールまたは `Write` |
 | `ARTIFACT_REUSED` | `tools/aidlc-state.ts` | `reuse-artifact` サブコマンド — 保持 / 変更 / やり直しの決定 |
 
 <a id="construction-bolts"></a>
@@ -406,7 +406,7 @@ report awaiting-approval  →  [?] AwaitingApproval
 | `SESSION_RESUMED` | `hooks/aidlc-session-start.ts` | `source=resume` |
 | `SESSION_COMPACTED` | `hooks/aidlc-validate-state.ts` | 重複を避けるため `PreCompact` で出力（次の `SessionStart` ではない） |
 | `SESSION_ENDED` | `hooks/aidlc-session-end.ts` | Claude Code からの `Reason` フィールドを含む |
-| `HUMAN_TURN` | `hooks/aidlc-mint-presence.ts`（＋ハーネスごとのプロンプト送信アダプター） | 実際の人間プロンプトまたは回答済み質問ウィジェットごとに 1 件。承認 / インタビューゲートは、直前のゲート解決以降に 1 件を要求する |
+| `HUMAN_TURN` | `hooks/aidlc-record-human-turn.ts`（＋ハーネスごとのプロンプト送信アダプター） | 実際の人間プロンプトまたは回答済み質問ウィジェットごとに 1 件。承認 / インタビューゲートは、直前のゲート解決以降に 1 件を要求する |
 | `SUBAGENT_COMPLETED` | `hooks/aidlc-log-subagent.ts` | サブエージェント停止フック経由でサブエージェント完了を記録 |
 | `REVIEWER_SCOPE_BLOCKED` | `hooks/aidlc-reviewer-scope.ts` | ユニット単位レビュアーのツール呼び出しが、兄弟ユニットの `construction/` パスへ到達したため拒否された（§12a の読み取り範囲境界）。拒否ごとに 1 行 |
 | `REVIEW_FREEZE_BLOCKED` | `hooks/aidlc-review-freeze.ts` | ファイルツールまたはシェルによる `produces[]` への書き込みが、ゲート前に新鮮な READY レビュー受領記録を無効化するとして拒否された（§12a の終端受領記録の順序）。拒否ごとに 1 行 |

@@ -44,21 +44,26 @@ while keeping you in control at every decision point.
 <a id="initialization-phase-automatic"></a>
 ## 初期化フェーズ (Initialization)（自動）
 
-3 つの初期化ステージは、`aidlc-utility init` の中で決定論的に実行されます。これは 1 回のツール呼び出しで完了し、所要時間は 1 秒未満です。初期化に対してあなたが操作することはありません。このフェーズはアクティブなスペースの中に最初のインテントを自動で誕生させ、そのワークフロー用に記録ディレクトリを準備します。
+3 つの初期化ステージは、`aidlc-utility intent-create` の中で決定論的に実行されます。これは 1 回のツール呼び出しで完了し、所要時間は 1 秒未満です。初期化に対してあなたが操作することはありません。このフェーズはアクティブなスペースの中に最初のインテントを自動で誕生させ、そのワークフロー用に記録ディレクトリを準備します。
 
 <a id="stage-01-workspace-scaffold"></a>
 ### ステージ 0.1: ワークスペースの作成 (Workspace Scaffold)
 
-フレームワークは最初のインテントを誕生させ、`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に記録ディレクトリを作成します（名前付きスペースを使わない限り `<space>` は `default` です）。
+フレームワークは最初のインテントと、その記録ディレクトリを `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` に作成します（名前付きスペースを使わない限り `<space>` は `default` です）。作成されるのは、スコープが実際に実行するフェーズごとに 1 つのフォルダだけなので、記録には存在するすべてのフェーズではなく計画が現れます。`feature` スコープは 5 つすべてを実行し、`bugfix` スコープはアイディエーションとオペレーションを飛ばすため、それらのフォルダは現れません。
 
 ```
-Intent born — record dir scaffolded:
-  aidlc/spaces/default/intents/<YYMMDD>-<label>/initialization/   (3 stage artifact dirs)
-  aidlc/spaces/default/intents/<YYMMDD>-<label>/ideation/         (7 stage artifact dirs)
-  ...
+Intent created, record dir at aidlc/spaces/default/intents/<YYMMDD>-<label>/
+  initialization/
+  inception/
+  construction/
+  verification/
 Space-level dirs ensured:
-  aidlc/spaces/default/knowledge/                             (team knowledge — empty; you add files)
+  aidlc/spaces/default/knowledge/    (team knowledge, empty; you add files)
 ```
+
+ステージ単位のフォルダは事前には作られません。ステージのフォルダ（例:
+`inception/requirements-analysis/`）は、そのステージが最初に成果物を書き込んだ
+ときに現れます。記録に並ぶのは、常に何かを生み出した作業だけです。
 
 <a id="stage-02-workspace-detection"></a>
 ### ステージ 0.2: ワークスペースの検出 (Workspace Detection)
@@ -236,7 +241,7 @@ sequenceDiagram
 <a id="subagent-delegation"></a>
 ### サブエージェントへの委譲 (Subagent Delegation)
 
-4 つのステージがバックグラウンドのサブエージェントへディスパッチされます。2.1 Reverse Engineering（パイプライン: 開発者によるスキャンの後、アーキテクトによる統合と書き出し）、2.2 Practices Discovery（サブエージェントのハブアンドスポーク: 主担当のドラフト、互いにブラインドな 3 つの支援レビュー、人間へのインタビュー、主担当による統合）、2.4 User Stories（モブ: 協働者が並行で貢献し、判断を要する意見の相違はステージ途中であなたに提示されることがあります）、3.5 Code Generation（サブエージェント）です。Practices Discovery は、スポークと最終統合の間で意図的にあなたを議論の場へ招き入れます。User Stories のモブも、ステージ途中で判断確認を提示することがあります。ワークスペース検出（0.2）はサブエージェントではなく、`aidlc-utility intent-birth` の中で決定論的に実行されます。
+4 つのステージがバックグラウンドのサブエージェントへディスパッチされます。2.1 Reverse Engineering（パイプライン: 開発者によるスキャンの後、アーキテクトによる統合と書き出し）、2.2 Practices Discovery（サブエージェントのハブアンドスポーク: 主担当のドラフト、互いにブラインドな 3 つの支援レビュー、人間へのインタビュー、主担当による統合）、2.4 User Stories（モブ: 協働者が並行で貢献し、判断を要する意見の相違はステージ途中であなたに提示されることがあります）、3.5 Code Generation（サブエージェント）です。Practices Discovery は、スポークと最終統合の間で意図的にあなたを議論の場へ招き入れます。User Stories のモブも、ステージ途中で判断確認を提示することがあります。ワークスペース検出（0.2）はサブエージェントではなく、`aidlc-utility intent-create` の中で決定論的に実行されます。
 
 ```mermaid
 sequenceDiagram

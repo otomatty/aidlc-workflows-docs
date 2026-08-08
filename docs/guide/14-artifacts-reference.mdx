@@ -10,6 +10,11 @@ AI-DLC の各ワークフローは、**インテント記録ディレクトリ**
 <a id="directory-tree"></a>
 ## ディレクトリツリー
 
+これは成果物が置かれ得る場所の全体像であり、新しい記録の初期状態ではありません。
+インテント作成時に作られるのは、スコープが実行するフェーズごとに 1 つのフォルダ
+（および `verification/`）だけです。残りは作業の進行に応じて現れ、ステージ単位の
+フォルダはそのステージが最初に書き込んだときに作られます。
+
 ```
 aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
   aidlc-state.md                    # Workflow state (commit)
@@ -119,7 +124,7 @@ flowchart LR
 
 | ステージ | 成果物 | 補足 |
 |-------|-----------|-------|
-| 0.1 ワークスペース足場作成 | `scaffold-report.md` | 決定論的（`aidlc-utility init` 内で実行） |
+| 0.1 ワークスペース足場作成 | `scaffold-report.md` | 決定論的（`aidlc-utility intent-create` 内で実行） |
 | 0.2 ワークスペース検出 | `workspace-findings.md`、`aidlc-state.md` の更新 | 決定論的なルールベース走査 |
 | 0.3 状態初期化 | `state-init-summary.md` | 決定論的 |
 

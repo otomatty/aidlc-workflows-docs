@@ -32,12 +32,20 @@ git checkout v2
 
 ```bash
 mkdir -p your-project/.kiro your-project/aidlc
+# Safe on fresh installs; required when upgrading from v2.5.56 or earlier.
+for retired_hook in \
+  audit-logger block mint runtime-compile stop sync-statusline
+do
+  rm -f \
+    "your-project/.kiro/hooks/aidlc-${retired_hook}.json" \
+    "your-project/.kiro/hooks/aidlc-${retired_hook}.kiro.hook"
+done
 cp -R dist/kiro-ide/.kiro/. your-project/.kiro/
 cp -R dist/kiro-ide/aidlc/. your-project/aidlc/     # the workspace shell (spaces/default/memory) — a sibling of .kiro/, not inside it
 cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have one
 ```
 
-`cp -R <src>/. <dst>/` の形式はツリーの**中身**をコピーします。`your-project/.kiro` が既に存在する場合（アップグレード）でも、存在しない場合（新規インストール）でも同じように動作します。単純な `cp -r dist/kiro-ide/.kiro your-project/.kiro` は、既存の `.kiro/` の内側に 2 つ目の `.kiro` を入れ子にしてしまい、IDE は新しいファイルを一切認識しません。
+削除ループは v2.5.57 のフック名移行のためのものです。オーバーレイコピーでは退役した登録を削除できないため、そのままにすると旧名と新名の両方が登録されてしまいます。新規インストールではこのループは何もしません。このクリーンアップの後、`cp -R <src>/. <dst>/` の形式はツリーの**中身**をコピーします。`your-project/.kiro` が既に存在する場合でも、存在しない場合でも同じように動作します。単純な `cp -r dist/kiro-ide/.kiro your-project/.kiro` は、既存の `.kiro/` の内側に 2 つ目の `.kiro` を入れ子にしてしまい、IDE は新しいファイルを一切認識しません。
 
 `aidlc/` ディレクトリはワークスペースシェルです。エンジンが読む事前構築済みの `aidlc/spaces/default/memory/` メソッドツリーを含みます。これは `.kiro/` の **兄弟ディレクトリ** であり、その内側ではないため、別々にコピーしてください（または `dist/kiro-ide/` ツリー全体をまとめてコピーしても構いません）。これがないと、`/aidlc --doctor` の "workspace shell ready" 判定は失敗します。
 
@@ -59,7 +67,7 @@ Claude Code ハーネスと同一です。`/aidlc <description>` でワークフ
 
 Kiro IDE は `.kiro/hooks/` 配下の v2 フック JSON ファイル（`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`、トリガーは PascalCase）を通じてフックを登録します（`hooks` ブロックをエージェント JSON の中で読む Kiro CLI とは異なる仕組みです）。各フックはコマンドを実行し、それが共有の `aidlc-kiro-adapter.ts` シムを経由して IDE のフックイベントを、バイト共有のコアフックが期待する形へ正規化します。
 
-Kiro IDE 1.x はフックの文脈を **stdin 上の JSON**（snake_case: `{ tool_name, tool_input, tool_response }`）として渡します。古い 0.12 ビルドは代わりに camelCase 相当を環境変数 `USER_PROMPT` に設定し、アダプターは両方を受け入れます。捕捉された PostToolUse の書き込み／シェルイベントは、どちらのチャネルでもツール入力が空のままなので、書き込まれたパスは結果テキストから復元する必要があり、ペイロードを持たないフック（`runtime-compile`、`sync-statusline`）は監査証跡を基準に動きます。後期の 1.x ビルドは一部の PreToolUse と委譲入力を埋めますが、アダプターはそれらのフィールドに依存せず保持します。
+Kiro IDE 1.x はフックの文脈を **stdin 上の JSON**（snake_case: `{ tool_name, tool_input, tool_response }`）として渡します。古い 0.12 ビルドは代わりに camelCase 相当を環境変数 `USER_PROMPT` に設定し、アダプターは両方を受け入れます。捕捉された PostToolUse の書き込み／シェルイベントは、どちらのチャネルでもツール入力が空のままなので、書き込まれたパスは結果テキストから復元する必要があり、ペイロードを持たないフック（`rebuild-stage-graph`、`sync-workflow-state`）は監査証跡を基準に動きます。後期の 1.x ビルドは一部の PreToolUse と委譲入力を埋めますが、アダプターはそれらのフィールドに依存せず保持します。
 
 ペイロード取得は**ペイロード依存のターゲット**（`audit-and-sensors`、`log-subagent`）に限定されています。空でない `USER_PROMPT` は 0.12 ビルド（stdin を開くが何も書かない）で即座に消費され、それ以外の場合、アダプターは 2 秒の broken-channel 上限付きで 1.x の stdin チャネルを読みます。それ以外のすべてのターゲット — 毎 `PreToolUse` で発火する `block` を含む — はどちらのチャネルにも触れず、ゼロレイテンシの経路を保ちます。
 
@@ -67,12 +75,12 @@ Kiro IDE 1.x はフックの文脈を **stdin 上の JSON**（snake_case: `{ too
 |------|-------------------|---------|
 | `aidlc-session-start` | `SessionStart` | セッションごとに 1 回、ワークフローの再開コンテキストを注入する（レガシーの 1.0 より前のファイルはプロンプトごとの `promptSubmit` に接続されたまま。その世代にはセッション開始トリガーがない） |
 | `aidlc-mint` | `UserPromptSubmit` | プロンプトごとに人間ターンのイベントを記録する（human-presence ゲート） |
-| `aidlc-stop` | `Stop` | 転送ループの監査（勧告のみ。IDE では Stop トリガーはブロックできず、強制はコンダクター自身の Stop プロトコルに依存する） |
+| `aidlc-continue-workflow` | `Stop` | 転送ループの監査（勧告のみ。IDE では Stop トリガーはブロックできず、強制はコンダクター自身の Stop プロトコルに依存する） |
 | `aidlc-block` | `PreToolUse` | 承認ゲートが開いたままで、その後に人間が操作していない間はツール呼び出しを強制ブロックする（human-presence フロア） |
-| `aidlc-audit-logger` | `PostToolUse`（`fs_write\|str_replace\|fs_append`） | 成果物の作成 / 更新を記録し、続けて該当するセンサーを起動する（パスはツール結果から取得） |
+| `aidlc-write-audit-log` | `PostToolUse`（`fs_write\|str_replace\|fs_append`） | 成果物の作成 / 更新を記録し、続けて該当するセンサーを起動する（パスはツール結果から取得） |
 | `aidlc-log-subagent` | `PostToolUse`（`^(subagent_.+\|invoke_sub_agent)$`） | 委譲先の識別情報とともに `SUBAGENT_COMPLETED` を記録する。マッチャーは任意の委譲名がアダプターへ届くよう広く取られており、補助的な `subagent_response` シェルはアダプターが落とす |
-| `aidlc-runtime-compile` | `PostToolUse`（`execute_bash`） | 実行時グラフを再コンパイルする（監査末尾を条件に実行） |
-| `aidlc-sync-statusline` | `PostToolUse`（`execute_bash`） | 監査内の最新 `STAGE_STARTED` から `Current Stage` を前進方向にのみ同期する（IDE は解析可能なタスクペイロードを渡さない） |
+| `aidlc-rebuild-stage-graph` | `PostToolUse`（`execute_bash`） | 実行時グラフを再コンパイルする（監査末尾を条件に実行） |
+| `aidlc-sync-workflow-state` | `PostToolUse`（`execute_bash`） | 監査内の最新 `STAGE_STARTED` から `Current Stage` を前進方向にのみ同期する（IDE は解析可能なタスクペイロードを渡さない） |
 
 `aidlc-session-end` には **v2 の登録がありません**。IDE の `Stop` トリガーは会話の終了時ではなくアシスタントの各ターンの終わりに発火するため、登録すると同一セッション内のプロンプト間に誤った `SESSION_ENDED` が追記されてしまいます。IDE が本物のセッション終了イベントを公開するまではレガシー専用（`agentStop`、1.0 より前のビルド）のままであり、IDE 1.x では `SESSION_ENDED` は記録されません。
 

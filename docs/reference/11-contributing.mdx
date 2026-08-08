@@ -103,7 +103,7 @@ LLM 推論が不要なハンドラ向け（テキスト表示、ファイルの�
 2. **ステータスライン更新** -- アクティブなインテントの `aidlc-state.md` がある場合、実行中ユーティリティを表すよう一時的に `Current Stage` を設定し（例: `running health check`）、完了時に元の値へ戻す。`aidlc-statusline.ts` フックが端末ステータスバー用にこのフィールドを読みます。
 3. **監査ログ** -- 適切なツールサブコマンドを呼び出す（例: 内部で `appendAuditEntry` を呼ぶ `bun .claude/tools/aidlc-utility.ts <handler>`）。LLM 本文から `**Event**:` マークダウンブロックを手書きしない — [状態機械: 禁止パターン](/reference/state-machine) を参照。
 
-`intent-birth` ハンドラは完全に決定的です。3 つの初期化ステージ（`workspace-scaffold`、`workspace-detection`、`state-init`）は単一の `aidlc-utility intent-birth` 呼び出し内で実行されます。ウェルカムメッセージはセッション開始時に `settings.json` の `companyAnnouncements` 経由で表示され、ステージではありません。
+`intent-create` ハンドラは完全に決定的です。3 つの初期化ステージ（`workspace-scaffold`、`workspace-detection`、`state-init`）は単一の `aidlc-utility intent-create` 呼び出し内で実行されます。ウェルカムメッセージはセッション開始時に `settings.json` の `companyAnnouncements` 経由で表示され、ステージではありません。
 
 <a id="adding-a-scope"></a>
 ## スコープの追加
@@ -144,7 +144,7 @@ LLM 推論が不要なハンドラ向け（テキスト表示、ファイルの�
 
 3. **再コンパイル + スコープ表の再生成** — `bun .claude/tools/aidlc-graph.ts compile` が `scopes:` タグを `tools/data/scope-grid.json` へ転置する。次に `bun .claude/tools/aidlc-utility.ts scope-table` が、SKILL.md のコンパイル済みスコープ表用の正規 Markdown 領域を表示する。`{/* BEGIN: compiled ... */}` / `{/* END: compiled ... */}` マーカー間の領域は生成されたままに保ち、その後 `bun .claude/tools/aidlc-graph.ts compile --check` と `bun .claude/tools/aidlc-utility.ts scope-table --check` を実行して終了コード 0（ドリフトなし）を確認する。
 
-4. **スコープ解決を検証** — `bun core/tools/aidlc-utility.ts init --scope hotfix --project-dir /tmp/scope-smoke` が成功し、`Scope: hotfix` 付きの状態ファイルを生成すること。
+4. **スコープ解決を検証** — `bun core/tools/aidlc-utility.ts intent-create --scope hotfix --project-dir /tmp/scope-smoke` が成功し、`Scope: hotfix` 付きの状態ファイルを生成すること。
 
 5. **`doctor` が環境既定として受け入れることを検証** — `AWS_AIDLC_DEFAULT_SCOPE=hotfix bun aidlc-utility.ts doctor` がその環境変数を有効と報告すること。
 
@@ -234,7 +234,7 @@ LLM 推論が不要なハンドラ向け（テキスト表示、ファイルの�
 
 2. **エージェントが発見されることを検証** — `bun -e "import { loadAgents } from 'core/tools/aidlc-lib.ts'; console.log(loadAgents().find(a => a.slug === '<slug>-agent'));"` が新しいエージェントのメタデータを表示すること。
 
-3. **インテント生成がスペースナレッジディレクトリを作ることを検証** — `bun core/tools/aidlc-utility.ts intent-birth --scope poc --project-dir /tmp/agent-smoke` が空のスペースレベル `aidlc/knowledge/` ディレクトリ（スペースの `intents/` と同階層）を作成すること。生成はエージェント別サブディレクトリや README をシードしません — チームは内容があるときに自分で `aidlc/knowledge/<slug>-agent/` を作ります。
+3. **インテント生成がスペースナレッジディレクトリを作ることを検証** — `bun core/tools/aidlc-utility.ts intent-create --scope poc --project-dir /tmp/agent-smoke` が空のスペースレベル `aidlc/knowledge/` ディレクトリ（スペースの `intents/` と同階層）を作成すること。生成はエージェント別サブディレクトリや README をシードしません — チームは内容があるときに自分で `aidlc/knowledge/<slug>-agent/` を作ります。
 
 4. **ステータスライン描画を検証** — `Active Agent: <slug>-agent` 付きの状態ファイルを用意してステータスラインフックを呼び出すと、出力の `--` 区切り後に表示名が含まれること。
 

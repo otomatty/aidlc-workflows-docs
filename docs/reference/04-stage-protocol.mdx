@@ -89,7 +89,7 @@ AI-DLC ワークフローのステージが実行されます。 5つのフェ�
 | 4 |ユーザー入力を決して要約しないでください。正確なオプション ラベルを担当のログ ツールまたはレポート ツールに渡します。自動ステージの場合は `N/A -- [reason]` を使用します。 |
 | 5 |インタラクションごとに 1 つの監査エントリ -- ログ/状態ツールは単一イベントの発行を強制します。複数のイベントを 1 つの呼び出しにマージしないでください。
 | 6 |ステージ終了時に、`aidlc-orchestrate.ts report --stage <slug> --result approved --user-input "<exact choice>"` (ゲートステージ) または `report --stage <slug> --result completed` (初期化) を呼び出します。エンジンは `[?]`/`[-]` を `[x]` に反転し、ゲートされると `GATE_APPROVED` を放出し、状態ツール | を介してアトミックに `STAGE_COMPLETED` を放出します。
-| 7 |作業を開始する前に、前のステージのタスク `completed` と現在のステージのタスク `in_progress` を `activeForm` でマークします (`sync-statusline` フックは状態の同期を処理します)。
+| 7 |作業を開始する前に、前のステージのタスク `completed` と現在のステージのタスク `in_progress` を `activeForm` でマークします (`sync-workflow-state` フックは状態の同期を処理します)。
 | 8 | `knowledge/aidlc-shared/audit-format.md` のイベント タイプのみを使用します -- 状態ツールとログ ツールによってこれが強制されます。 `audit/` シャードには決して直接書き込まないでください。
 | 9 |ライフサイクルイベントを手書きしたり、`aidlc-state.ts` のライフサイクル動詞を呼び出したりしないでください。結果は `aidlc-orchestrate.ts` を通じて報告します。エンジンの内部状態呼び出しがアトミックな監査行を発行します。
 

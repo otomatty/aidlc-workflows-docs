@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "01893096167530dd14b099867ab80b87b5763e35",
-	"last_checked_commit_date": "2026-08-07 15:02:50 +1000",
-	"last_checked_commit_message": "fix: harden human-authorization boundaries + unit-of-work lifecycle receipts (2.5.55)",
-	"checked_at": "2026-08-07",
-	"site_version": "2.5.55"
+	"last_checked_commit_sha": "8c60e1ab038fefdf3fdc08e5dce255503d687adb",
+	"last_checked_commit_date": "2026-08-08 09:32:40 +1000",
+	"last_checked_commit_message": "fix: ground claims whose source tags are written adjacently (2.5.58) (#686)",
+	"checked_at": "2026-08-08",
+	"site_version": "2.5.58"
 }

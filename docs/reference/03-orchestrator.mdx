@@ -39,12 +39,12 @@ description: エンジンとコンダクターに分かれた AI-DLC オーケ�
 
 引数が既知の 9 つのスコープ（`enterprise`, `feature`, `mvp`, `poc`, `bugfix`, `refactor`, `infra`, `security-patch`, `workshop`）のいずれかに一致する場合:
 
-新しいワークスペース（まだインテントがない、つまり `aidlc/spaces/*/intents/*/` 配下に `aidlc-state.md` がない状態）で明示的にスコープを指定すると、**最初のインテントが誕生します**。エンジンの `next` は、実行後に継続する `print` ディレクティブを出力し、`aidlc-utility.ts intent-birth --scope <scope>` を指名します（`--depth` / `--test-strategy` / `--review` フラグがあれば、そのままそのコマンドへ渡します）。コンダクターはそれを実行し、最初のステージへ着地するために `next` を再実行します。裸の位置引数（`/aidlc bugfix`）でも明示フラグ（`/aidlc --scope bugfix`）でも、出力される誕生用の表示は同一です。何を作るかを説明する形（`/aidlc "build the auth service"`）でも誕生します。スコープ名も説明もない裸の `/aidlc` は誕生しません（環境変数や既定値で解決されたスコープは誕生の合図ではありません）。代わりに、何を作るかを説明するかスコープを名指しするよう促す、状態未作成エラーを出します。
+新しいワークスペース（まだインテントがない、つまり `aidlc/spaces/*/intents/*/` 配下に `aidlc-state.md` がない状態）で明示的にスコープを指定すると、**最初のインテントが誕生します**。エンジンの `next` は、実行後に継続する `print` ディレクティブを出力し、`aidlc-utility.ts intent-create --scope <scope>` を指名します（`--depth` / `--test-strategy` / `--review` フラグがあれば、そのままそのコマンドへ渡します）。コンダクターはそれを実行し、最初のステージへ着地するために `next` を再実行します。裸の位置引数（`/aidlc bugfix`）でも明示フラグ（`/aidlc --scope bugfix`）でも、出力される誕生用の表示は同一です。何を作るかを説明する形（`/aidlc "build the auth service"`）でも誕生します。スコープ名も説明もない裸の `/aidlc` は誕生しません（環境変数や既定値で解決されたスコープは誕生の合図ではありません）。代わりに、何を作るかを説明するかスコープを名指しするよう促す、状態未作成エラーを出します。
 
 1. `aidlc/spaces/<active-space>/memory/` からガードレールを読み込みます。
 2. ユーザーへ "What would you like to build?" と尋ねます。
 3. スコープからステージへの対応付けに従って、実行すべきステージを決定します。
-4. 初期化フェーズ（ワークスペーススキャフォールド、ワークスペース検出、状態初期化）を、決定論的な `aidlc-utility init` 呼び出し 1 回として実行します。ウェルカムメッセージはセッション開始時に、`settings.json` の `companyAnnouncements` 経由で描画されます。
+4. 初期化フェーズ（ワークスペーススキャフォールド、ワークスペース検出、状態初期化）を、決定論的な `aidlc-utility intent-create` 呼び出し 1 回として実行します。ウェルカムメッセージはセッション開始時に、`settings.json` の `companyAnnouncements` 経由で描画されます。
 5. スコープ内のすべてのステージについて、ステージ単位のタスクを作成します。最初のステージは `in_progress`、残りは `pending` に設定されます。スコープ外のステージにはタスク自体が作られません。
 6. 初期化後の最初のステージを開始します。
 
@@ -122,12 +122,12 @@ description: エンジンとコンダクターに分かれた AI-DLC オーケ�
 
 深さとは独立してテスト量戦略（最小・標準・包括的）を上書きします。未指定時は現在の深さが既定です。`--depth standard --test-strategy minimal` のように、成果物は充実、テストは最小、といった組み合わせを可能にします。単独変更では `TEST_STRATEGY_CHANGED` 監査イベントを記録します。
 
-<a id="intent-birth----the-initialization-phase"></a>
+<a id="intent-create----the-initialization-phase"></a>
 ### インテント誕生 -- 初期化フェーズ
 
-別個のスキャフォールドコマンドはありません（以前の `init` フラグは廃止され、ワークスペース殻は `dist/<harness>/` に事前構築済みで配布されます）。3 つの初期化ステージ（ワークスペーススキャフォールド、ワークスペース検出、状態初期化）は、`aidlc-utility intent-birth` の中で決定論的に実行されます。これは最初の `/aidlc`（または `/aidlc <description>`）で自動起動されるか、`/aidlc-init` パッケージから明示的に起動されます。誕生は、`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` にインテントの記録ディレクトリを発行し、状態を初期化し、スコープルーティングを適用し、ワークフローを初期化後の最初のステージへ配置します。
+別個のスキャフォールドコマンドはありません（以前の `init` フラグは廃止され、ワークスペース殻は `dist/<harness>/` に事前構築済みで配布されます）。3 つの初期化ステージ（ワークスペーススキャフォールド、ワークスペース検出、状態初期化）は、`aidlc-utility intent-create` の中で決定論的に実行されます。これは最初の `/aidlc`（または `/aidlc <description>`）で自動起動されるか、`/aidlc-init` パッケージから明示的に起動されます。誕生は、`aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` にインテントの記録ディレクトリを発行し、状態を初期化し、スコープルーティングを適用し、ワークフローを初期化後の最初のステージへ配置します。
 
-1. 記録ディレクトリツリーを作成します（冪等。既存ディレクトリ / ファイルはスキップ）。対象は `audit/` シャードディレクトリ、ステージ成果物ディレクトリ群（空のまま）、検証ディレクトリです。
+1. 記録ディレクトリツリーを作成します（冪等。既存ディレクトリ / ファイルはスキップ）。対象は `audit/` シャードディレクトリ、スコープが実行するフェーズごとに 1 つの空の成果物ディレクトリ（アクティブなスコープで EXECUTE ステージを持たないフェーズには作られません。手順 4 の `PHASE_SKIPPED` イベントと一致します）、検証ディレクトリです。ステージ単位のディレクトリは事前作成されず、そのステージが最初に成果物を書き込んだときに現れます。
 2. 空のスペース級 `aidlc/knowledge/` ディレクトリを作成します（そのスペースの `intents/` の兄弟）。ここは固定ファイル集合を持たない自由形式であり、誕生時にエージェントごとのサブディレクトリも README も種まきしません。チームが自分でファイルを追加します。
 3. ワークスペースを走査し、実際のフェーズ（例: `--scope feature` なら `IDEATION`）、解決されたスコープ、コンパイル済みスコープグリッド（`scope-grid.json`、各ステージの `scopes:` フロントマターを転置したもの）から導かれたステージ計画を `aidlc-state.md` に書き込みます。
 4. 完全なイベント列を発行します。`WORKFLOW_STARTED`, `WORKSPACE_SCAFFOLDED`, `WORKSPACE_SCANNED`, `WORKSPACE_INITIALISED`、最初に実行されるフェーズの `PHASE_STARTED`、各初期化ステージに対する `STAGE_STARTED` + `STAGE_COMPLETED`、そしてそのスコープでスキップされるフェーズに対する `PHASE_SKIPPED` を含みます。
@@ -403,7 +403,7 @@ sequenceDiagram
 | 2.4 ユーザーストーリー | mob | 主導はインライン。`aidlc-design-agent` + `aidlc-developer-agent` + `aidlc-quality-agent` を並列で | 4 参加者 | 主導がドラフトし、互いにブラインドの協力者が貢献ファイルを書き、主導がゲート前に統合する |
 | 3.5 コード生成 | subagent | `aidlc-developer-agent` | `aidlc-developer-agent` | コード記述は単位仕様に集中した清潔なコンテキストの恩恵が大きい |
 
-ワークスペース検出（0.2）は以前はサブエージェントでした。現在は `aidlc-utility init` 内の決定論的な規則ベース走査器です。規則は `aidlc-common/stages/initialization/workspace-detection.md` に文書化されています。
+ワークスペース検出（0.2）は以前はサブエージェントでした。現在は `aidlc-utility intent-create` 内の決定論的な規則ベース走査器です。規則は `aidlc-common/stages/initialization/workspace-detection.md` に文書化されています。
 
 6 段階の流れ:
 
@@ -569,7 +569,7 @@ stateDiagram-v2
 
 タスクはフェーズバッチごとに作成されます。
 
-- **初期化**: すべての初期化ステージタスク（ワークスペーススキャフォールド、ワークスペース検出、状態初期化）を、`aidlc-utility init` 実行前に作成します。このツールは 3 ステージを 1 回の呼び出しで完了させるため、タスクはツールが戻った後で完了へ切り替わります。
+- **初期化**: すべての初期化ステージタスク（ワークスペーススキャフォールド、ワークスペース検出、状態初期化）を、`aidlc-utility intent-create` 実行前に作成します。このツールは 3 ステージを 1 回の呼び出しで完了させるため、タスクはツールが戻った後で完了へ切り替わります。
 - **アイデア化**: すべてのアイデア化ステージタスクを、ステージ 1.1 開始前に作成します。
 - **構想化**: すべての構想化ステージタスクを、ステージ 2.1 開始前に作成します。
 - **構築**: デリバリー計画の実行計画に基づいてタスクを作成します。各単位ごとの単位別ステージタスクと、横断タスクを作成します。
@@ -744,10 +744,10 @@ Claude Code の `Task` ツール呼び出しが失敗したとき:
 <a id="appendix-b-hook-reference"></a>
 ## 付録 B: フックリファレンス
 
-フレームワークフックは `settings.json` にプロジェクト全体で登録されます（0.6.0 でのフック移動。ワークフローがアクティブでないときは自己ゲートします）。そのうち 3 つを以下で詳述します。残り、たとえば `aidlc-sensor-fire.ts`, `aidlc-sync-statusline.ts`, `aidlc-runtime-compile.ts` などは [フックとツール](/reference/hooks-and-tools) で扱っています。そちらが権威的なフック一覧と、全フックの完全なソース水準の文書を持ちます。
+フレームワークフックは `settings.json` にプロジェクト全体で登録されます（0.6.0 でのフック移動。ワークフローがアクティブでないときは自己ゲートします）。そのうち 3 つを以下で詳述します。残り、たとえば `aidlc-run-sensors.ts`, `aidlc-sync-workflow-state.ts`, `aidlc-rebuild-stage-graph.ts` などは [フックとツール](/reference/hooks-and-tools) で扱っています。そちらが権威的なフック一覧と、全フックの完全なソース水準の文書を持ちます。
 
-<a id="posttooluse-audit-loggerts"></a>
-### `PostToolUse`: `audit-logger.ts`
+<a id="posttooluse-aidlc-write-audit-logts"></a>
+### `PostToolUse`: `aidlc-write-audit-log.ts`
 
 - **マッチャー**: `Write|Edit`
 - **発火条件**: スキルセッション中の、Claude Code によるすべての `Write` または `Edit` ツール呼び出し。

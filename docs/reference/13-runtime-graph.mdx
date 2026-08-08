@@ -153,7 +153,7 @@ units:
 ## 3. コンパイルライフサイクル
 
 コンパイルは、遷移クラスの監査イベントが出力されるたびにツール使用後のシェルフック
-（`.claude/hooks/aidlc-runtime-compile.ts`）から起動されます。このフックは
+（`.claude/hooks/aidlc-rebuild-stage-graph.ts`）から起動されます。このフックは
 コンダクターからのすべてのシェルツール呼び出しで発火し、低コストに絞り込みます。
 
 1. **コマンドフィルター** — `bun .claude/tools/aidlc-(state|jump|bolt|utility).ts`
@@ -162,7 +162,7 @@ units:
    `aidlc-worktree.ts` は WORKTREE_* イベントのみを出力します。
 2. **監査の存在ガード** — 意図の `audit/` シャードがまだ存在しない場合は終了します。
 3. **ハートビート** — 診断ツールによる無応答フック検知のため、
-   `<record>/.aidlc-hooks-health/runtime-compile.last` を書き込みます。
+   `<record>/.aidlc-hooks-health/rebuild-stage-graph.last` を書き込みます。
 4. **末尾 3 ブロックの読み取り** — `audit.md` を `\n---\n` で分割し、
    最後の 3 エントリを取得します。
 5. **イベントクラスフィルター** — 次のパターンを
