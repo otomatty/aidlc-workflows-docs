@@ -11,7 +11,7 @@ description: 永続ルールの 5 層構造、学習ループ、センサーに�
 <a id="rules-at-a-glance"></a>
 ## ルールの概要
 
-ルールは、アクティブスペースのメモリ層の Markdown ファイル、つまり `aidlc/spaces/<active-space>/memory/` にあります。これはワークスペースルートにある手で編集可能な単一セットで、各ハーネスがそれぞれのネイティブな取り込み機構（Claude の `@` インポートスタブ、Kiro CLI のリソースまたは Kiro IDE のステアリング、Codex の `AIDLC_RULES_DIR`）を通じて読み込みます。各ファイルは、そのスコープに応じて名前が付いています。
+ルールは、アクティブスペースのメモリ層の Markdown ファイル、つまり `aidlc/spaces/<active-space>/memory/` にあります。これはワークスペースルートにある手で編集可能な単一セットで、各ハーネスがそれぞれのネイティブな取り込み機構（Claude の `@` インポートスタブ、Kiro CLI のリソースまたは Kiro IDE のステアリング、Codex の `AIDLC_RULES_DIR`、opencode の `instructions` グロブ、Copilot の `AGENTS.md` の `@` インポート）を通じて読み込みます。各ファイルは、そのスコープに応じて名前が付いています。
 
 ```
 aidlc/spaces/<active-space>/memory/

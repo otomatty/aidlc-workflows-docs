@@ -6,7 +6,7 @@ AI-DLC の方法論上の概念はハーネスに依存しません。各 CLI �
 独自のネイティブ・プリミティブを通じてそれらを表現します。この章では
 AI-DLC の概念を各ハーネスで使われるプリミティブに対応付け、続いて
 **Claude Code** での表現を詳しく説明します（最も完全に文書化されている
-ハーネスです。Kiro CLI、Kiro IDE、Codex、opencode は同じ概念をそれぞれの
+ハーネスです。Kiro CLI、Kiro IDE、Codex、opencode、GitHub Copilot は同じ概念をそれぞれの
 同等機能で表現します。
 章ごとの要約は[他のハーネスで実行する](/guide/harnesses)を、
 ハーネス追加時のソース契約は[新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness)を参照してください）。
@@ -21,19 +21,19 @@ AI-DLC の概念を各ハーネスで使われるプリミティブに対応付�
 AI-DLC の概念は不変であり、それを担うプリミティブがハーネスごとの
 パラメーターです。新しいハーネスへ移植する場合は、列を追加してください。
 
-| AI-DLC の概念 | Claude Code | Kiro CLI | Kiro IDE | Codex CLI | opencode |
-|----------------|-------------|----------|----------|-----------|----------|
-| **オーケストレーター入口**（`/aidlc` + ランナー） | スキル（`/aidlc`） | スキル（`/aidlc`） | スキル（`/aidlc`） | スキル（`$aidlc`） | コマンド → スキル（`/aidlc`。スキルは `skills.paths` 経由で `.aidlc/skills` から） |
-| **エージェント・ペルソナ**（全 14） | `.claude/agents/*.md` | `.kiro/agents/*.json` + ペルソナ `.md` | ペルソナ `.md`。委譲先には IDE の `tools:` 許可を追加 | `.codex/agents/` TOML | `.opencode/agents/*.md`（サブエージェント）+ ペルソナ `.md` |
-| **自動化**（監査、状態、追跡） | `settings.json` 経由のフック | `agents/aidlc.json` 経由のフック | `.kiro/hooks/aidlc-*.json`（v2、IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook`（レガシー、pre-1.0） | `.codex/hooks.json` 経由のフック（1 アダプター） | アダプタープラグイン（`.opencode/plugin/`） |
-| **常設ルール**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @インポート・スタブ経由） | `aidlc/spaces/<active-space>/memory/`（エージェントリソース経由） | `aidlc/spaces/<active-space>/memory/`（常時取り込みステアリングのライブ参照経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` グロブ経由） |
-| **プロジェクト・オンボーディング文書** | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
-| **権限 / 設定** | `.claude/settings.json` | `.kiro/settings/cli.json` + エージェント設定 | 委譲先のエージェント `.md` の `tools:` フロントマター | `.codex/config.toml`（+ Starlark `rules/`） | `opencode.json`（プロジェクトルート） |
+| AI-DLC の概念 | Claude Code | Kiro CLI | Kiro IDE | Codex CLI | opencode | GitHub Copilot |
+|----------------|-------------|----------|----------|-----------|----------|----------------|
+| **オーケストレーター入口**（`/aidlc` + ランナー） | スキル（`/aidlc`） | スキル（`/aidlc`） | スキル（`/aidlc`） | スキル（`$aidlc`） | コマンド → スキル（`/aidlc`。スキルは `skills.paths` 経由で `.aidlc/skills` から） | スキル（`/aidlc`。`.github/skills/`） |
+| **エージェント・ペルソナ**（全 14） | `.claude/agents/*.md` | `.kiro/agents/*.json` + ペルソナ `.md` | ペルソナ `.md`。委譲先には IDE の `tools:` 許可を追加 | `.codex/agents/` TOML | `.opencode/agents/*.md`（サブエージェント）+ ペルソナ `.md` | `.github/agents/*.md`（カスタムエージェント）+ ペルソナ `.md` |
+| **自動化**（監査、状態、追跡） | `settings.json` 経由のフック | `agents/aidlc.json` 経由のフック | `.kiro/hooks/aidlc-*.json`（v2、IDE >= 1.0）+ `.kiro/hooks/aidlc-*.kiro.hook`（レガシー、pre-1.0） | `.codex/hooks.json` 経由のフック（1 アダプター） | アダプタープラグイン（`.opencode/plugin/`） | `.github/hooks/aidlc.json` 経由のフック（1 アダプター） |
+| **常設ルール**（レイヤーチェーン） | `aidlc/spaces/<active-space>/memory/`（`.claude/rules/aidlc.md` の @インポート・スタブ経由） | `aidlc/spaces/<active-space>/memory/`（エージェントリソース経由） | `aidlc/spaces/<active-space>/memory/`（常時取り込みステアリングのライブ参照経由） | `aidlc/spaces/<active-space>/memory/`（`AIDLC_RULES_DIR` 経由） | `aidlc/spaces/<active-space>/memory/`（`instructions` グロブ経由） | `aidlc/spaces/<active-space>/memory/`（`AGENTS.md` の @インポート経由） |
+| **プロジェクト・オンボーディング文書** | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
+| **権限 / 設定** | `.claude/settings.json` | `.kiro/settings/cli.json` + エージェント設定 | 委譲先のエージェント `.md` の `tools:` フロントマター | `.codex/config.toml`（+ Starlark `rules/`） | `opencode.json`（プロジェクトルート） | `trustedFolders`（`~/.copilot/config.json`）+ `--allow-tool` フラグ |
 
 基盤となる決定論的エンジン、状態機械、監査ログ、ステージグラフ、スウォーム
 レフェリーは、すべてのハーネスでバイト単位で同一です。異なるのは、それらを
 担うプリミティブだけです。この章の残りでは各プリミティブの **Claude Code**
-での表現を詳述します。Kiro CLI、Kiro IDE、Codex、opencode の同等機能に
+での表現を詳述します。Kiro CLI、Kiro IDE、Codex、opencode、Copilot の同等機能に
 ついては各ガイド章を参照してください。
 
 ---
@@ -529,4 +529,4 @@ cp .claude/settings.local.json.example .claude/settings.local.json
 - [フックとツール](/reference/hooks-and-tools) -- フック・システム、監査分類、CLI ツール
 - [ナレッジ・システム](/reference/knowledge-system) -- 2 層のナレッジ、読み込み順
 - [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) -- 上記の対応表へ列を追加する方法: マニフェスト、フック・アダプター、`emit.ts` 契約
-- [他のハーネスで実行する](/guide/harnesses) -- ハーネス別の、Kiro と Codex におけるこれらのプリミティブの表現
+- [他のハーネスで実行する](/guide/harnesses) -- Kiro CLI、Kiro IDE、Codex、opencode、Copilot におけるこれらのプリミティブの表現

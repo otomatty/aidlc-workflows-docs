@@ -2,7 +2,7 @@
 title: 新しいハーネスへの移植
 description: 1 つの `harness/<name>/` ディレクトリと 1 行のマニフェスト行で AI-DLC を新しい CLI ハーネスへ移植する契約を説明します。
 ---
-AI-DLC は **1 つのコアと複数のハーネス** という形で出荷されます。現在は Claude Code、Kiro CLI、Kiro IDE、Codex CLI に対応しており、この対応先の集合は開いています。人が著述するソースは、ハーネス中立な `core/` と、CLI ごとに薄く用意する `harness/<name>/` サーフェスです。パッケージャー（`scripts/package.ts`）が、コミット済みの各 `dist/<harness>/` ツリーを再生成します。新しいハーネスを追加するのに必要なのは **1 つのディレクトリと 1 行のマニフェスト行** だけです。エンジン、方法論、ハーネスディレクトリとルールディレクトリの解決のために `core/` を編集する必要はありません。唯一の任意例外が、ハーネスごとの `--doctor` 分岐です（手順 2 を参照）。このページでは、その契約を説明します。
+AI-DLC は **1 つのコアと複数のハーネス** という形で出荷されます。現在は Claude Code、Kiro CLI、Kiro IDE、Codex CLI、GitHub Copilot に対応しており、この対応先の集合は開いています。人が著述するソースは、ハーネス中立な `core/` と、CLI ごとに薄く用意する `harness/<name>/` サーフェスです。パッケージャー（`scripts/package.ts`）が、コミット済みの各 `dist/<harness>/` ツリーを再生成します。新しいハーネスを追加するのに必要なのは **1 つのディレクトリと 1 行のマニフェスト行** だけです。エンジン、方法論、ハーネスディレクトリとルールディレクトリの解決のために `core/` を編集する必要はありません。唯一の任意例外が、ハーネスごとの `--doctor` 分岐です（手順 2 を参照）。このページでは、その契約を説明します。
 
 > このリポジトリでの「ハーネス」には 3 つの意味があります。**`harness/`**（トップレベル。ここで扱う CLI ごとの配布サーフェス）、**`docs/harness-engineering/`**（このガイド）、**`tests/harness/`**（テストスイートの補助ライブラリ）です。互いに無関係で、配布物なのは最初の 1 つだけです。
 
@@ -15,6 +15,8 @@ harness/
   claude/  manifest.ts · skills/aidlc/ · CLAUDE.md · settings.json
   kiro/    manifest.ts · skills/aidlc/ · agents/*.json · hooks/aidlc-kiro-adapter.ts · settings/cli.json · AGENTS.md
   codex/   manifest.ts · emit.ts · skills/aidlc/ · hooks/aidlc-codex-adapter.ts
+  opencode/ manifest.ts · emit.ts · skills/aidlc/ · command/ · plugin/
+  copilot/ manifest.ts · emit.ts · skills/aidlc/ · hooks/aidlc-copilot-adapter.ts
 scripts/
   package.ts               # bun scripts/package.ts [<name>] [--check]
   manifest-types.ts        # the HarnessManifest contract every manifest implements
@@ -34,7 +36,7 @@ dist/<name>/               # GENERATED, committed, drift-guarded
 - `coreDirs: DirMap[]` — `core/<src>` のどのディレクトリを `<harnessDir>/<dst>` へ射影するか。ここでディレクトリ名の変更や除外を行います（`Kiro CLI` では `rules → steering`、`Codex CLI` では `rules → aidlc-rules` かつ `skills/` は除外。`emit` を参照）。3 つのセッションスキルはツリー内ハーネス（`Claude Code` 系、`Kiro CLI` 系）ではコアディレクトリです。`Codex CLI` では代わりに `emit` します。
 - `harnessFiles: FileMap[]` — `harness/<name>/<src>` から配布ツリーへそのままコピーする、人が著述したサーフェスです（`.md` にはトークン置換があります）。`projectRoot: true` を付けると、ファイルはハーネスディレクトリの横、たとえば `AGENTS.md` のようにプロジェクトルート側へ着地します。
 - `frontmatterAdditions`（任意） - `core/` から投影される `.md` のフロントマターに、射影中だけ追記するファイルごとの YAML 行です。ほかのハーネスへ出荷してはならないハーネス固有フィールドを注入するときに使います（Kiro IDE は委譲先エージェントファイルの `.md` フロントマターへ `tools: ["read", "write", "shell"]` を注入します。IDE はそこからサブエージェント用ツール権限を読みます）。これは `core/` を単一ソースに保つため、マニフェストデータとして宣言されます。パッケージャーは、タイプミスのあるパス、フロントマターブロックの欠落、あるいは `core/` がすでに宣言しているキーの重複でエラーにします。
-- `rulesRename` — リネームされたルールディレクトリ（`"steering"` | `"aidlc-rules"` | `null`）。パッケージャーはこれを、コピーされたディレクトリ自体、本文中の `<harnessDir>/rules/` 参照、コンパイル済みステージグラフ内のルールパスのすべてへ適用します（コンパイル時に `AIDLC_RULES_DIR` を設定し、`loadRules` がリネーム済みディレクトリを見付けられるようにします）。さらに生成される `tools/data/harness.json` にも書き出し、実行時の `rulesSubdir()` シームがそこを読みます。こうして、実インストール環境でもハードコードなしにリネーム後のディレクトリが解決されます。`rulesRename` が純粋なマニフェストデータで済むのはこのシームのおかげです。ここで設定すれば、ビルド本文、コンパイル済みパス、ランタイムの全層が追従し、`core/` の編集は不要です。
+- `rulesRename` — リネームされたルールディレクトリ（`"steering"` | `"aidlc-rules"` | `null`）。パッケージャーはこれを、コピーされたディレクトリ自体、本文中の `<harnessDir>/rules/` 参照、コンパイル済みステージグラフ内のルールパスのすべてへ適用します（コンパイル時に `AIDLC_RULES_DIR` を設定し、`loadRules` がリネーム済みディレクトリを見付けられるようにします）。さらに生成される `tools/data/harness.json` にも書き出し、これはマニフェスト名とルールディレクトリの両方を記録します。実行時のパス解決はその名前を使って、エンジンディレクトリを共有するハーネス同士を区別し、`rulesSubdir()` はリネーム情報を読みます。こうして、実インストール環境でもハードコードなしに両方の情報が解決されます。`rulesRename` が純粋なマニフェストデータで済むのはこのシームのおかげです。ここで設定すれば、ビルド本文、コンパイル済みパス、ランタイムの全層が追従し、`core/` の編集は不要です。
 - `authoredExempt: RegExp[]` — `core/` からコピーされるディレクトリの内部で、生成物ではなく手書きとみなすファイルです（孤立ファイル走査を飛ばします）。例: `^hooks/aidlc-<name>-adapter\.ts$`。
 - `skipRunnerGen` — そのハーネスが `<harnessDir>/skills/` を出荷しない場合に設定します（`Codex CLI` はスキルツリーを `emit` で `.agents/skills/` へ出します）。そうするとパッケージャーは標準のランナー生成手順を飛ばします。
 - `emit` — 任意のプラグイン（手順 3）。不要なハーネスでは `null`。

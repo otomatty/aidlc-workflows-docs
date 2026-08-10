@@ -268,7 +268,7 @@ sequenceDiagram
 <a id="source-vs-distribution-one-core-many-harnesses"></a>
 ## ソース対ディストリビューション（1 つのコア、複数のハーネス）
 
-このフレームワークは**1 回だけ著述し、ハーネスごとに生成**されます。現在は Claude Code、Kiro CLI、Codex CLI、そしてそれを移植できるあらゆる CLI が対象です。
+このフレームワークは**1 回だけ著述し、ハーネスごとに生成**されます。現在は Claude Code、Kiro CLI、Codex CLI、GitHub Copilot、そしてそれを移植できるあらゆる CLI が対象です。
 人手で著述するソースはハーネス中立な `core/` と、CLI ごとの薄い `harness/<name>/`
 サーフェスから成り、`bun scripts/package.ts` がコミット済みかつ
 差分監視付きの `dist/<harness>/` ツリーを再生成します。
@@ -283,13 +283,14 @@ scripts/package.ts     # the build: copy core (token→.claude/.kiro/.codex) +
                        #   harness, compile the graph, generate runners, emit;
                        #   `--check` is the byte-parity drift guard
 dist/<harness>/        # GENERATED + committed: claude/.claude, kiro/.kiro,
-                       #   codex/{.codex,.agents} — never hand-edited
+                       #   kiro-ide/.kiro, codex/{.codex,.agents},
+                       #   opencode/{.aidlc,.opencode}, copilot/{.aidlc,.github} — never hand-edited
 ```
 
 `core/` の `.ts` は変換なしでバイトコピーされます。ランタイムの `harnessDir()` という継ぎ目
 （`core/tools/aidlc-lib.ts`）は、ハードコードした一覧ではなくツール自身のパスから出荷済みレイアウトを
-実行時に導出するため、新しいハーネスを追加してもここへの編集は不要です。またルールディレクトリの名前変更は、
-ツリーごとに生成される `tools/data/harness.json` により出荷され、`rulesSubdir()` の継ぎ目がそれを読みます。
+実行時に導出するため、新しいハーネスを追加してもここへの編集は不要です。またマニフェスト名とルールディレクトリの名前変更は、
+ツリーごとに生成される `tools/data/harness.json` に格納されて出荷され、ランタイムのパス解決はその名前を使って共有エンジンディレクトリを区別し、`rulesSubdir()` の継ぎ目がその名前変更を読みます。
 1 セットのツールソースがすべてのハーネスで動きます。詳しくは
 [新しいハーネスへの移植](/harness-engineering/porting-to-a-new-harness) を参照してください。
 
@@ -442,7 +443,7 @@ aidlc/                                    # neutral, harness-independent, commit
 `activeSpace(projectDir)` にするため、AI-DLC 自身の解決器もカーソルに追従します。
 `/aidlc space <name>` でスペースを切り替えると、
 各ハーネス固有のルール取り込み（上で述べた Claude の `@` による取り込み用スタブ、
-Kiro CLI のリソースまたは Kiro IDE のステアリング、Codex のルールディレクトリ）も切り替え先スペースの
+Kiro CLI のリソースまたは Kiro IDE のステアリング、Codex のルールディレクトリ、opencode の `instructions` グロブ、Copilot の `AGENTS.md` `@` 取り込み）も切り替え先スペースの
 `memory/` を指すよう再ポイントされます。`default` では再ポイントはバイト単位で同一の無操作なので、
 単一チームのコミット済みツリーが無駄に書き換わることはありません。
 

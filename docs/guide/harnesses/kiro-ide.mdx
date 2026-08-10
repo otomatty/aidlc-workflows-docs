@@ -67,9 +67,9 @@ Claude Code ハーネスと同一です。`/aidlc <description>` でワークフ
 
 Kiro IDE は `.kiro/hooks/` 配下の v2 フック JSON ファイル（`{"version":"v1","hooks":[{name,trigger,matcher,action}]}`、トリガーは PascalCase）を通じてフックを登録します（`hooks` ブロックをエージェント JSON の中で読む Kiro CLI とは異なる仕組みです）。各フックはコマンドを実行し、それが共有の `aidlc-kiro-adapter.ts` シムを経由して IDE のフックイベントを、バイト共有のコアフックが期待する形へ正規化します。
 
-Kiro IDE 1.x はフックの文脈を **stdin 上の JSON**（snake_case: `{ tool_name, tool_input, tool_response }`）として渡します。古い 0.12 ビルドは代わりに camelCase 相当を環境変数 `USER_PROMPT` に設定し、アダプターは両方を受け入れます。捕捉された PostToolUse の書き込み／シェルイベントは、どちらのチャネルでもツール入力が空のままなので、書き込まれたパスは結果テキストから復元する必要があり、ペイロードを持たないフック（`rebuild-stage-graph`、`sync-workflow-state`）は監査証跡を基準に動きます。後期の 1.x ビルドは一部の PreToolUse と委譲入力を埋めますが、アダプターはそれらのフィールドに依存せず保持します。
+Kiro IDE 1.x はフックの文脈を **stdin 上の JSON**（snake_case: `{ session_id, tool_name, tool_input, tool_response }`）として渡します。古い 0.12 ビルドは代わりに camelCase 相当を環境変数 `USER_PROMPT` に設定し、アダプターは両方を受け入れます。捕捉された PostToolUse の書き込み／シェルイベントは、どちらのチャネルでもツール入力が空のままなので、書き込まれたパスは結果テキストから復元する必要があり、監査末尾を参照するフック（`rebuild-stage-graph`、`sync-workflow-state`）は監査証跡を基準に動きます。グラフ再構築の経路はシェル結果とセッション識別情報も保持するため、`intent-create` の成功が呼び出し元のセッションに結び付きます。最新のイベントは厳密な `session_id` を運びますが、レガシーチャネルは SessionStart が保持する合成識別情報を再利用します。同様に最新の Stop はイベント固有の `session_id` を優先し、同時実行中の別チャットが作成後のハンドオフを横取りしてしまうことを防ぎます。レガシーの `agentStop` は保持済みの識別情報にフォールバックします。後期の 1.x ビルドは一部の PreToolUse と委譲入力を埋めますが、アダプターはそれらのフィールドに依存せず保持します。
 
-ペイロード取得は**ペイロード依存のターゲット**（`audit-and-sensors`、`log-subagent`）に限定されています。空でない `USER_PROMPT` は 0.12 ビルド（stdin を開くが何も書かない）で即座に消費され、それ以外の場合、アダプターは 2 秒の broken-channel 上限付きで 1.x の stdin チャネルを読みます。それ以外のすべてのターゲット — 毎 `PreToolUse` で発火する `block` を含む — はどちらのチャネルにも触れず、ゼロレイテンシの経路を保ちます。
+ペイロード取得は**ペイロード依存のターゲット**（`audit-and-sensors`、`log-subagent`、`rebuild-stage-graph`）に加え、最新の `session_id` を得るための `session-start` と `continue-workflow` に限定されています。空でない `USER_PROMPT` は 0.12 ビルド（stdin を開くが何も書かない）で即座に消費され、それ以外の場合、アダプターは 2 秒の broken-channel 上限付きで 1.x の stdin チャネルを読みます。それ以外のすべてのターゲット — 毎 `PreToolUse` で発火する `block` を含む — はどちらのチャネルにも触れず、ゼロレイテンシの経路を保ちます。
 
 | フック | トリガー（マッチャー） | 目的 |
 |------|-------------------|---------|

@@ -134,7 +134,7 @@ aidlc-delivery-agent はエンジニアリングマネージャーの役割を�
 
 **ドメイン:** アプリケーション設計、ドメインモデリング、NFR、コンポーネント分解
 
-aidlc-architect-agent は設計上の中心的な権威です。もっとも広くステージに関与し（3 フェーズにまたがる 9 ステージ）、`judgment` ティアを担います。これは他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と並ぶものです。judgment ティアのエージェントは、あなたのセッション自身のモデルと推論労力を継承するため、あなたが選んだものより低く格下げされることはありません。`templated` ティア（Claude Code、Codex、opencode では労力を抑えた中規模モデル。Kiro では全ティアがセッションのモデルと労力を継承します）を担うのは delivery、pipeline-deploy、operations だけです。なぜなら、それらの出力は主として定型的な計画、CI/CD YAML、ランブックの雛形だからです。
+aidlc-architect-agent は設計上の中心的な権威です。もっとも広くステージに関与し（3 フェーズにまたがる 9 ステージ）、`judgment` ティアを担います。これは他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と並ぶものです。judgment ティアのエージェントは、あなたのセッション自身のモデルと推論労力を継承するため、あなたが選んだものより低く格下げされることはありません。`templated` ティア（Claude Code、Codex、opencode では労力を抑えた中規模モデル。Kiro と Copilot では全ティアがセッションのモデルと労力を継承します）を担うのは delivery、pipeline-deploy、operations だけです。なぜなら、それらの出力は主として定型的な計画、CI/CD YAML、ランブックの雛形だからです。
 
 - **主導:** feasibility, application-design, units-generation, functional-design, nfr-requirements, nfr-design
 - **支援:** intent-capture, reverse-engineering（統合）, delivery-planning

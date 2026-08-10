@@ -10,7 +10,7 @@ AI-DLC を**使って**ソフトウェアを作るなら、まず [ユーザー�
 
 > **このリファレンス中のパス表記について。** AI-DLC は 1 回だけ著述し、各ハーネス向けに生成します。そのため、ファイルのパスは意図に応じて次の 3 つの規約で表記します。
 > - **`core/…`** -- 人手で著述する、ハーネス中立な**唯一の正本**です（例: `core/tools/aidlc-orchestrate.ts`, `core/aidlc-common/stages/`）。編集するのはここです。ファイルが*どこで著述・変更されるか*を示すときは `core/` パスを使います。
-> - **`dist/<harness>/…`** -- **生成済み・コミット済み・差分監視付き**の配布物です（`dist/claude/.claude/`, `dist/kiro/.kiro/`, `dist/kiro-ide/.kiro/`, `dist/codex/`）。手で編集してはいけません。`bun scripts/package.ts` がバイト単位で再現します。*何が出荷されるか*を説明するときだけ参照します。
+> - **`dist/<harness>/…`** -- **生成済み・コミット済み・差分監視付き**の配布物です（`dist/claude/.claude/`, `dist/kiro/.kiro/`, `dist/kiro-ide/.kiro/`, `dist/codex/`, `dist/opencode/`, `dist/copilot/`）。手で編集してはいけません。`bun scripts/package.ts` がバイト単位で再現します。*何が出荷されるか*を説明するときだけ参照します。
 > - **`<harness-dir>/…`**（例: `.claude/`, `.kiro/`, `.codex/`） -- *インストール済み* プロジェクトの中にある**実行時**の場所です。ここでコマンドが動き、フレームワークがワークフロー中に読み書きします（`bun .claude/tools/aidlc-graph.ts compile`, `.claude/agents/` を読む `loadAgents()` など）。このディレクトリはハーネスのパラメーターです。
 >
 > このリファレンスで素の `.claude/` パスが出てきた場合は、Claude ハーネス固有の実行時位置として読んでください。同じファイルは `core/` に著述され、各ハーネスそれぞれのディレクトリへ出荷されます。
