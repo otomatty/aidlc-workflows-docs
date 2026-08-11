@@ -4,7 +4,9 @@ description: AI-DLC のすべての呼び出しパターンとフラグをまと
 ---
 AI-DLC のすべてのコマンドは、オーケストレーターの呼び出しから始まります。この章は、あらゆる呼び出しパターンとフラグを網羅する完全リファレンスです。
 
-> **呼び出しプレフィックスはハーネスごとに異なります。** Claude Code、Kiro IDE、Kiro CLI、opencode、GitHub Copilot では `/aidlc` を入力します。Codex CLI では `$aidlc`（または `/skills` → aidlc）です。以下のフラグと挙動はどちらでも同一で、変わるのはプレフィックスだけです。例では `/aidlc` を使います。Codex では `$aidlc` に置き換えてください。[Kiro CLI](/guide/harnesses/kiro-cli)、[Kiro IDE](/guide/harnesses/kiro-ide)、[Codex CLI](/guide/harnesses/codex-cli)、[opencode](/guide/harnesses/opencode)、[GitHub Copilot](/guide/harnesses/copilot) の各ハーネスガイドを参照してください。
+> **呼び出しプレフィックスはハーネスごとに異なります。** Claude Code、Kiro IDE、Kiro CLI、Cursor、opencode、GitHub Copilot では `/aidlc` を入力します。Codex CLI では `$aidlc`（または `/skills` → aidlc）です。以下のフラグと挙動はどちらでも同一で、変わるのはプレフィックスだけです。例では `/aidlc` を使います。Codex では `$aidlc` に置き換えてください。[Kiro CLI](/guide/harnesses/kiro-cli)、[Kiro IDE](/guide/harnesses/kiro-ide)、[Codex CLI](/guide/harnesses/codex-cli)、[Cursor](/guide/harnesses/cursor)、[opencode](/guide/harnesses/opencode)、[GitHub Copilot](/guide/harnesses/copilot) の各ハーネスガイドを参照してください。
+
+> **Cursor のショートカット。** Cursor では `/aidlc-status`、`/aidlc-jump --stage <slug\|#>`（または `--phase <name\|#>`）、`/aidlc-scope <name>` もネイティブスキルとして公開されています。これらは以下に示す対応する `/aidlc` の形をまとめたものであり、同じエンジンを経由します。別系統の状態経路ではなく、単なるエイリアスです。
 
 ---
 

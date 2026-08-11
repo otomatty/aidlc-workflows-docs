@@ -268,7 +268,7 @@ sequenceDiagram
 <a id="source-vs-distribution-one-core-many-harnesses"></a>
 ## ソース対ディストリビューション（1 つのコア、複数のハーネス）
 
-このフレームワークは**1 回だけ著述し、ハーネスごとに生成**されます。現在は Claude Code、Kiro CLI、Codex CLI、GitHub Copilot、そしてそれを移植できるあらゆる CLI が対象です。
+このフレームワークは**1 回だけ著述し、ハーネスごとに生成**されます。現在は Claude Code、Kiro CLI、Kiro IDE、Codex CLI、Cursor、opencode、GitHub Copilot、そしてそれを移植できるあらゆる CLI が対象です。
 人手で著述するソースはハーネス中立な `core/` と、CLI ごとの薄い `harness/<name>/`
 サーフェスから成り、`bun scripts/package.ts` がコミット済みかつ
 差分監視付きの `dist/<harness>/` ツリーを再生成します。
