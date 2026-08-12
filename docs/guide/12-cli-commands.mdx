@@ -619,7 +619,7 @@ bun .claude/tools/aidlc-graph.ts ars --iae 0.30 --csu 0.80 --ve 0.40 --r 0.20 --
 <a id="aidlc-graph-validate-grid-arbitrary-grid-dependency-check"></a>
 ### `aidlc-graph validate-grid` - 任意グリッドの依存関係チェック
 
-`bun .claude/tools/aidlc-graph.ts validate-grid --proposal <path> [--strict] [--project-type <t>] [--keywords <csv>]` は、任意の `{"<stage>": "EXECUTE"|"SKIP"}` JSON グリッドを検証します。寛容モードは `validate-scope` を模倣し、経路外にある必須の生成元を助言扱いにします。`--strict` を付けると厳密に拒否します（再構成と同じ方針です）。`--keywords` は、付与した各キーワードが既存スコープのキーワードと競合しないか調べます。競合時は既存スコープ名を含む重大エラーになります（コンポーザーは、ゲート承認済みキーワードを書き込む前にこれを実行します）。無効な場合だけ終了コード 1 を返し、JSON 結果を標準出力へ書きます。
+`bun .claude/tools/aidlc-graph.ts validate-grid --proposal <path> [--strict] [--project-type <t>] [--keywords <csv>]` は、任意の `{"<stage>": "EXECUTE"|"SKIP"}` JSON グリッドを検証します。提案はコンパイル済みの全ステージをちょうど 1 回ずつ名指ししなければなりません。欠落したステージ、未知のステージ、無効なアクションはいずれもエラーです。寛容モードは `validate-scope` を模倣し、経路外にある必須の生成元を助言扱いにします。`--strict` を付けると厳密に拒否します（再構成と同じ方針です）。`--keywords` は、付与した各キーワードが既存スコープのキーワードと競合しないか調べます。競合時は既存スコープ名を含む重大エラーになります（コンポーザーは、ゲート承認済みキーワードを書き込む前にこれを実行します）。結果にはさらに `nearest_stock` が含まれます。これはグラフ / プラグインが著述した標準スコープを、提案からのグリッド距離で昇順に並べたもの（`{scope, diff, differs}`）で、コンポーザーが著述したスコープのエントリは除外され、キーの欠落・余剰はどちらも差分として数えられます。前方 / 報告の構成では、標準一致かカスタムかの判断はこの最終提案の結果だけでルーティングされ（`diff <= 2` かつ深さが互換）、モデルによる数え直しや先行する機械的 ARS 選別には依りません。実行中の再構成では、この順位付けは助言扱いとし、稼働中のスコープと計画を保持します。無効な場合だけ終了コード 1 を返し、JSON 結果を標準出力へ書きます。
 
 <a id="aidlc-sensor-inspect-and-fire-sensors"></a>
 ### `aidlc-sensor` — センサーを調べて発火する

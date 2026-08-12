@@ -76,8 +76,8 @@
 		{
 			"sourcePath": "docs/guide/12-cli-commands.md",
 			"translationPath": "docs/guide/12-cli-commands.mdx",
-			"sourceCommit": "d7807fe1230defdbf81e544ac5d044e012bb08d7",
-			"sourceHash": "78b148ea6b6492b6e8bc0d357a340273164220a263dfed48bb72ae5c20adc055"
+			"sourceCommit": "e3bf9be14265e3e1621bfbd34ca04c70b124c250",
+			"sourceHash": "f923652caa9a5d81ebc725a1733bcb2fad7646c982f6d9f79166792db8833319"
 		},
 		{
 			"sourcePath": "docs/guide/13-customization.md",
@@ -328,8 +328,8 @@
 		{
 			"sourcePath": "docs/reference/03-orchestrator.md",
 			"translationPath": "docs/reference/03-orchestrator.mdx",
-			"sourceCommit": "8c60e1ab038fefdf3fdc08e5dce255503d687adb",
-			"sourceHash": "ee86ca8d0ca0963b6534bbede81ce0bd474fe1225c13fa95ce2ad59c46f4740d"
+			"sourceCommit": "e3bf9be14265e3e1621bfbd34ca04c70b124c250",
+			"sourceHash": "00a90d38b46a9bec34c0a7d2361feab5b5ab9c1731cc501019bb711e1c2a75b0"
 		},
 		{
 			"sourcePath": "docs/reference/04-stage-protocol.md",
@@ -442,8 +442,8 @@
 		{
 			"sourcePath": "docs/reference/17-skill-system.md",
 			"translationPath": "docs/reference/17-skill-system.mdx",
-			"sourceCommit": "18bcc4688e20258e713de750d725f83981f88bde",
-			"sourceHash": "d4aefc27dc0fa0cf59002c0ff08149909cbbcf7c920ba91557589b1de3cd4a6d"
+			"sourceCommit": "e3bf9be14265e3e1621bfbd34ca04c70b124c250",
+			"sourceHash": "d53a9c489400b5171ebfca3c1e692c960a75f1cc9a025211e68578bfa07d3e50"
 		},
 		{
 			"sourcePath": "docs/reference/18-plugin-mechanism.md",
