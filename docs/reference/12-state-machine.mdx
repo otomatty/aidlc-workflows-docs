@@ -353,7 +353,7 @@ report awaiting-approval  →  [?] AwaitingApproval
 | `QUESTION_ANSWERED` | `tools/aidlc-log.ts` | ゲート以外の質問への応答後に出力。承認の選択は `report` が所有するライフサイクルイベント |
 | `SUMMARY_CONFIRMATION_RECORDED` | `tools/aidlc-log.ts` | 人間の裏付けを持つ統合サマリーの受領記録。質問ファイルのダイジェストに束縛され、公開監査 append からは予約されている |
 | `REVIEW_REQUESTED` | `tools/aidlc-log.ts` | コンダクターが §12a レビュアーサブエージェントをディスパッチしたときに出力 |
-| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | `READY` または `NOT-READY` のレビュアー判定を読み取ったときに出力し、宣言された出力パスとバイト列に対する `Artifact Fingerprint` を記録する。完了系のすべての状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在のワークフロー試行の、かつフィンガープリントがなお一致する受領記録を要求する。ユニット単位のステージは該当ユニットごとに 1 件を要求し、無効化をそのユニットに限定する。自律スウォームの確定は加えて、各設定済みユニットの Bolt 開始後の一致する受領記録と、該当する必須成果物のすべてがその Bolt ワークツリー内にファイルとして存在することを要求する（存在しない任意出力は有効なフィンガープリントエントリのまま）。 |
+| `REVIEW_COMPLETED` | `tools/aidlc-log.ts` | 対応する正のイテレーションの `REVIEW_REQUESTED` があって初めて出力し、宣言された出力パスとバイト列に対する `Artifact Fingerprint` を記録する。`READY` は即座に終端。助言的（advisory）な `NOT-READY` は 1 パス後に終端。敵対的（adversarial）な `NOT-READY` は `reviewer_max_iterations` に到達して初めて終端となる（それ以前の行は修復／再試行の進捗をウェーブへ露出する）。完了系のすべての状態遷移（`approve`、`advance`、`finalize`、`complete-workflow`）は、現在のワークフロー試行の、かつフィンガープリントがなお一致する終端受領記録を要求する。ユニット単位のステージは該当ユニットごとに 1 件を要求し、無効化をそのユニットに限定する。自律スウォームの確定は加えて、各設定済みユニットの Bolt 開始後の対になった終端受領記録と、該当する必須成果物のすべてがその Bolt ワークツリー内にファイルとして存在することを要求する（存在しない任意出力は有効なフィンガープリントエントリのまま）。 |
 
 <a id="unit-lifecycle-inline-per-unit-construction-stages"></a>
 ### ユニットのライフサイクル（インラインのユニット単位 Construction ステージ）
@@ -363,7 +363,7 @@ report awaiting-approval  →  [?] AwaitingApproval
 | `UNIT_STARTED` | `tools/aidlc-state.ts` | `unit start` — エンジンが現在ルーティングしているステージ／ユニットの厳密な組、権威ある DAG 由来の安全なユニット識別子（安全なレガシー表記を含む）、そして他に開いているユニットが無いことを要求する |
 | `UNIT_PAUSED` | `tools/aidlc-state.ts` | `unit pause` — `--reason` と `--next-action` が必須。エンジンは一時停止中のユニットを最優先でルーティングし、明示的な再開までハードストップする |
 | `UNIT_RESUMED` | `tools/aidlc-state.ts` | `unit resume` — 現在一時停止中のユニットだけが再開できる |
-| `UNIT_COMPLETED` | `tools/aidlc-state.ts` | `unit complete` — 確定前にそのユニットの必須成果物が通常ファイルであることを検証する。4 つのライフサイクルイベントはいずれも、厳密な境界イベント／タイムスタンプ／序数からなる `Run floor`（またはフェイルクローズのシャード横断曖昧性トークン）を伴い、受領記録モードは試行をまたいで有効なまま、同一シャード内の追記順が確定を制御し、順序の無い同一秒のシャード横断ライフサイクル同点は一時停止などの非終端状態を保持する。したがって古い・曖昧な・再オープンされたユニットは、再度完了するまでゲートをブロックする |
+| `UNIT_COMPLETED` | `tools/aidlc-state.ts` | 直列の `unit complete` は、アクティブなユニットの必須成果物を検証する。ウェーブの `unit complete --wave` は代わりに、エンジンがそのエントリをなおビルド完了／レビュー決着済みとして露出しているかを検証し、新しいユニット日誌のエントリを決定論的なマーカー付きで親日誌へ複写し、受領記録を最終的な成果物フィンガープリントへ束縛したうえで、単一アクティブのチェックポイントを開かずに確定する。すべてのライフサイクル行は、厳密な境界イベント／タイムスタンプ／序数からなる `Run floor`（またはフェイルクローズのシャード横断曖昧性トークン）を伴う。受領記録モードは試行をまたいで有効なままなので、古い・変更された・曖昧な・再オープンされた・親日誌へ未集約のユニットは、再度完了するまでゲートをブロックする |
 
 <a id="scope-and-configuration"></a>
 ### スコープと構成
@@ -409,7 +409,7 @@ report awaiting-approval  →  [?] AwaitingApproval
 | `HUMAN_TURN` | `hooks/aidlc-record-human-turn.ts`（＋ハーネスごとのプロンプト送信アダプター） | 実際の人間プロンプトまたは回答済み質問ウィジェットごとに 1 件。承認 / インタビューゲートは、直前のゲート解決以降に 1 件を要求する |
 | `SUBAGENT_COMPLETED` | `hooks/aidlc-log-subagent.ts` | サブエージェント停止フック経由でサブエージェント完了を記録 |
 | `REVIEWER_SCOPE_BLOCKED` | `hooks/aidlc-reviewer-scope.ts` | ユニット単位レビュアーのツール呼び出しが、兄弟ユニットの `construction/` パスへ到達したため拒否された（§12a の読み取り範囲境界）。拒否ごとに 1 行 |
-| `REVIEW_FREEZE_BLOCKED` | `hooks/aidlc-review-freeze.ts` | ファイルツールまたはシェルによる `produces[]` への書き込みが、ゲート前に新鮮な READY レビュー受領記録を無効化するとして拒否された（§12a の終端受領記録の順序）。拒否ごとに 1 行 |
+| `REVIEW_FREEZE_BLOCKED` | `hooks/aidlc-review-freeze.ts` | ファイルツールまたはシェルによる `produces[]` への書き込みが、ゲート前に新鮮な終端レビュー受領記録（READY、または実効レビュークラスにおける終端 NOT-READY）を無効化するとして拒否された。拒否ごとに 1 行 |
 | `PLAN_APPROVAL_BLOCKED` | `hooks/aidlc-plan-approval-guard.ts` | コード生成の開発者エージェントディスパッチが、対象ユニットに空でない明示承認済みの `code-generation-plan.md` が無いとして拒否された（ステージ手順 2〜3 は手順 4 に先立つ必要がある）。拒否ごとに 1 行 |
 
 <a id="diagnostics-and-workspace"></a>

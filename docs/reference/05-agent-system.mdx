@@ -106,8 +106,8 @@ tier: judgment                      # judgment | balanced | templated (see Agent
 | ティア | Claude Code（`.md` のメタデータ部） | Codex CLI（TOML） | Kiro CLI/IDE（CLI はエージェント JSON の `"model"`、IDE は `.md` フロントマターの `model:`） | Kiro の CLI 設定にある `chat.modelDefaults` | opencode（`.md` のメタデータ部） | Copilot（`.md` のメタデータ部） | Cursor（`.md` のメタデータ部） |
 |------|-------------------------------|-------------------|--------------------------------------|-------------------------------------|-----------------------------|-----------------------------|--------------------------|
 | `judgment` | `model: inherit`、`effort:` 行なし | `model`／`model_reasoning_effort` キーなし（設定のセッション既定値が適用される） | フィールドを省略（スキーマのフォールバック: ユーザーの既定モデル） | ティア項目なし | `model:`／`variant:` キーなし（`opencode.json` のセッション既定値が適用される） | 省略（セッションのモデルを継承） | `model:` を省略（セッションのモデルを継承） |
-| `balanced` | `model: sonnet`、`effort:` 行なし | `model = "openai.gpt-5.4"`、推論量キーなし | フィールドを省略（下記参照） | ティア項目なし | `model: amazon-bedrock/global.anthropic.claude-sonnet-4-6`、`variant` キーなし | 省略（セッションのモデルを継承） | `model:` を省略（下記参照） |
-| `templated` | `model: sonnet`、`effort: medium` | `model = "openai.gpt-5.4"`、`model_reasoning_effort = "medium"` | フィールドを省略（下記参照） | ティア項目なし | 同じモデル、`variant: medium` | 省略（セッションのモデルを継承） | `model:` を省略（下記参照） |
+| `balanced` | `model: sonnet`、`effort:` 行なし | `model = "openai.gpt-5.6-terra"`、推論量キーなし | フィールドを省略（下記参照） | ティア項目なし | `model: amazon-bedrock/global.anthropic.claude-sonnet-4-6`、`variant` キーなし | 省略（セッションのモデルを継承） | `model:` を省略（下記参照） |
+| `templated` | `model: sonnet`、`effort: medium` | `model = "openai.gpt-5.6-terra"`、`model_reasoning_effort = "medium"` | フィールドを省略（下記参照） | ティア項目なし | 同じモデル、`variant: medium` | 省略（セッションのモデルを継承） | `model:` を省略（下記参照） |
 
 この表を支える重要事実:
 

@@ -190,8 +190,8 @@
 		{
 			"sourcePath": "docs/guide/harnesses/codex-cli.md",
 			"translationPath": "docs/guide/harnesses/codex-cli.mdx",
-			"sourceCommit": "d7807fe1230defdbf81e544ac5d044e012bb08d7",
-			"sourceHash": "78fc8938b45cd98b03dc696a95eaf1f7631dc893e0c4348eed8dde6eb28d524f"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "fede926d9c6aa55d42f602759137daf0a30536a2d7294856dca94038db4b669f"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/copilot.md",
@@ -202,8 +202,8 @@
 		{
 			"sourcePath": "docs/guide/harnesses/cursor.md",
 			"translationPath": "docs/guide/harnesses/cursor.mdx",
-			"sourceCommit": "d7807fe1230defdbf81e544ac5d044e012bb08d7",
-			"sourceHash": "2ea3b06c2088210fdcf0a212fced32eb973c2773231646d9ab86221ff60609e9"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "2aec0fa090c649fb6d483d29ee53ca0904a95308f9bc8291b3264d9e35cd5732"
 		},
 		{
 			"sourcePath": "docs/guide/harnesses/kiro-cli.md",
@@ -328,8 +328,8 @@
 		{
 			"sourcePath": "docs/reference/03-orchestrator.md",
 			"translationPath": "docs/reference/03-orchestrator.mdx",
-			"sourceCommit": "e3bf9be14265e3e1621bfbd34ca04c70b124c250",
-			"sourceHash": "00a90d38b46a9bec34c0a7d2361feab5b5ab9c1731cc501019bb711e1c2a75b0"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "7f029a2a13516dfb0f3b14055a5d91d545719971d0a3453067381a8535a4ed50"
 		},
 		{
 			"sourcePath": "docs/reference/04-stage-protocol.md",
@@ -340,8 +340,8 @@
 		{
 			"sourcePath": "docs/reference/04-stages/construction.md",
 			"translationPath": "docs/reference/04-stages/construction.mdx",
-			"sourceCommit": "8c60e1ab038fefdf3fdc08e5dce255503d687adb",
-			"sourceHash": "f4aa6f9cda32943a037cbb87c4e3903fef620c2cdf9af94a9baa7a296e0bd54f"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "c09e8053fb13004f1ea46ba15b6071ab44d89e84e188355ec9216d791a05720e"
 		},
 		{
 			"sourcePath": "docs/reference/04-stages/ideation.md",
@@ -370,14 +370,14 @@
 		{
 			"sourcePath": "docs/reference/05-agent-system.md",
 			"translationPath": "docs/reference/05-agent-system.mdx",
-			"sourceCommit": "d7807fe1230defdbf81e544ac5d044e012bb08d7",
-			"sourceHash": "f4acaaca15d830a8bb37c6ba138645e37b22810cb6e8346ebb3b7d6ce7ec29c4"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "f8aef0e192bea657252d8557878cec708e7f7e921c98294700c44c584b080b70"
 		},
 		{
 			"sourcePath": "docs/reference/06-hooks-and-tools.md",
 			"translationPath": "docs/reference/06-hooks-and-tools.mdx",
-			"sourceCommit": "18bcc4688e20258e713de750d725f83981f88bde",
-			"sourceHash": "bcbdb0e0964302560d821190b64444d4dae4cc0237abcc4e92f1f58a705f2f62"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "e08db42eecd5c0953978b03a7853e6b2396dfb9f0c9a5229229981d3c3b37a00"
 		},
 		{
 			"sourcePath": "docs/reference/07-sensor-system.md",
@@ -412,14 +412,14 @@
 		{
 			"sourcePath": "docs/reference/12-state-machine.md",
 			"translationPath": "docs/reference/12-state-machine.mdx",
-			"sourceCommit": "8c60e1ab038fefdf3fdc08e5dce255503d687adb",
-			"sourceHash": "3701057bf05db68ebf97590a5fb2071ff9bf18771c78254f6246ab808c5b818c"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "86c6a423ab749d63484e4b38b815d3ec6eba217560d5444236ba232e57d9f818"
 		},
 		{
 			"sourcePath": "docs/reference/13-runtime-graph.md",
 			"translationPath": "docs/reference/13-runtime-graph.mdx",
-			"sourceCommit": "8c60e1ab038fefdf3fdc08e5dce255503d687adb",
-			"sourceHash": "845b996197fe9499b56adcc6b6b1606f996174745c7c666e660371537b6d2a82"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "913bf537afe9f3c36dfbb54e9c10a5a6fa9af9424db0b02cccbfb64e6e607e62"
 		},
 		{
 			"sourcePath": "docs/reference/14-claude-features.md",
@@ -442,8 +442,8 @@
 		{
 			"sourcePath": "docs/reference/17-skill-system.md",
 			"translationPath": "docs/reference/17-skill-system.mdx",
-			"sourceCommit": "e3bf9be14265e3e1621bfbd34ca04c70b124c250",
-			"sourceHash": "d53a9c489400b5171ebfca3c1e692c960a75f1cc9a025211e68578bfa07d3e50"
+			"sourceCommit": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
+			"sourceHash": "2e5bcbc3cc331edb9e97720b9e18bbff98b5afaba9a7d672efbba49c48354909"
 		},
 		{
 			"sourcePath": "docs/reference/18-plugin-mechanism.md",

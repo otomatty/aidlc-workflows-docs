@@ -9,7 +9,7 @@ description: Codex CLI ハーネス向けの前提条件、インストール手
 
 - **Codex CLI ≥ 0.145.0** - これより前のリリースでは、ターン途中の自動コンパクション後に compact ソースの `SessionStart` の処理が先送りされ、復元されたワークフローミッションなしでモデルの継続が 1 回実行されてしまうことがあります。さらに 0.139.0 より前のリリースでは、サブエージェントフックの入力に実際のエージェントロールが含まれず、ハイフンを含むエージェント TOML も解決できません。`/aidlc --doctor` がこの固定版を検証します。`codex --version` で確認してください。
 - **bun** - Claude ハーネスと同じ要件です。すべてのツールとフックは bun 経由で実行されます。
-- **モデルプロバイダー** - 同梱の `config.toml` は既定で **Amazon Bedrock** を使います（`openai.gpt-5.5`、エージェントは `openai.gpt-5.4`）。`[model_providers.amazon-bedrock.aws]` で AWS のプロファイルとリージョンを設定してください。OpenAI 認証を使う場合は、プロバイダーの行をコメントアウトします。注意: Bedrock では `web_search` は利用できないため、市場調査（Market Research）ステージは自動的に縮退します。
+- **モデルプロバイダー** - 同梱の `config.toml` は既定で **Amazon Bedrock** を使います（`openai.gpt-5.5`、エージェントは `openai.gpt-5.6-terra`）。`[model_providers.amazon-bedrock.aws]` で AWS のプロファイルとリージョンを設定してください。OpenAI 認証を使う場合は、プロバイダーの行をコメントアウトします。注意: Bedrock では `web_search` は利用できないため、市場調査（Market Research）ステージは自動的に縮退します。
 
 <a id="install"></a>
 ## インストール
