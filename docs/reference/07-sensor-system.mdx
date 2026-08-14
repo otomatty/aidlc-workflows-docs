@@ -6,7 +6,7 @@ description: ステージ出力への書き込み時に発火する AI-DLC セ�
 
 この章は、AI-DLC のセンサーマニフェスト、つまりステージ出力への書き込み時に発火する決定論的チェックの**スキーマリファレンス**です。センサーは制御ループにおけるフィードバック側であり、ルールはフィードフォワード側です（次章の [ルールシステム](/reference/rule-system) を参照）。[プレーンアーキテクチャ](/reference/plane-architecture) は、両者を各ステージノードへ解決されるコントロールプレーン入力として位置付けます。
 
-この章が扱うのはマニフェストの**ファイル形式**です。センサーマニフェストに何が含まれるか、ステージがどうセンサーをインポートするか、出荷済み 5 つのマニフェストがどう設定されているかを説明します。ワークフロー中にセンサーがどう発火するかという利用者向け視点は、ユーザーガイドの [ルールと学習ループ](/guide/rules-and-the-learning-loop) を参照してください。
+この章が扱うのはマニフェストの**ファイル形式**です。センサーマニフェストに何が含まれるか、ステージがどうセンサーをインポートするか、出荷済み 6 つのマニフェストがどう設定されているかを説明します。ワークフロー中にセンサーがどう発火するかという利用者向け視点は、ユーザーガイドの [ルールと学習ループ](/guide/rules-and-the-learning-loop) を参照してください。
 
 > **パス規約。** 以下の `<record>/` はアクティブな意図の記録ディレクトリ、つまり `aidlc/spaces/<space>/intents/<YYMMDD>-<label>/` を指します（UTC 日付の短い接頭辞と短いケバブケースのラベルを持ち、記録ディレクトリが時系列順に並ぶ形です。正準 ID は `intents.json` の行にある UUIDv7 です）。なお、出荷済みの 2 つの文書形状センサーの `matches` グロブは、現在でも旧来の成果物ツリーのパス形状を保持しており、以下ではスキーマ説明のためにその値を逐語で引用します。
 
@@ -120,16 +120,19 @@ outputs: ...
 
 実行時の `PostToolUse` フック（`aidlc-run-sensors.ts`）は、グラフノードの `sensors_applicable` を読みます。マニフェストを再度開きません。`matches` はコンパイル時のスナップショットです。ワークフロー中にマニフェストを編集しても、その進行中ワークフローで何が発火するかは変わりません。これは BGP 的な安定性特性です（[プレーンアーキテクチャ](/reference/plane-architecture) を参照）。
 
-<a id="per-stage-sensor-matrix-32-framework-stages"></a>
-### ステージごとのセンサーマトリクス（フレームワーク 32 ステージ）
+<a id="per-stage-sensor-matrix-33-framework-stages"></a>
+### ステージごとのセンサーマトリクス（フレームワーク 33 ステージ）
 
 | ステージ | `sensors:` |
 |---|---|
 | 3 つの初期化（ワークスペース足場作成、ワークスペース検出、状態初期化） | `[]`（決定論的セットアップであり、エージェント著述 Markdown がない） |
 | `intent-capture` | `[claim-sources, required-sections, upstream-coverage]`（`claim-sources` は、ステージの成果物全体にわたり、可視のインライン出所表記、正式なソースレジスタの値、人間が確認した正確な想定を検査します） |
-| その他の構想 6、立ち上げ 8、運用 7 の Markdown ステージと `code-generation` | Markdown ステージは `[required-sections, upstream-coverage]`、`code-generation` は `[linter, type-check]`（コードのみ） |
+| その他の構想 6、その他の立ち上げ 6、運用 7 の Markdown ステージ | `[required-sections, upstream-coverage]` |
+| `user-stories`、`domain-design`、`units-generation` | `[required-sections, upstream-coverage, traceability]` |
 | `build-and-test` | `[required-sections, upstream-coverage, type-check]`（`linter` は意図的に除外。ビルドが正準のリントを走らせるため） |
-| 5 つの構築設計（CI パイプライン、機能設計、インフラ設計、NFR 設計、NFR 要件） | `[required-sections, upstream-coverage, linter, type-check]`（コード断片を含む Markdown 設計） |
+| `ci-pipeline` | `[required-sections, upstream-coverage, linter, type-check]` |
+| ユニット単位の構築設計 4 ステージ（`functional-design`、`infrastructure-design`、`nfr-design`、`nfr-requirements`） | `[required-sections, upstream-coverage, linter, type-check, traceability]` |
+| `code-generation` | `[linter, type-check, traceability]` |
 
 フォーク側でのカスタマイズは、ステージの `sensors:` 一覧を直接編集して行います。束縛は、カスタマイズ対象のすぐ隣にあります。マニフェストは純粋な機能記述子であり、ステージ対象化フィールドは持ちません。`applies_to:` はありません。プル型の著述により除去されました。厳密加算の実行時モデルが適用されるので、フォークがあるセンサーをあるステージへ付けたいならインポートし、不要なら書かなければよいだけです。上書きレイヤーを考える必要はありません。
 
@@ -145,10 +148,11 @@ outputs: ...
 | `aidlc-claim-sources.md` | `**/{aidlc-docs,intents}/**` |
 | `aidlc-required-sections.md` | `**/{aidlc-docs,intents}/**` |
 | `aidlc-upstream-coverage.md` | `**/{aidlc-docs,intents}/**` |
+| `aidlc-traceability.md` | `**/traceability.json` |
 | `aidlc-linter.md` | `**/*.{ts,js}` |
 | `aidlc-type-check.md` | `**/*.{ts,tsx}` |
 
-`matches` は実質的に発火フィルターそのものです。理論上は任意でも、実務上は必須です。フックは書き込まれたパスをこのグロブと比較し、一致した場合だけ発火します。`matches` を持たないエントリは一切発火しません（`aidlc-run-sensors.ts`: `if (!entry.matches) continue`）。そのため、出荷済み 5 マニフェストはすべて `matches` を宣言しています。出所センサーと 2 つの文書形状センサーは成果物ツリーに（出荷済みマニフェストは上の表に示した `matches` 値を持ちます）、2 つのコード品質センサーは言語グロブに限定されます。コンパイル解決器は `matches` をそのままステージ別 `sensors_applicable[]` へコピーし、フックはグラフノードからスナップショットされた値を読みます。
+`matches` は実質的に発火フィルターそのものです。理論上は任意でも、実務上は必須です。フックは書き込まれたパスをこのグロブと比較し、一致した場合だけ発火します。`matches` を持たないエントリは一切発火しません（`aidlc-run-sensors.ts`: `if (!entry.matches) continue`）。そのため、出荷済み 6 マニフェストはすべて `matches` を宣言しています。出所センサーと 2 つの文書形状センサーは成果物ツリーに、トレーサビリティセンサーは自身の JSON 成果物に、2 つのコード品質センサーは言語グロブに限定されます。コンパイル解決器は `matches` をそのままステージ別 `sensors_applicable[]` へコピーし、フックはグラフノードからスナップショットされた値を読みます。
 
 空文字列（`matches: ""`）は解析時に拒否されます。グロブがないとセンサーは発火しないため、マニフェストは自分が適用されるグロブ形状を必ず明示しなければなりません。「全部に発火する」モードはありません。
 

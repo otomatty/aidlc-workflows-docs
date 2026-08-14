@@ -125,7 +125,7 @@ bun .claude/tools/aidlc-orchestrate.ts next --stage <your-slug> --single
 <a id="the-runner-skill-is-optional-packaging"></a>
 ### ランナースキルは任意のパッケージ
 
-出荷される単体実行可能なステージには、それぞれ `skills/aidlc-<slug>/SKILL.md` に薄いランナースキルも付きます。これにより `/aidlc-<slug>`（例: `/aidlc-application-design`）として入力できます。これらは **`--single` フラグの上に載った任意の簡便機能**に過ぎません。およそ 6 行のシェルで `next --stage <slug> --single` を駆動するだけです。手書きではなく、生成器がコンパイル済みステージのスラッグごとに出力するため、ランナーの集合がステージの集合から手作業でずれることはありません。（3 つの起動用初期化ステージにはステージ別ランナーがありません。単独の `--single` に意味がなく、初期化フェーズ全体が `/aidlc-init` コマンドだからです。これはエンジンのインテント作成処理をパッケージ化しています。）ステージを追加または削除した後は、ランナーを再生成します。
+出荷される単体実行可能なステージには、それぞれ `skills/aidlc-<slug>/SKILL.md` に薄いランナースキルも付きます。これにより `/aidlc-<slug>`（例: `/aidlc-domain-design`）として入力できます。これらは **`--single` フラグの上に載った任意の簡便機能**に過ぎません。およそ 6 行のシェルで `next --stage <slug> --single` を駆動するだけです。手書きではなく、生成器がコンパイル済みステージのスラッグごとに出力するため、ランナーの集合がステージの集合から手作業でずれることはありません。（3 つの起動用初期化ステージにはステージ別ランナーがありません。単独の `--single` に意味がなく、初期化フェーズ全体が `/aidlc-init` コマンドだからです。これはエンジンのインテント作成処理をパッケージ化しています。）ステージを追加または削除した後は、ランナーを再生成します。
 
 ```bash
 # Regenerate every runner dir from the compiled stage list

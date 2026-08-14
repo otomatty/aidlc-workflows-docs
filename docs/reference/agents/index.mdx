@@ -18,7 +18,7 @@ description: 11 体の AI-DLC エージェントの設定、ステージ担当�
 | 1 | [aidlc-product-agent](/reference/agents/product-agent) | 要件、スコープ、ユーザーストーリー、市場調査 |
 | 2 | [aidlc-design-agent](/reference/agents/design-agent) | UX/UI、ワイヤーフレーム、インタラクション設計、アクセシビリティ |
 | 3 | [aidlc-delivery-agent](/reference/agents/delivery-agent) | チーム編成、キャパシティ計画、デリバリー順序の設計 |
-| 4 | [aidlc-architect-agent](/reference/agents/architect-agent) | アプリケーション設計、ドメインモデリング、NFR、分解 |
+| 4 | [aidlc-architect-agent](/reference/agents/architect-agent) | ドメイン設計、ドメインモデリング、NFR、分解 |
 | 5 | [aidlc-aws-platform-agent](/reference/agents/aws-platform-agent) | AWS インフラ、IaC、FinOps、環境プロビジョニング |
 | 6 | [aidlc-compliance-agent](/reference/agents/compliance-agent) | GRC、規制マッピング、データ分類、リスク |
 | 7 | [aidlc-devsecops-agent](/reference/agents/devsecops-agent) | 脅威モデリング、セキュリティパイプライン、セキュア設計レビュー |
@@ -88,10 +88,10 @@ description: 11 体の AI-DLC エージェントの設定、ステージ担当�
 | エージェント | 主担当ステージ | 支援ステージ | ティア | 利用が想定されるツール |
 |-------|-------------|----------------|-------|------------------------------|
 | [aidlc-product-agent](/reference/agents/product-agent) | intent-capture, market-research, scope-definition, requirements-analysis, user-stories | rough-mockups, approval-handoff, refined-mockups | judgment | WebSearch |
-| [aidlc-design-agent](/reference/agents/design-agent) | rough-mockups, refined-mockups | user-stories, application-design | judgment | WebSearch |
+| [aidlc-design-agent](/reference/agents/design-agent) | rough-mockups, refined-mockups | user-stories, domain-design | judgment | WebSearch |
 | [aidlc-delivery-agent](/reference/agents/delivery-agent) | team-formation, approval-handoff, delivery-planning | scope-definition, units-generation | templated | -- |
-| [aidlc-architect-agent](/reference/agents/architect-agent) | feasibility, application-design, units-generation, functional-design, nfr-requirements, nfr-design | intent-capture, reverse-engineering（統合）, delivery-planning | judgment | -- |
-| [aidlc-aws-platform-agent](/reference/agents/aws-platform-agent) | infrastructure-design, environment-provisioning | feasibility, application-design, nfr-design, feedback-optimization | judgment | Bash |
+| [aidlc-architect-agent](/reference/agents/architect-agent) | feasibility, domain-design, units-generation, functional-design, nfr-requirements, nfr-design | intent-capture, reverse-engineering（統合）, delivery-planning | judgment | -- |
+| [aidlc-aws-platform-agent](/reference/agents/aws-platform-agent) | infrastructure-design, environment-provisioning | feasibility, domain-design, nfr-design, feedback-optimization | judgment | Bash |
 | [aidlc-compliance-agent](/reference/agents/compliance-agent) | （なし） | feasibility, nfr-requirements, infrastructure-design, environment-provisioning | judgment | WebSearch |
 | [aidlc-devsecops-agent](/reference/agents/devsecops-agent) | （なし） | practices-discovery, nfr-requirements, infrastructure-design, build-and-test, environment-provisioning | judgment | Bash |
 | [aidlc-developer-agent](/reference/agents/developer-agent) | reverse-engineering（コードスキャン）, code-generation | practices-discovery, user-stories, functional-design, deployment-execution | judgment | Bash |
@@ -135,10 +135,10 @@ description: 11 体の AI-DLC エージェントの設定、ステージ担当�
 | エージェント | 初期化（フェーズ 0） | アイデア創出（フェーズ 1） | インセプション（フェーズ 2） | 構築（フェーズ 3） | 運用（フェーズ 4） |
 |-------|--------------------------|---------------------|---------------------|------------------------|---------------------|
 | aidlc-product-agent | -- | L (intent-capture, market-research, scope-definition), S (rough-mockups, approval-handoff) | L (requirements-analysis, user-stories), S (refined-mockups) | -- | -- |
-| aidlc-design-agent | -- | L (rough-mockups) | L (refined-mockups), S (user-stories, application-design) | -- | -- |
+| aidlc-design-agent | -- | L (rough-mockups) | L (refined-mockups), S (user-stories, domain-design) | -- | -- |
 | aidlc-delivery-agent | -- | L (team-formation, approval-handoff), S (scope-definition) | L (delivery-planning), S (units-generation) | -- | -- |
-| aidlc-architect-agent | -- | L (feasibility), S (intent-capture) | L (application-design, units-generation), S (reverse-engineering, delivery-planning) | L (functional-design, nfr-requirements, nfr-design) | -- |
-| aidlc-aws-platform-agent | -- | S (feasibility) | S (application-design) | L (infrastructure-design), S (nfr-design) | L (environment-provisioning), S (feedback-optimization) |
+| aidlc-architect-agent | -- | L (feasibility), S (intent-capture) | L (domain-design, units-generation), S (reverse-engineering, delivery-planning) | L (functional-design, nfr-requirements, nfr-design) | -- |
+| aidlc-aws-platform-agent | -- | S (feasibility) | S (domain-design) | L (infrastructure-design), S (nfr-design) | L (environment-provisioning), S (feedback-optimization) |
 | aidlc-compliance-agent | -- | S (feasibility) | -- | S (nfr-requirements, infrastructure-design) | S (environment-provisioning) |
 | aidlc-devsecops-agent | -- | -- | S (practices-discovery) | S (nfr-requirements, infrastructure-design, build-and-test) | S (environment-provisioning) |
 | aidlc-developer-agent | -- | -- | L (reverse-engineering), S (practices-discovery, user-stories) | L (code-generation), S (functional-design) | S (deployment-execution) |

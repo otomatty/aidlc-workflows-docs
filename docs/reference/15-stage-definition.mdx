@@ -131,9 +131,10 @@ YAML が正です。JSON はビルド成果物です。継続的インテグレ�
 
 存在する理由: ステージの `produces[]` 成果物は常に記録ディレクトリ内の Markdown に
 解決されます（パス解決器が書き込む唯一の場所）。そのため「`produces` は存在するか？」
-という検査は、`code-generation-plan.md` と `code-summary.md` を書いただけで
-実際のコードを 1 行も出さない `code-generation` ステージでも満たされてしまいます
-（課題 #366）。`workspace_requires: true` がその穴を閉じます。ステージ完了時の
+という検査は、`code-generation-plan.md`、`unit-test-instructions.md`、
+`code-summary.md` を書いただけで実際のコードを 1 行も出さない `code-generation`
+ステージでも満たされてしまいます（課題 #366）。
+`workspace_requires: true` がその穴を閉じます。ステージ完了時の
 成果物ガード（`aidlc-state.ts` の `approve` / `advance` / `finalize` /
 `complete-workflow`）は、ステージ完了前に `aidlc/` ワークスペースツリーと
 ハーネスディレクトリの外で実ソース作業の証拠を追加で要求します。
@@ -170,9 +171,11 @@ produces:
   - performance-requirements
   - security-requirements
   - scalability-requirements
+  - observability-requirements
 produces_kinds:
   performance-requirements: [service, ui]
   scalability-requirements: [service]
+  observability-requirements: [service]
 ```
 
 存在する理由: 4 つの構築設計ステージは、固定の `produces` 一覧を全ユニットに
@@ -196,6 +199,9 @@ produces_kinds:
 4 ステージの既定種別行列はステージフロントマターのデータであり、エントリーごとに
 レビューと差し戻しが可能です。誤ったエントリーを削除すると、その成果物の全行列が
 復元されます。
+
+標準の NFR ステージは、`observability-requirements` と `observability-design` の
+両方をサービス種別のユニットへ対応付けます。
 
 信頼に関する注意: `kind:` 値は `units-generation` ゲートで列挙検査されます
 （`required-sections` センサーは誤記で大きく失敗します）が、その後のコンパイル済み
@@ -251,18 +257,17 @@ produces_kinds:
 
 `produces:` と並ぶ、プレーンなケバブケース文字列リストです。ステージがユニットごとに
 **書いてよい**が**必須ではない**成果物を名付けます。不在はなしを意味します。
-必要な 2 ステージだけが宣言するため、コンパイル済み `stage-graph.json` は
-最小のままです。
+必要な 1 ステージだけ（`frontend-components` のための `functional-design`）が
+宣言するため、コンパイル済み `stage-graph.json` は最小のままです。
 
 存在する理由: ユニット単位の構築ステージ（`for_each: unit-of-work`）は、その
 ユニットの記録ディレクトリ上にすべての `produces[]` 成果物があるときだけ、その
 ユニットについてカバー済みになります（`aidlc-orchestrate.ts` 内のユニット単位
 カバレッジ検査）。一部の成果物はユニットに対して本当に条件付きです。
-`functional-design` はユニットに UI があるときだけ `frontend-components` を書き、
-`infrastructure-design` はユニットがインフラを共有するときだけ
-`shared-infrastructure` を書きます。それらを `produces:` に載せると、バックエンド
-専用ユニットでもカバレッジを満たすため N／A スタブを書かされ、書くまでステージ
-ゲートに到達できませんでした。`optional_produces:` へ移すと免除されます。
+`functional-design` はユニットに UI があるときだけ `frontend-components` を
+書きます。これを `produces:` に載せると、バックエンド専用ユニットでもカバレッジを
+満たすため N／A スタブを書かされ、書くまでステージゲートに到達できません
+でした。`optional_produces:` へ移すと免除されます。
 
 - **カバレッジ免除。** `optional_produces` エントリーはユニット単位カバレッジ
   ループで無視されます。ユニットは**必須**の `produces[]` 成果物が存在する時点で

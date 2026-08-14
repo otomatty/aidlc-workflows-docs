@@ -2,7 +2,7 @@
 title: Kiro IDE での AI-DLC 実行
 description: Kiro IDE 向けの前提条件、インストール、フックの仕組み、Claude Code との差分を説明します。
 ---
-このフレームワークのハーネスの 1 つとして、`dist/kiro-ide/` は [Kiro IDE](https://kiro.dev/) の内部で同じ AI-DLC 方法論を実行します。決定論的な 1 つのコア、つまりツール、32 個のステージファイル、プロトコル、ナレッジ、センサー、スコープ、ルールは、すべてのハーネスでバイト単位に共有されます。異なるのはシェル（スキル、エージェント設定、フックの配線、有効化方法）だけです。
+このフレームワークのハーネスの 1 つとして、`dist/kiro-ide/` は [Kiro IDE](https://kiro.dev/) の内部で同じ AI-DLC 方法論を実行します。決定論的な 1 つのコア、つまりツール、33 個のステージファイル、プロトコル、ナレッジ、センサー、スコープ、ルールは、すべてのハーネスでバイト単位に共有されます。異なるのはシェル（スキル、エージェント設定、フックの配線、有効化方法）だけです。
 
 :::important
 **Kiro IDE では Claude Opus 4.8 で AI-DLC を実行してください。** コンダクターは各ステージごとに複数段階の手順を進めます。確認質問、成果物の生成、レビュー担当者の確認、学習ループ、そして承認ゲートです。Opus 4.8 はこの手順を最後まで守り、各ゲートで正しく停止します。より弱いモデルは任意手順（レビュー担当者の確認と学習ループ）を省略し、ゲートを急いで通過することがあります。ワークフローを始める前に、チャットモデルを **Claude Opus 4.8** に設定してください。
@@ -60,7 +60,7 @@ cp dist/kiro-ide/AGENTS.md your-project/AGENTS.md   # merge if you already have 
 <a id="usage"></a>
 ## 使い方
 
-Claude Code ハーネスと同一です。`/aidlc <description>` でワークフローを開始し、`/aidlc --status` で現在位置を確認でき、`/aidlc --doctor`、`--stage`、`--phase`、`--depth`、`--test-strategy` もすべて使えます。ステージごとのランナー（`/aidlc-application-design`）とスコープごとのランナー（`/aidlc-feature`）もインストールされます。初期化コマンドはありません。同梱シェルがワークスペースを足場として用意し、最初の `/aidlc` で最初のインテントが自動生成されます。
+Claude Code ハーネスと同一です。`/aidlc <description>` でワークフローを開始し、`/aidlc --status` で現在位置を確認でき、`/aidlc --doctor`、`--stage`、`--phase`、`--depth`、`--test-strategy` もすべて使えます。ステージごとのランナー（`/aidlc-domain-design`）とスコープごとのランナー（`/aidlc-feature`）もインストールされます。初期化コマンドはありません。同梱シェルがワークスペースを足場として用意し、最初の `/aidlc` で最初のインテントが自動生成されます。
 
 <a id="how-hooks-work-on-kiro-ide"></a>
 ## Kiro IDE でフックはどう動くか
@@ -124,7 +124,7 @@ IDE ハーネスが CLI ハーネス（`harness/kiro/`）と異なるのは 4 �
 インストールと有効化が終わったら、方法論自体はどのハーネスでも同じです。次はハーネス中立の章へ進んでください。
 
 - [最初のワークフロー](/guide/your-first-workflow) - 注釈付きの最初から最後までの実行例
-- [フェーズとステージ](/guide/phases-and-stages) - 5 つのフェーズと 32 のステージ
+- [フェーズとステージ](/guide/phases-and-stages) - 5 つのフェーズと 33 のステージ
 - [スコープ、深度、テスト戦略](/guide/scopes-and-depth) - 実行規模の適切な見積もり方
 - [用語集](/guide/glossary) - すべての用語の定義
 

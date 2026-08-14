@@ -184,7 +184,7 @@ aidlc/spaces/default/
 <a id="feature-walkthrough"></a>
 ## feature の実例
 
-この例では、タスク管理アプリケーション向けの通知サービスを構築します。**feature** スコープは Standard の深さで 32 ステージすべてを実行します。この実例では、全フェーズにまたがる主要ステージを抜粋します。
+この例では、タスク管理アプリケーション向けの通知サービスを構築します。**feature** スコープは Standard の深さで 33 ステージすべてを実行します。この実例では、全フェーズにまたがる主要ステージを抜粋します。
 
 <a id="invocation-1"></a>
 ### 呼び出し
@@ -202,7 +202,7 @@ aidlc/spaces/default/
 
 3 つの初期化ステージは `aidlc-utility intent-create` 内で自動実行されます。ワークスペース検出は、TypeScript、Node.js 20、Express、PostgreSQL、既存のタスク / 利用者サービスを持つ既存プロジェクトを特定します。
 
-> 進捗: 全体 3/32 | スコープ: feature、深さ: Standard
+> 進捗: 全体 3/33 | スコープ: feature、深さ: Standard
 
 <a id="ideation-phase-stages-11-17"></a>
 ### アイデア創出フェーズ（ステージ 1.1〜1.7）
@@ -253,10 +253,10 @@ None.
 
 アイデア創出の全出力を集約した取り組み概要をまとめます。フェーズ境界検証により、インテントからスコープまでの追跡可能性を確認します。
 
-> 進捗: 全体 10/32 | アイデア創出フェーズ完了。検証ゲート通過。
+> 進捗: 全体 10/33 | アイデア創出フェーズ完了。検証ゲート通過。
 
-<a id="inception-phase-stages-21-28"></a>
-### インセプションフェーズ（ステージ 2.1〜2.8）
+<a id="inception-phase-stages-21-29"></a>
+### インセプションフェーズ（ステージ 2.1〜2.9）
 
 **ステージ 2.1 — リバースエンジニアリング**（パイプライン）
 
@@ -274,15 +274,15 @@ None.
 
 まず aidlc-product-agent がペルソナとストーリーの下書きを作ります。次に aidlc-design-agent、aidlc-developer-agent、aidlc-quality-agent が、互いに見えないコラボレーターとしてその下書きを検査し、それぞれがアイデンティティ付きのコントリビューションファイルを書きます。リードの aidlc-product-agent が 3 つすべてのコントリビューションを `personas.md` と `stories.md` へ統合したうえで、**Approve** / **Request Changes** ゲートを提示します。
 
-**ステージ 2.6 — アプリケーション設計**（aidlc-architect-agent）
+**ステージ 2.6 — ドメイン設計**（aidlc-architect-agent）
 
 aidlc-architect-agent が通知サービスのアーキテクチャを設計します。
 
-- **コンポーネント**: `NotificationService`、`PreferenceService`、`EmailRenderer`、`DigestScheduler`
-- **API 契約**: 設定管理用 REST エンドポイント、起点処理用の内部イベントハンドラー
-- **アーキテクチャ決定記録**: イベント駆動の起点パターン（ポーリングではなく）、メールキューに SQS（直接送信ではなく）
+- **コンポーネント**: `NotificationService`、`PreferenceService`、`EmailRenderer`、`DigestScheduler`。それぞれに振る舞い、依存先／依存元、所有するエンティティを付与します
+- **エンティティ所有**: `NotificationService` が Notification と NotificationEvent を所有し、`PreferenceService` が Preference を所有します
+- **根拠**: イベント駆動の起点パターン（ポーリングではなく）、メールキューに SQS（直接送信ではなく）を Rationale セクションに記録します
 
-`components.md`、`services.md`、`decisions.md` を生成します。
+統合された `components.md`（`yaml` フェンス付きカタログと Mermaid 図、サマリー、所有関係、根拠の各表）と、ADR ログである `decisions.md` を生成します。
 
 **ステージ 2.7 — 作業ユニット生成**（aidlc-architect-agent）
 
@@ -294,16 +294,20 @@ aidlc-architect-agent が通知サービスのアーキテクチャを設計し�
 
 依存関係マップ付きの `unit-of-work.md` を生成します。順序は `notification-core` が先で、その後に利用者設定とメール処理を並列実行します。
 
-**ステージ 2.8 — デリバリー計画**（aidlc-delivery-agent）
+**ステージ 2.8 — 契約設計**（aidlc-architect-agent）
+
+システムが連携し合う 3 つのユニットに分割されるため、契約設計はユニット間の境界を形式化します。対象は、`notification-core` が呼び出し元へ公開する内部イベント契約と、`notification-email` が `notification-preferences` から利用する設定参照の契約です。境界ごとに 1 行を持ち、各行にインラインの仕様ブロックを含む `contract-summary.md` を生成します。
+
+**ステージ 2.9 — デリバリー計画**（aidlc-delivery-agent）
 
 Bolt の実行順は次のとおりです。Bolt 1 は `notification-core` を出荷します（ワーキングスケルトンとして、イベントハンドラー処理がエンドツーエンドで通ることを証明します）。Bolt 2 では `notification-preferences` と `notification-email` を並列出荷します。Bolt ごとの完了定義は `bolt-plan.md` に記録し、WSJF 風の根拠は `risk-and-sequencing-rationale.md`、外部 SES / SQS 依存は `external-dependency-map.md` に記録します。フェーズ境界検証により要件とアーキテクチャの整合を確認します。
 
-> 進捗: 全体 18/32 | インセプションフェーズ完了。検証ゲート通過。
+> 進捗: 全体 19/33 | インセプションフェーズ完了。検証ゲート通過。
 
 <a id="construction-phase-stages-31-37"></a>
 ### 構築フェーズ（ステージ 3.1〜3.7）
 
-構築は 2.8 の計画に従って **Bolt ごと**に実行されます。最初の Bolt はワーキングスケルトンで、その後に出る段階選択プロンプトが残りの実行における自律性を決めます。依存関係を共有しない Bolt は並列で実行します。
+構築は 2.9 の計画に従って **Bolt ごと**に実行されます。最初の Bolt はワーキングスケルトンで、その後に出る段階選択プロンプトが残りの実行における自律性を決めます。依存関係を共有しない Bolt は並列で実行します。
 
 **Bolt 1: `notification-core`** — ワーキングスケルトン（常にゲート付き）
 
@@ -328,7 +332,7 @@ The walking skeleton shipped. How should the remaining Bolts run?
 
 **Bolt 2: `notification-preferences` + `notification-email`** — 並列バッチ
 
-両者は `notification-core` にだけ依存し、互いには依存しないため、2.8 の計画では 1 つのバッチにまとめられます。コンダクターは各 Bolt ごとに質問を集め、設計成果物を生成し、その後 **2 つのコード生成ステージを同時に委譲**するため、単一ターン内で 2 つの `Task` 呼び出しを発行します。
+両者は `notification-core` にだけ依存し、互いには依存しないため、2.9 の計画では 1 つのバッチにまとめられます。コンダクターは各 Bolt ごとに質問を集め、設計成果物を生成し、その後 **2 つのコード生成ステージを同時に委譲**するため、単一ターン内で 2 つの `Task` 呼び出しを発行します。
 
 - **`notification-preferences` — 3.1 機能設計** — 設定エンティティ、既定値、経路切り替え
 - **`notification-preferences` — 3.5 コード生成** — CRUD API エンドポイント、設定リポジトリ、検証。2 つのソースファイルと 3 つのテストファイル
@@ -360,7 +364,7 @@ Options:
 
 リント、ビルド、テスト、セキュリティ走査の各ステージを持つ CI パイプラインを設定します。品質ゲートは網羅率 >= 75%、重大な脆弱性なしです。
 
-> 進捗: 全体 25/32 | 構築完了。検証ゲート通過。
+> 進捗: 全体 26/33 | 構築完了。検証ゲート通過。
 
 <a id="operation-phase-stages-41-47"></a>
 ### 運用フェーズ（ステージ 4.1〜4.7）
@@ -373,14 +377,14 @@ Options:
 
 **ステージ 4.7 — フィードバックと最適化** — SLO 目標（アプリ内配信 99.9%、30 秒以内のメール配信 99%）、コスト分析、フィードバックループ文書
 
-> 進捗: 全体 32/32 | 運用完了。feature ワークフロー完了。
+> 進捗: 全体 33/33 | 運用完了。feature ワークフロー完了。
 
 <a id="key-differences-from-bugfix"></a>
 ### バグ修正との主な違い
 
 | 観点 | バグ修正 | 機能開発 |
 |--------|--------|---------|
-| 実行ステージ数 | 7 | 32 |
+| 実行ステージ数 | 7 | 33 |
 | 深さ | Minimal | Standard |
 | フェーズ | 初期化 + 構想 + 構築 | 5 フェーズすべて |
 | 作業ユニット数 | 1 | 3 |

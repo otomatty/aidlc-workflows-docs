@@ -49,8 +49,9 @@ aidlc/spaces/<space>/intents/<YYMMDD>-<label>/   # one record dir per intent
     requirements-analysis/
     user-stories/                   (conditional)
     refined-mockups/                (conditional)
-    application-design/             (conditional)
+    domain-design/             (conditional)
     units-generation/
+    contract-design/           (conditional)
     delivery-planning/
 
   construction/                     # Phase 3 artifacts
@@ -143,8 +144,8 @@ flowchart LR
 | 1.6 粗いモックアップ | `wireframes.md`、`user-flow.md` | 条件付き |
 | 1.7 承認と引き継ぎ | `initiative-brief.md`、`decision-log.md` | 常に実行 |
 
-<a id="inception-stages-21-28"></a>
-### 構想（ステージ 2.1〜2.8）
+<a id="inception-stages-21-29"></a>
+### 構想（ステージ 2.1〜2.9）
 
 | ステージ | 主要成果物 | 条件 |
 |-------|--------------|-----------|
@@ -153,24 +154,27 @@ flowchart LR
 | 2.3 要件分析 | `requirements.md` | 常に実行 |
 | 2.4 ユーザーストーリー | `stories.md`、`personas.md` | ユーザー向け機能 |
 | 2.5 詳細モックアップ | `mockups.md`、`interaction-spec.md`、`accessibility-checklist.md` | UI プロジェクト |
-| 2.6 アプリケーション設計 | `components.md`、`services.md`、`decisions.md` | 新規コンポーネントが必要なとき |
+| 2.6 ドメイン設計 | `components.md`（統合されたコンポーネントカタログ）、`decisions.md`（ADR ログ） | 新規コンポーネントが必要なとき |
 | 2.7 作業ユニット生成 | `unit-of-work.md`、`unit-of-work-dependency.md`、`unit-of-work-story-map.md` | 常に実行 |
-| 2.8 デリバリー計画 | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | 常に実行 |
+| 2.8 契約設計 | `contract-summary.md`（ユニット間の契約） | 複数ユニットのシステム |
+| 2.9 デリバリー計画 | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | 常に実行 |
 
 <a id="construction-stages-31-37"></a>
 ### 構築（ステージ 3.1〜3.7）
 
 ステージ 3.1〜3.5 は作業ユニットごとに繰り返されます。成果物は `construction/{unit-name}/{stage-name}/` に配置されます。ステージ 3.6〜3.7 はすべての作業ユニット完了後に 1 回だけ実行します。
 
-4 つの設計ステージ（3.1〜3.4）は、各作業ユニットの**種類**に応じて成果物を絞り込みます（2.7 の依存関係ブロックで `service`、`spec`、`ui`、`packaging`、`library` としてタグ付けします）。`spec` の作業ユニットには拡張性文書が不要で、`packaging` の作業ユニットにはビジネスロジックモデルが不要です。種類が付いていない作業ユニットには、以下の完全な対応表が適用されます。各種類に適用する成果物はステージのフロントマターデータ（`produces_kinds`。詳細は [ステージ定義](/reference/stage-definition)）で決まります。あるステージの成果物がどれも適用されない作業ユニットは、そのステージでファイルを生成せずに完了します。
+4 つの設計ステージ（3.1〜3.4）は、各作業ユニットの**種類**に応じて成果物を絞り込みます（2.7 の依存関係ブロックで `service`、`spec`、`ui`、`packaging`、`library` としてタグ付けします）。`spec` の作業ユニットには拡張性文書が不要で、`packaging` の作業ユニットには機能仕様が不要です。種類が付いていない作業ユニットには、以下の完全な対応表が適用されます。各種類に適用する成果物はステージのフロントマターデータ（`produces_kinds`。詳細は [ステージ定義](/reference/stage-definition)）で決まります。あるステージの成果物がどれも適用されない作業ユニットは、そのステージでファイルを生成せずに完了します。
 
 | ステージ | 主要成果物 | 条件 |
 |-------|--------------|-----------|
-| 3.1 機能設計 | `business-logic-model.md`、`business-rules.md` | 計画に従い、作業ユニットごと（種類ごと） |
+| 3.1 機能設計 | `entities.md`、`rules.md`、`functional-spec.md` | 計画に従い、作業ユニットごと（種類ごと） |
 | 3.2 非機能要件 | `security-requirements.md`、`performance-requirements.md` | 計画に従い、作業ユニットごと（種類ごと） |
+| 3.2 非機能要件 | `observability-requirements.md` | 計画に従い、サービスユニットのみ |
 | 3.3 非機能設計 | `security-design.md`、`performance-design.md` | 計画に従い、作業ユニットごと（種類ごと） |
-| 3.4 インフラ設計 | `deployment-architecture.md`、`infrastructure-services.md` | 計画に従い、作業ユニットごと（種類ごと） |
-| 3.5 コード生成 | `code-generation-plan.md`、`code-generation-questions.md`、`code-summary.md`（コードはワークスペースルートに出る） | 常に実行、作業ユニットごと |
+| 3.3 非機能設計 | `observability-design.md` | 計画に従い、サービスユニットのみ |
+| 3.4 インフラ設計 | `infrastructure-specification.md`、`monitoring-design.md`、`cicd-pipeline.md` | 計画に従い、作業ユニットごと（種類ごと） |
+| 3.5 コード生成 | `code-generation-plan.md`、`code-generation-questions.md`、`unit-test-instructions.md`、`code-summary.md`（コードはワークスペースルートに出る） | 常に実行、作業ユニットごと |
 | 3.6 ビルドとテスト | `build-instructions.md`、`test-results.md` | 常に実行、全作業ユニット完了後 |
 | 3.7 CI パイプライン | `ci-config.md`、`quality-gates.md` | 条件付き、全作業ユニット完了後 |
 
@@ -228,8 +232,8 @@ flowchart LR
 各ステージは、前段ステージの成果物を入力として読みます。主要な依存関係の連鎖は次のとおりです。
 
 - **意図の取り込み**の成果物は、市場調査、実現可能性評価、スコープ定義、粗いモックアップへ流れる
-- **要件分析**の成果物は、ユーザーストーリー、アプリケーション設計、すべての構築ステージへ流れる
-- **アプリケーション設計**と**作業ユニット生成**の成果物は、作業ユニットごとのすべての構築ステージへ流れる
+- **要件分析**の成果物は、ユーザーストーリー、ドメイン設計、すべての構築ステージへ流れる
+- **ドメイン設計**と**作業ユニット生成**の成果物は、作業ユニットごとのすべての構築ステージへ流れる
 - **すべての構築成果物**は、ビルドとテスト、CI パイプラインへ流れる
 - **インフラ設計**の成果物は、運用ステージへ流れる
 

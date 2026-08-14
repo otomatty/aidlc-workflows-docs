@@ -62,7 +62,7 @@ git checkout v2
 <a id="use"></a>
 ## 使い方
 
-`$aidlc`（または `/skills` -> aidlc）に続けてスコープか説明を渡してオーケストレーターを起動します。コマンド体系は Claude ハーネスと同じで、`$aidlc --status`、`$aidlc --help` などが使えます。ステージランナーは明示起動のみです。`$aidlc-application-design`、`$aidlc-bugfix` などを使います（37 個のランナー説明がインデックスを汚染しないよう、暗黙のスキルマッチングから除外されています）。
+`$aidlc`（または `/skills` -> aidlc）に続けてスコープか説明を渡してオーケストレーターを起動します。コマンド体系は Claude ハーネスと同じで、`$aidlc --status`、`$aidlc --help` などが使えます。ステージランナーは明示起動のみです。`$aidlc-domain-design`、`$aidlc-bugfix` などを使います（37 個のランナー説明がインデックスを汚染しないよう、暗黙のスキルマッチングから除外されています）。
 
 <a id="harness-differences-vs-claude-code"></a>
 ## Claude Code とのハーネス差分
@@ -93,7 +93,7 @@ bun scripts/package.ts --check        # CI drift guard (every harness)
 インストールと信頼設定が完了したら、方法論自体はどのハーネスでも同じです。次はハーネス中立の章へ進んでください。
 
 - [最初のワークフロー](/guide/your-first-workflow) - 注釈付きの最初から最後までの実行例
-- [フェーズとステージ](/guide/phases-and-stages) - 5 つのフェーズと 32 のステージ
+- [フェーズとステージ](/guide/phases-and-stages) - 5 つのフェーズと 33 のステージ
 - [スコープ、深度、テスト戦略](/guide/scopes-and-depth) - 実行規模の適切な見積もり方
 - [用語集](/guide/glossary) - すべての用語の定義
 

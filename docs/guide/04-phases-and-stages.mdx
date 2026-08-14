@@ -1,8 +1,8 @@
 ---
 title: フェーズとステージ
-description: AI-DLC の 5 つのフェーズと 32 のステージ、その接続関係と実行モードを説明します。
+description: AI-DLC の 5 つのフェーズと 33 のステージ、その接続関係と実行モードを説明します。
 ---
-AI-DLC のライフサイクルは、32 のステージを含む 5 つのフェーズで構成されています。この章では各フェーズを説明し、そのステージを列挙し、どのように接続されているかを示します。
+AI-DLC のライフサイクルは、33 のステージを含む 5 つのフェーズで構成されています。この章では各フェーズを説明し、そのステージを列挙し、どのように接続されているかを示します。
 
 > **ハーネスに関する注記。** このガイドが説明する方法論、すなわちフェーズ、ステージ、エージェント、ゲートは、どのハーネスでも同一です。仕組みにハーネス差がある場合（ゲートがどう表示されるか、サブエージェントをどうディスパッチするか、設定がどこにあるか）は、その差異を明示し、対応するハーネスの章に表でまとめています: [他のハーネスでの実行](/guide/harnesses)。特記がない限り、ここでの例は Claude Code を使います。
 
@@ -25,10 +25,10 @@ graph LR
         I1 -.->|"7 ステージ"| I7
     end
 
-    subgraph INCEPTION["インセプション (2.1-2.8)"]
+    subgraph INCEPTION["インセプション (2.1-2.9)"]
         N1["リバースエンジニアリング"]
         N7["デリバリー計画"]
-        N1 -.->|"8 ステージ"| N7
+        N1 -.->|"9 ステージ"| N7
     end
 
     subgraph CONSTRUCTION["コンストラクション (3.1-3.7)"]
@@ -56,7 +56,7 @@ graph LR
     style OPERATION fill:#fce4ec,stroke:#e91e63
 ```
 
-\{/* Text fallback: 直線的な流れです。初期化（0.1-0.3）が自動でアイデア創出（1.1-1.7）へ進み、そこから検証ゲート 1 を通ってインセプション（2.1-2.8）へ、検証ゲート 2 を通ってコンストラクション（3.1-3.7）へ、検証ゲート 3 を通って運用（4.1-4.7）へ進みます。4.7 からは 1.1 へ戻るフィードバックループがあります。 */\}
+\{/* Text fallback: 直線的な流れです。初期化（0.1-0.3）が自動でアイデア創出（1.1-1.7）へ進み、そこから検証ゲート 1 を通ってインセプション（2.1-2.9）へ、検証ゲート 2 を通ってコンストラクション（3.1-3.7）へ、検証ゲート 3 を通って運用（4.1-4.7）へ進みます。4.7 からは 1.1 へ戻るフィードバックループがあります。 */\}
 
 フェーズは順番に実行されます。各フェーズ境界では（初期化 → アイデア創出を除く）、**検証ゲート** が自動で走り、下流のステージがその上に積み上がる前に、欠けたつながり、孤立した成果物、不整合を検出します。
 
@@ -152,9 +152,10 @@ flowchart TD
     S22["2.3 要件分析\n(aidlc-product-agent)"]
     S23["2.4 ユーザーストーリー\n(aidlc-product-agent)"]
     S24["2.5 詳細モックアップ\n(aidlc-design-agent)"]
-    S25["2.6 アプリケーション設計\n(aidlc-architect-agent)"]
+    S25["2.6 ドメイン設計\n(aidlc-architect-agent)"]
     S26["2.7 作業単位の生成\n(aidlc-architect-agent)"]
-    S27["2.8 デリバリー計画\n(aidlc-delivery-agent)"]
+    S2C["2.8 契約設計\n(aidlc-architect-agent)"]
+    S27["2.9 デリバリー計画\n(aidlc-delivery-agent)"]
     VG2{{"検証ゲート:\nインセプション → コンストラクション"}}
 
     BF_CHECK{"ブラウンフィールド？\n（初期化 0.3 の結果）"}
@@ -179,7 +180,9 @@ flowchart TD
     S24 -.->|条件付き| S25
     S25 -.->|"スコープ内なら"| S26
     S22 -.->|"2.6 をスキップした場合"| S26
-    S26 ==>|常に実行| S27
+    S26 -.->|条件付き| S2C
+    S26 -.->|"2.8 をスキップした場合"| S27
+    S2C ==>|常に実行| S27
     S27 ==>|常に実行| VG2
 
     style S21 fill:#bbdefb,stroke:#1565c0
@@ -190,11 +193,12 @@ flowchart TD
     style S23 fill:#fff9c4,stroke:#f9a825
     style S24 fill:#fff9c4,stroke:#f9a825
     style S25 fill:#fff9c4,stroke:#f9a825
+    style S2C fill:#fff9c4,stroke:#f9a825
     style VG2 fill:#ef9a9a,stroke:#c62828
     style RE_DETAIL fill:#e8eaf6,stroke:#3f51b5
 ```
 
-\{/* Text fallback: ブラウンフィールド判定（ステージ 0.3 の結果）を行います。はいの場合、2.1 リバースエンジニアリングが 2 リンクのパイプライン（開発者によるコードスキャンの後にアーキテクトによる統合と書き出し）として実行されます。その後、2.2 プラクティスの発見が、含まれるすべてのスコープに対してハブアンドスポーク（主担当のドラフト、互いにブラインドな quality/developer/devsecops のスポーク、人間へのインタビュー、主担当による統合）として実行され、確認・確定された内容をアクティブスペースのメモリへ昇格させます。続いて 2.3 要件分析（ALWAYS）、必要に応じて 2.4 ユーザーストーリーのモブ、必要に応じて 2.5 詳細モックアップ、必要に応じて 2.6 アプリケーション設計、2.7 作業単位の生成（ALWAYS）、2.8 デリバリー計画（ALWAYS）と続き、最後に検証ゲート 2 を通ります。 */\}
+\{/* Text fallback: ブラウンフィールド判定（ステージ 0.3 の結果）を行います。はいの場合、2.1 リバースエンジニアリングが 2 リンクのパイプライン（開発者によるコードスキャンの後にアーキテクトによる統合と書き出し）として実行されます。その後、2.2 プラクティスの発見が、含まれるすべてのスコープに対してハブアンドスポーク（主担当のドラフト、互いにブラインドな quality/developer/devsecops のスポーク、人間へのインタビュー、主担当による統合）として実行され、確認・確定された内容をアクティブスペースのメモリへ昇格させます。続いて 2.3 要件分析（ALWAYS）、必要に応じて 2.4 ユーザーストーリーのモブ、必要に応じて 2.5 詳細モックアップ、必要に応じて 2.6 ドメイン設計、2.7 作業単位の生成（ALWAYS）、必要に応じて 2.8 契約設計、2.9 デリバリー計画（ALWAYS）と続き、最後に検証ゲート 2 を通ります。 */\}
 
 | # | ステージ | 主担当 | 支援 | 主な成果物 | 条件 |
 |---|-------|------|-----------|---------------|-----------|
@@ -203,9 +207,10 @@ flowchart TD
 | 2.3 | 要件分析 | aidlc-product-agent | — | `requirements.md` | ALWAYS |
 | 2.4 | ユーザーストーリー | aidlc-product-agent | aidlc-design-agent、aidlc-developer-agent、aidlc-quality-agent | `stories.md`、`personas.md` | ユーザー向け機能がある場合 |
 | 2.5 | 詳細モックアップ | aidlc-design-agent | aidlc-product-agent | 高精細モックアップ、インタラクション仕様 | UI のあるプロジェクト |
-| 2.6 | アプリケーション設計 | aidlc-architect-agent | aidlc-aws-platform-agent、aidlc-design-agent | アプリケーション設計成果物、ADR | 実行計画による |
+| 2.6 | ドメイン設計 | aidlc-architect-agent | aidlc-aws-platform-agent、aidlc-design-agent | `components.md`、`decisions.md`（ADR） | 実行計画による |
 | 2.7 | 作業単位の生成 | aidlc-architect-agent | aidlc-delivery-agent | `unit-of-work.md`、`unit-of-work-dependency.md`（DAG）、`unit-of-work-story-map.md` | ALWAYS |
-| 2.8 | デリバリー計画 | aidlc-delivery-agent | aidlc-architect-agent | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | ALWAYS |
+| 2.8 | 契約設計 | aidlc-architect-agent | aidlc-aws-platform-agent | `contract-summary.md` | CONDITIONAL |
+| 2.9 | デリバリー計画 | aidlc-delivery-agent | aidlc-architect-agent | `bolt-plan.md`、`team-allocation.md`、`risk-and-sequencing-rationale.md`、`external-dependency-map.md` | ALWAYS |
 
 **主な動作:** ステージ 2.1 は **パイプライン**（2 リンクのチェーン）として動作します。最初に aidlc-developer-agent がコードスキャンを行い、その後 aidlc-architect-agent が統合を行って成果物を書き出します。これはブラウンフィールドプロジェクトでのみ実行されます。ステージ 2.2 は、グリーンフィールドとブラウンフィールドの両方の作業で **サブエージェントのハブアンドスポーク** として動作します。主担当がドラフトを作成し、quality/developer/devsecops がそれぞれ独立に検査し、人間へのインタビューでギャップを解消し、主担当が統合します。ステージ 2.4 は **モブ** として動作します。主担当がドラフトを作成し、design、developer、quality の各エージェントがコントリビューションファイルを介して並行で貢献します。
 
@@ -225,7 +230,7 @@ flowchart TD
 
 現在の形はその中間です。コンストラクションは **ボルト単位（Bolt by Bolt）** で進みます。各 [ボルト](/guide/glossary) は、1 つの作業単位（または依存関係で結ばれた少数の作業単位）に対するステージ 3.1–3.5 の 1 周です。最初のボルトは **ウォーキングスケルトン** であり、ゲート付きかつ対話的です。つまり、アーキテクチャを証明する最小のエンドツーエンドのスライスです。これが出荷されると、**ラダープロンプト** がちょうど 1 回だけ発火します。「continue autonomously, or gate every Bolt?（自律的に続行するか、すべてのボルトでゲートを挟むか）」という問いです。あなたの回答は状態に記録され、このワークフローの残りすべてのボルトを支配します。ステージ 3.6（ビルドとテスト）と 3.7（CI パイプライン）は、最後に全体に対して 1 回だけ実行されます。
 
-この形により、早い段階で確信を得るチェックポイントを持ちつつ、自律実行を意図的に選択でき、2.8 で計画済みのボルトの大きさに合った、レビュー可能なスライスを保てます。
+この形により、早い段階で確信を得るチェックポイントを持ちつつ、自律実行を意図的に選択でき、2.9 で計画済みのボルトの大きさに合った、レビュー可能なスライスを保てます。
 
 <a id="construction-flow"></a>
 ### コンストラクションの流れ
@@ -233,7 +238,7 @@ flowchart TD
 ```mermaid
 flowchart TD
     START(["コンストラクションを開始"])
-    READ[/"bolt-plan.md（2.8 から）\n+ unit-of-work-dependency.md（2.7 から）を読む"/]
+    READ[/"bolt-plan.md（2.9 から）\n+ unit-of-work-dependency.md（2.7 から）を読む"/]
 
     BOLT1["ボルト 1 — ウォーキングスケルトン\n（ステージ 3.1–3.5）"]
     GATE1{{"ウォーキングスケルトンのゲート\n常に表示"}}
@@ -323,8 +328,8 @@ flowchart LR
 
 | # | ステージ | 主担当 | 支援 | 主な成果物 | 実行単位 |
 |---|-------|------|-----------|---------------|------|
-| 3.1 | 機能設計 | aidlc-architect-agent | aidlc-developer-agent | `business-logic-model.md`、`business-rules.md` | ボルトごと（実行計画により CONDITIONAL） |
-| 3.2 | NFR 要件 | aidlc-architect-agent | aidlc-devsecops-agent、aidlc-compliance-agent、aidlc-quality-agent | セキュリティ・パフォーマンス・信頼性の NFR | ボルトごと（CONDITIONAL） |
+| 3.1 | 機能設計 | aidlc-architect-agent | aidlc-developer-agent | `entities.md`、`rules.md`、`functional-spec.md` | ボルトごと（実行計画により CONDITIONAL） |
+| 3.2 | NFR 要件 | aidlc-architect-agent | aidlc-devsecops-agent、aidlc-compliance-agent、aidlc-quality-agent | パフォーマンス・セキュリティ・スケーラビリティ・信頼性・可観測性の NFR | ボルトごと（CONDITIONAL） |
 | 3.3 | NFR 設計 | aidlc-architect-agent | aidlc-aws-platform-agent | NFR 設計仕様 | ボルトごと（CONDITIONAL） |
 | 3.4 | インフラストラクチャ設計 | aidlc-aws-platform-agent | aidlc-devsecops-agent、aidlc-compliance-agent | インフラ仕様、IaC 設計 | ボルトごと（CONDITIONAL） |
 | 3.5 | コード生成 | aidlc-developer-agent | — | アプリケーションコード + コードドキュメント | ボルトごと（ALWAYS、ボルト内では作業単位ごと） |
@@ -415,12 +420,12 @@ flowchart TD
 | モード | ステージ | ユーザー操作 | 説明 |
 |------|--------|-----------------|-------------|
 | インライン（自動続行） | 0.1、0.2、0.3 | なし | `aidlc-utility intent-create` の中で決定論的に実行、承認ゲートなし |
-| インライン | 28 ステージ | あり | エージェントが会話の中で作業し、最後に承認ゲートを出す |
+| インライン | 29 ステージ | あり | エージェントが会話の中で作業し、最後に承認ゲートを出す |
 | サブエージェント | 2.2、3.5 | 2.2 はプラクティスのインタビュー + 最終ゲート、3.5 は承認ゲート | ハブアンドスポークのプラクティスの発見。単独集中のコード生成 |
 | パイプライン（2 リンク） | 2.1 | 承認ゲートのみ | 開発者によるスキャンの後、アーキテクトによる統合と書き出し |
 | モブ | 2.4 | ステージ途中の判断確認の質問 + 承認ゲート | 主担当がドラフトを作成し、design/developer/quality がコントリビューションファイルを介して並行で協働する |
 
-全 32 ステージのトポロジー内訳は、**インライン 28 / サブエージェント 2 / パイプライン 1 / モブ 1** です。
+全 33 ステージのトポロジー内訳は、**インライン 29 / サブエージェント 2 / パイプライン 1 / モブ 1** です。
 
 ---
 

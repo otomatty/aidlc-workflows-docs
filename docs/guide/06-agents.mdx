@@ -17,9 +17,9 @@ AI-DLC は、コンダクターがステージ中に有効化する 11 のドメ
 
 人間のソフトウェアチームでは、3〜5 人のモブが要件からデプロイまで機能全体をカバーします。各人は複数の専門領域にまたがる幅広いスキルセットを持ち寄ります。AI-DLC はこのモデルをなぞっています。
 
-- **各エージェントが、多くのタスクにまたがる 1 つのドメイン全体を担当します。** aidlc-architect-agent は実現可能性評価、アプリケーション設計、ユニット生成、機能設計、NFR 要件、NFR 設計を扱います。これは 3 フェーズにまたがる 6 ステージです。狭い専門家モデルでは、ほぼ同一のナレッジベースを持つ 6 つの別エージェントが必要になります。
+- **各エージェントが、多くのタスクにまたがる 1 つのドメイン全体を担当します。** aidlc-architect-agent は実現可能性評価、ドメイン設計、ユニット生成、契約設計、機能設計、NFR 要件、NFR 設計を扱います。これは 3 フェーズにまたがる 7 ステージです。狭い専門家モデルでは、ほぼ同一のナレッジベースを持つ 7 つの別エージェントが必要になります。
 
-- **エージェントが少ないほど引き継ぎも少なくなります。** どのエージェント境界も情報損失の起点になり得ます。同じ aidlc-architect-agent がアプリケーション設計と機能設計の両方を主導すれば、明示的な引き継ぎ成果物を要求せずに自然にコンテキストを保持できます。
+- **エージェントが少ないほど引き継ぎも少なくなります。** どのエージェント境界も情報損失の起点になり得ます。同じ aidlc-architect-agent がドメイン設計と機能設計の両方を主導すれば、明示的な引き継ぎ成果物を要求せずに自然にコンテキストを保持できます。
 
 - **支援役によって、数を増やさずに協調できます。** "security-reviewer-agent" や "compliance-reviewer-agent" や "cost-reviewer-agent" を作る代わりに、aidlc-devsecops-agent と aidlc-compliance-agent が、他者主導のステージで支援エージェントとして参加します。どのように参加するかはステージの `mode`、すなわち通信トポロジーが決めます。`inline` ステージでは、コンダクターは各支援エージェントを自身のコンテキスト内でペルソナとして採用します。`subagent`（ハブアンドスポーク）と `mob`（メッシュ）のステージでは、各支援エージェントは実在する独立した協働者としてディスパッチされ、主担当が統合するための自分のコントリビューションファイルを書きます（全員が書き、最終成果物は主担当が所有します。user-stories がモブのショーケースとして出荷されています）。`pipeline`（チェーン）ステージでは、リンクが順番に成果物を直接前進させます（reverse-engineering が出荷されているチェーンです）。どのトポロジーでも、すべての委譲を実行するのはコンダクターです。エージェントが互いを呼び出すことは決してありません。
 
@@ -115,7 +115,7 @@ aidlc-product-agent はプロダクトマネージャーとビジネスアナリ
 aidlc-design-agent はワイヤーフレーム、モックアップ、インタラクション仕様を作成します。ユーザー向け機能では aidlc-product-agent と密接に連携し、デザインが実装可能であることを確かめるために aidlc-developer-agent とも連携します。
 
 - **主導:** rough-mockups, refined-mockups
-- **支援:** user-stories, application-design
+- **支援:** user-stories, domain-design
 - **特別なツール:** WebSearch（デザイン調査用）
 
 <a id="aidlc-delivery-agent"></a>
@@ -132,11 +132,11 @@ aidlc-delivery-agent はエンジニアリングマネージャーの役割を�
 <a id="aidlc-architect-agent"></a>
 ### [aidlc-architect-agent](/guide/agents/architect-agent)
 
-**ドメイン:** アプリケーション設計、ドメインモデリング、NFR、コンポーネント分解
+**ドメイン:** ドメイン設計、ドメインモデリング、NFR、コンポーネント分解
 
-aidlc-architect-agent は設計上の中心的な権威です。もっとも広くステージに関与し（3 フェーズにまたがる 9 ステージ）、`judgment` ティアを担います。これは他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と並ぶものです。judgment ティアのエージェントは、あなたのセッション自身のモデルと推論労力を継承するため、あなたが選んだものより低く格下げされることはありません。`templated` ティア（Claude Code、Codex、opencode では労力を抑えた中規模モデル。Kiro、Cursor、Copilot では全ティアがセッションのモデルと労力を継承します）を担うのは delivery、pipeline-deploy、operations だけです。なぜなら、それらの出力は主として定型的な計画、CI/CD YAML、ランブックの雛形だからです。
+aidlc-architect-agent は設計上の中心的な権威です。もっとも広くステージに関与し（3 フェーズにまたがる 10 ステージ）、`judgment` ティアを担います。これは他の 7 つの高判断エージェント（product、design、developer、quality、devsecops、compliance、aws-platform）と並ぶものです。judgment ティアのエージェントは、あなたのセッション自身のモデルと推論労力を継承するため、あなたが選んだものより低く格下げされることはありません。`templated` ティア（Claude Code、Codex、opencode では労力を抑えた中規模モデル。Kiro、Cursor、Copilot では全ティアがセッションのモデルと労力を継承します）を担うのは delivery、pipeline-deploy、operations だけです。なぜなら、それらの出力は主として定型的な計画、CI/CD YAML、ランブックの雛形だからです。
 
-- **主導:** feasibility, application-design, units-generation, functional-design, nfr-requirements, nfr-design
+- **主導:** feasibility, domain-design, units-generation, contract-design, functional-design, nfr-requirements, nfr-design
 - **支援:** intent-capture, reverse-engineering（統合）, delivery-planning
 
 <a id="aidlc-aws-platform-agent"></a>
@@ -147,7 +147,7 @@ aidlc-architect-agent は設計上の中心的な権威です。もっとも広�
 aidlc-aws-platform-agent はインフラストラクチャを設計し、環境をプロビジョニングし、コストを最適化します。AWS CLI と CDK のコマンドを実行するための Bash アクセスを持っています。
 
 - **主導:** infrastructure-design, environment-provisioning
-- **支援:** feasibility, application-design, nfr-design, feedback-optimization
+- **支援:** feasibility, domain-design, contract-design, nfr-design, feedback-optimization
 - **特別なツール:** Bash（`aws`、`cdk` コマンド用）
 
 <a id="aidlc-compliance-agent"></a>
@@ -228,10 +228,10 @@ aidlc-operations-agent は監視をセットアップし、インシデント対
 | エージェント | フェーズ 0 | フェーズ 1 | フェーズ 2 | フェーズ 3 | フェーズ 4 |
 |-------|---------|---------|---------|---------|---------|
 | aidlc-product-agent | — | L (intent-capture, market-research, scope-definition), S (rough-mockups, approval-handoff) | L (requirements-analysis, user-stories), S (refined-mockups) | — | — |
-| aidlc-design-agent | — | L (rough-mockups) | L (refined-mockups), S (user-stories, application-design) | — | — |
+| aidlc-design-agent | — | L (rough-mockups) | L (refined-mockups), S (user-stories, domain-design) | — | — |
 | aidlc-delivery-agent | — | L (team-formation, approval-handoff), S (scope-definition) | L (delivery-planning), S (units-generation) | — | — |
-| aidlc-architect-agent | — | L (feasibility), S (intent-capture) | L (application-design, units-generation), S (reverse-engineering, delivery-planning) | L (functional-design, nfr-requirements, nfr-design) | — |
-| aidlc-aws-platform-agent | — | S (feasibility) | S (application-design) | L (infrastructure-design), S (nfr-design) | L (environment-provisioning), S (feedback-optimization) |
+| aidlc-architect-agent | — | L (feasibility), S (intent-capture) | L (domain-design, units-generation, contract-design), S (reverse-engineering, delivery-planning) | L (functional-design, nfr-requirements, nfr-design) | — |
+| aidlc-aws-platform-agent | — | S (feasibility) | S (domain-design, contract-design) | L (infrastructure-design), S (nfr-design) | L (environment-provisioning), S (feedback-optimization) |
 | aidlc-compliance-agent | — | S (feasibility) | — | S (nfr-requirements, infrastructure-design) | S (environment-provisioning) |
 | aidlc-devsecops-agent | — | — | S (practices-discovery) | S (nfr-requirements, infrastructure-design, build-and-test) | S (environment-provisioning) |
 | aidlc-developer-agent | — | — | L (reverse-engineering), S (practices-discovery, user-stories) | L (code-generation), S (functional-design) | S (deployment-execution) |
@@ -242,7 +242,7 @@ aidlc-operations-agent は監視をセットアップし、インシデント対
 <a id="observations"></a>
 ### 観察ポイント
 
-- **aidlc-architect-agent** がもっとも広く関与しています（3 フェーズにまたがる 9 ステージ）。これは `judgment` ティアを担い、他の 7 つの高判断エージェントも同様です。**aidlc-delivery-agent**、**aidlc-pipeline-deploy-agent**、**aidlc-operations-agent** だけが `templated` ティアを担います
+- **aidlc-architect-agent** がもっとも広く関与しています（3 フェーズにまたがる 10 ステージ）。これは `judgment` ティアを担い、他の 7 つの高判断エージェントも同様です。**aidlc-delivery-agent**、**aidlc-pipeline-deploy-agent**、**aidlc-operations-agent** だけが `templated` ティアを担います
 - **aidlc-developer-agent** は Inception、Construction、Operation の 3 フェーズにまたがります
 - **aidlc-compliance-agent** と **aidlc-devsecops-agent** は純粋に支援役として動作し、他者主導のステージに参加します
 - **aidlc-operations-agent** は知見を aidlc-product-agent に戻すことでライフサイクルループを閉じます
@@ -287,7 +287,7 @@ aidlc-operations-agent は監視をセットアップし、インシデント対
 
 もう 1 つ、両グループの外側に位置するエージェントがいます。`aidlc-composer-agent`、適応ワークフローのコンポーザーです。コンダクターはコンポーズ要求（`/aidlc compose`、コールドスタート時のコンポーズ提案、`--report`、または `--new-scope`）でこれをディスパッチします。このエージェントはタスクの実装エントロピーを見積もります（5 つの構成要素: 意図の曖昧さ、構造的不確実性、検証エントロピー、リスク、未解決の前提。CodeKB MCP が設定されていればその分析に、そうでなければワークスペース走査に基づきます）。そのうえで、スコア内訳とステージごとの根拠を付けた実行可能な最小の EXECUTE/SKIP グリッドを提案し、ゲートであなたが承認した *後にのみ*、コンポーズ済みスコープ（前方／報告モード）を著述するか、決定論的な `recompose` 動詞が適用する保留ステージの切り替え（実行中モード）を提案します。そのペルソナは、存在と欠落の両方をエントロピープロファイルに照らして正当化します。各 EXECUTE はそれが低減する構成要素を名指しし、各 SKIP はそれをすでにカバーしているものを名指しし、背骨（コア、検証、要となる発見ステージ）を削ることは危険な失敗として扱われます。[スコープ、深度、テスト戦略 - 適応コンポーザー](/guide/scopes-and-depth#the-adaptive-composer) を参照してください。
 
-レビュアーが起動するのは、ステージが `reviewer:` フィールドを宣言しているときだけです。現時点ではプロダクトリードが `rough-mockups`、`refined-mockups`、`requirements-analysis`、`user-stories` をレビューし、アーキテクチャレビュアーが `application-design`、`units-generation`、`functional-design`、`nfr-requirements`、`nfr-design`、`infrastructure-design`、`code-generation` をレビューします。
+レビュアーが起動するのは、ステージが `reviewer:` フィールドを宣言しているときだけです。現時点ではプロダクトリードが `rough-mockups`、`refined-mockups`、`requirements-analysis`、`user-stories` をレビューし、アーキテクチャレビュアーが `domain-design`、`units-generation`、`functional-design`、`nfr-requirements`、`nfr-design`、`infrastructure-design`、`code-generation` をレビューします。
 
 **レビュアーステップ。** ステージ本文が成果物を作成すると、学びの儀式（learnings ritual）と承認ゲートの前に、コンダクターは指名されたレビュアーを **別のサブエージェント** として呼び出します。レビュアーはステージ定義、Q&A、成果物を読みます（ビルダーの `memory.md` や計画は読みません。独立した判断を形成するためです）。そのうえで `## Review` セクションを追加し、**READY** または **NOT-READY** の判定を付けます。判定の扱い方は、ステージのレビュークラスによって変わります。
 

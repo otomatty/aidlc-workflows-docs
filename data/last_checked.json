@@ -1,8 +1,8 @@
 {
 	"branch": "v2",
-	"last_checked_commit_sha": "cbf3f30a86cc7cd74c16bca744e2e3d53c28bbf1",
-	"last_checked_commit_date": "2026-08-13 00:56:17 +0100",
-	"last_checked_commit_message": "fix(cursor): emit preToolUse allow JSON under failClosed (2.5.66) (#745)",
-	"checked_at": "2026-08-13",
-	"site_version": "2.5.69"
+	"last_checked_commit_sha": "74a51a10f50c97572edbf33df188b4efcd3113e0",
+	"last_checked_commit_date": "2026-08-13 21:45:06 +0530",
+	"last_checked_commit_message": "feat: domain-design + contract-design restructure; infra-design consolidation (v2.6.1) (#711)",
+	"checked_at": "2026-08-14",
+	"site_version": "2.6.1"
 }

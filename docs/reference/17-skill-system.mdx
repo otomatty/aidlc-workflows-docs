@@ -90,7 +90,7 @@ flowchart LR
 <a id="4-plural-skills-runners-and-the-shared-spine"></a>
 ## 4. 複数スキル、ランナー、共有スパイン
 
-オーケストレーターは多数あるスキルの 1 つです。各ハーネスはスキルディレクトリ（`<harness-dir>/skills/`、例: `dist/claude/.claude/skills/`）に複数集合を配布します。基幹の `aidlc` オーケストレーター、実行可能なステージごとの**ステージランナー**（コアステージは `aidlc-<slug>`、プラグイン所有のステージはプラグインプレフィックス付きスラッグをそのまま使う）、`runner: true` のスコープごとの**スコープランナー**（コアスコープは `aidlc-<scope>`、プラグイン所有のスコープは名前をそのまま使う）、読み取り専用セッションスキル（`aidlc-session-cost`、`aidlc-replay`、`aidlc-outcomes-pack`）、および `aidlc-init`。ルーティングと実行の知識はすべて、`core/aidlc-common/` で著述される**共有スパイン**（配布先は `<harness-dir>/aidlc-common/`）に一度だけあります。`conductor.md` ペルソナ、`protocols/`、および `stages/{initialization,ideation,inception,construction,operation}/` 配下の 32 ステージファイルです。
+オーケストレーターは多数あるスキルの 1 つです。各ハーネスはスキルディレクトリ（`<harness-dir>/skills/`、例: `dist/claude/.claude/skills/`）に複数集合を配布します。基幹の `aidlc` オーケストレーター、実行可能なステージごとの**ステージランナー**（コアステージは `aidlc-<slug>`、プラグイン所有のステージはプラグインプレフィックス付きスラッグをそのまま使う）、`runner: true` のスコープごとの**スコープランナー**（コアスコープは `aidlc-<scope>`、プラグイン所有のスコープは名前をそのまま使う）、読み取り専用セッションスキル（`aidlc-session-cost`、`aidlc-replay`、`aidlc-outcomes-pack`）、および `aidlc-init`。ルーティングと実行の知識はすべて、`core/aidlc-common/` で著述される**共有スパイン**（配布先は `<harness-dir>/aidlc-common/`）に一度だけあります。`conductor.md` ペルソナ、`protocols/`、および `stages/{initialization,ideation,inception,construction,operation}/` 配下の 33 ステージファイルです。
 
 ランナースキルは `tools/aidlc-runner-gen.ts` が生成し、手書きしません。
 

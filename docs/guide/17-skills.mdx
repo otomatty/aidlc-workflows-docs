@@ -15,7 +15,7 @@ description: "`/aidlc` と、スコープ・ステージ・セットアップ用
 
 - **`/aidlc`** — 完全なオーケストレーター。フラグは組み込まれていません。スコープの検出（または、作りたいものの説明）から始まり、そのスコープに含まれる全ステージを完了まで駆動します。最もよく使う入口です。
 - **スコープランナー** — `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch`。同じ完全ワークフローですが、スコープが固定され、スコープ検出を省略します。
-- **ステージランナー** — `/aidlc-application-design`、`/aidlc-code-generation` など計 29 個。1 つのステージだけを独立実行し、メインワークフローには一切触れません。プラグインが所有するステージは、`/test-pro-integration` のように、プラグイン接頭辞付きのコマンド名をそのまま使います。
+- **ステージランナー** — `/aidlc-domain-design`、`/aidlc-code-generation` など計 29 個。1 つのステージだけを独立実行し、メインワークフローには一切触れません。プラグインが所有するステージは、`/test-pro-integration` のように、プラグイン接頭辞付きのコマンド名をそのまま使います。
 - **`/aidlc-init`** — 最初のインテントを作成します（初期化フェーズ全体を 1 ステップで実行）。エンジンの自動作成機能を明示的に使うためのパッケージです。
 - **セッションスキル** — `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack`。ワークフローの読み取り専用表示であり、詳細は [セッション管理](/guide/session-management) で扱います。
 
@@ -66,7 +66,7 @@ description: "`/aidlc` と、スコープ・ステージ・セットアップ用
 ステージランナーは**1 つのステージを独立実行**します。ステージに設定されたエージェントとレビュアーを使い、合成された完了を記録し、ワークフローの学習や承認ゲートなしで停止します。メインワークフローの `Current Stage` を進めることはなく、その独立性はツール自体が強制します。
 
 ```
-/aidlc-application-design
+/aidlc-domain-design
 /aidlc-code-generation
 /aidlc-requirements-analysis
 /aidlc-reverse-engineering
@@ -105,7 +105,7 @@ description: "`/aidlc` と、スコープ・ステージ・セットアップ用
 |---|---|---|---|
 | オーケストレーター | `/aidlc` | 完全ワークフロー。スコープは検出 | — |
 | スコープランナー | `/aidlc-bugfix`、`/aidlc-feature`、`/aidlc-mvp`、`/aidlc-security-patch` | 完全ワークフロー。スコープ固定、検出なし | `/aidlc --scope <name>` |
-| ステージランナー | `/aidlc-application-design`、`/aidlc-code-generation`、…（計 29 個） | 1 ステージのみ独立実行。ワークフローは進めない | `/aidlc --stage <slug> --single` |
+| ステージランナー | `/aidlc-domain-design`、`/aidlc-code-generation`、…（計 29 個） | 1 ステージのみ独立実行。ワークフローは進めない | `/aidlc --stage <slug> --single` |
 | 初期化ラッパー | `/aidlc-init` | 最初のインテントを作成する（初期化を実行） | 新しいワークスペースでの `/aidlc` |
 | セッション表示 | `/aidlc-session-cost`、`/aidlc-replay`、`/aidlc-outcomes-pack` | 読み取り専用のワークフローレポート | [セッション管理](/guide/session-management) を参照 |
 

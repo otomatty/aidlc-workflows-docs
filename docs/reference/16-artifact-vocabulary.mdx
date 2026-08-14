@@ -88,7 +88,7 @@ consumes:
    レジストリに解決できなければなりません。孤立した消費側は壊れた参照として
    報告されます。
 
-32 個のステージファイルはすべて `produces:` を宣言しているため、導出結果には
+33 個のステージファイルはすべて `produces:` を宣言しているため、導出結果には
 レジストリ全体が含まれます。ツールは空のデータに対しても明確に定義されています。
 `produces:` を持たないステージは単に何も追加しません。ただし、配布される
 フレームワークではすべてのステージに値があります。
@@ -133,9 +133,11 @@ consumes:
 ファイルを書き込みます。ワイヤ上で衝突しないように、正規名は分けられています。
 
 - `build-test-results` — `build-and-test` が出力します。このステージでは
-  `build-instructions`、`unit-test-instructions`、
-  `integration-test-instructions`、`performance-test-instructions`、
-  `security-test-instructions`、`build-and-test-summary` と対になります。
+  `build-instructions`、`integration-test-instructions`、
+  `performance-test-instructions`、`security-test-instructions`、
+  `build-and-test-summary` と対になります。
+- `unit-test-instructions` は `code-generation` がユニット単位で生成し、
+  `build-and-test` が消費します。
 - `load-test-results` — `performance-validation` が出力します。同じステージが
   すでに出力する `load-test-plan` と対になります。
 
@@ -151,27 +153,34 @@ consumes:
 ## ファイルシステムへのマッピング
 
 アーティファクトのディスク上のパスは、`(正規名) + (生成ステージ) + (ユニット単位
-フラグ)` から導出できます。現在の形は 2 種類です。
+フラグ)` から導出できます。拡張子は既定で Markdown です。正規アーティファクト
+`traceability` だけが構造化データの例外で、`traceability.json` に解決されます。
+配置の形は 2 種類です。
 
-- **ユニット単位ではないステージ（29 件中 24 件）：**
-  `<record>/<phase>/<stage>/<canonical-name>.md`
+- **ユニット単位ではないステージ（30 件中 25 件）：**
+  `<record>/<phase>/<stage>/<artifact-filename>`
   例：アイデア創出の `feasibility` ステージが生成する
   `feasibility-assessment` は、
   `<record>/ideation/feasibility/feasibility-assessment.md` にあります。
 
-- **ユニット単位の構築ステージ（29 件中 5 件）：**
+- **ユニット単位の構築ステージ（30 件中 5 件）：**
   `nfr-requirements`、`nfr-design`、`functional-design`、
   `infrastructure-design`、`code-generation`。これらは構築中に
   作業単位ごとに各アーティファクトを 1 つ出力します。
-  `<record>/construction/{unit-name}/<stage>/<canonical-name>.md`
-  例：`functional-design` が生成する `business-logic-model` は、
-  `<record>/construction/{unit-name}/functional-design/business-logic-model.md`
+  `<record>/construction/{unit-name}/<stage>/<artifact-filename>`
+  例：`functional-design` が生成する `functional-spec`（機能仕様）は、
+  `<record>/construction/{unit-name}/functional-design/functional-spec.md`
   にあります。
 
 ユニット単位かどうかは、ステージフロントマターの
 `for_each: unit-of-work` フィールドで宣言されます。作業単位ごとに一度実行される
 5 つの構築ステージにはこれがあり、他のステージにはありません。将来的な
 ヘルパーは、ステージグラフと正規名から機械的にパスを計算できます。
+
+`aidlc-lib.ts` の `artifactFilename()` は、ディレクティブ、ユニット単位の
+カバレッジ、完了ガード、レビューフィンガープリントで共有される拡張子リゾルバです。
+`traceability` を除くすべてのアーティファクトは `<canonical-name>.md` に解決され、
+`traceability` は `traceability.json` に解決されます。
 
 **コード知識ベースはスペースレベルの例外です。** リバースエンジニアリングの 9 つの
 アーティファクト（`business-overview`、`architecture`、`code-structure`、
@@ -203,8 +212,8 @@ bun dist/claude/.claude/tools/aidlc-graph.ts artifacts
 正規名を 1 行に 1 件、アルファベット順で出力します。
 
 PR-8 前の出力は空です。ステージがまだ YAML に移行しておらず、`produces:` が
-設定されていないためです。PR-8 後には、29 の非初期化ステージにまたがるおよそ
-118 件の名前まで増えます。
+設定されていないためです。PR-8 後には、30 の非初期化ステージにまたがるおよそ
+119 件の名前まで増えます。
 
 件数を調べるには `wc -l`、絞り込みには `grep`、乖離チェックには期待するベースライン
 との `diff` にパイプしてください。
